@@ -1,3 +1,4 @@
+
 <?php 
 
 require_once __DIR__ ."/../Model/products.php";
@@ -14,6 +15,8 @@ class ProductsController {
         // Get raw JSON input data
         $data = json_decode(file_get_contents('php://input'), true);
     
+        
+
         
 
         // Check if data is an array of multiple products or a single product
@@ -105,4 +108,3 @@ class ProductsController {
     }
 
 
-}
