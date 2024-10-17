@@ -11,11 +11,13 @@ class ProductsController {
         $this->product = new Product();
     }
 
+    
+
+
     public function create() {
         // Get raw JSON input data
         $data = json_decode(file_get_contents('php://input'), true);
     
-        
 
         
 
@@ -30,21 +32,21 @@ class ProductsController {
                     $location = $product['location'] ?? null;
                     $vendor = $product['vendor'] ?? null;
                     $code = $product['code'] ?? null;
+                    $sku = $product['sku'] ?? null;
+                    $barcode = $product['barcode'] ?? null;
                     $price = $product['price'] ?? null;
-                    $profit = $product['profit'] ?? null;
-                    $margin = $product['margin'] ?? null;
                     $quantity = $product['quantity'] ?? null;
                     $unit = $product['unit'] ?? null;
-                    $image_path = $product['image_path'] ?? null;
+                    $media_path = $product['media_path'] ?? null;
     
                     // Validate required fields
-                    if (empty($name) || empty($location) || empty($vendor) || empty($code) || empty($price) || empty($profit) || empty($margin) || empty($quantity) || empty($unit) || empty($image_path)) {
+                    if (empty($name) || empty($location) || empty($vendor) || empty($code) || empty($sku) || empty($barcode) || empty($price) || empty($quantity) || empty($unit) || empty($media_path)) {
                         echo json_encode(['message' => 'All fields are required for each product']);
                         return;
                     }
     
                     // Call the create method in the Product model
-                    $this->product->create($name, $location, $vendor, $code, $price, $profit, $margin, $quantity, $unit, $image_path);
+                    $this->product->create($name, $location, $vendor, $code, $sku, $barcode, $price, $quantity, $unit, $media_path);
                 }
                 echo json_encode(['message' => 'All products created successfully']);
             } else {
@@ -53,21 +55,21 @@ class ProductsController {
                 $location = $data['location'] ?? null;
                 $vendor = $data['vendor'] ?? null;
                 $code = $data['code'] ?? null;
+                $sku = $data['sku'] ?? null;
+                $barcode = $data['barcode'] ?? null;
                 $price = $data['price'] ?? null;
-                $profit = $data['profit'] ?? null;
-                $margin = $data['margin'] ?? null;
                 $quantity = $data['quantity'] ?? null;
                 $unit = $data['unit'] ?? null;
-                $image_path = $data['image_path'] ?? null;
+                $media_path = $data['media_path'] ?? null;
     
                 // Validate required fields
-                if (empty($name) || empty($location) || empty($vendor) || empty($code) || empty($price) || empty($profit) || empty($margin) || empty($quantity) || empty($unit) || empty($image_path)) {
+                if (empty($name) || empty($location) || empty($vendor) || empty($code) || empty($sku) || empty($barcode) || empty($price) || empty($quantity) || empty($unit) || empty($media_path)) {
                     echo json_encode(['message' => 'All fields are required']);
                     return;
                 }
     
                 // Call the create method in the Product model
-                $this->product->create($name, $location, $vendor, $code, $price, $profit, $margin, $quantity, $unit, $image_path);
+                $this->product->create($name, $location, $vendor, $code, $sku, $barcode, $price, $quantity, $unit, $media_path);
     
                 echo json_encode(['message' => 'Product created successfully']);
             }
@@ -75,6 +77,7 @@ class ProductsController {
             echo json_encode(['message' => 'Invalid input data']);
         }
     }
+
     
        
 
@@ -86,6 +89,28 @@ class ProductsController {
     // Get Single Product
     public function get($id) {
         echo json_encode($this->product->get($id));
+    }
+
+    //Get Total number of products
+    public function getTotalItems() { 
+         echo json_encode( $this->product->getTotalItems());
+    }
+
+    //Get Total number of Low stock products
+
+    public function getLowStockAlerts() {
+        echo json_encode( $this->product->getLowStockAlerts());
+    }
+    //Get Total number of warehouse products
+    public function getWhNo() {
+        echo json_encode( $this->product->getWhNo());
+    }
+    public function getWhItems() {
+        echo json_encode( $this->product->getWhItems());
+    }
+    //Get all products in warehouse A
+    public function getWhA() {
+        echo json_encode( $this->product->getWhA());
     }
 
     // Update Product
@@ -106,6 +131,7 @@ class ProductsController {
             echo json_encode(['message' => 'Failed to delete product']);
         }
     }
+
 
 }
 

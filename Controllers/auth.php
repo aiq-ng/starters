@@ -22,7 +22,7 @@ class AuthController {
             $username = $data['username'] ?? null;
             $email = $data['email'] ?? null;
             $password = $data['password'] ?? null;
-
+            $role = $data['role'] ?? null;
 
             // Validate required fields
             if ($username && $email && $password) {
@@ -34,7 +34,7 @@ class AuthController {
                     return;
                 }
                 // Register the user
-                if ($this->user->register($username, $email, $password)) {
+                if ($this->user->register($username, $email, $password, $role)) {
                     // Send a JSON response
                     echo json_encode([
                         'status' => 'success',

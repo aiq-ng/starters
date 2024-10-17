@@ -1,0 +1,421 @@
+Screen 1. Inventory Database tracking :
+a. Inform us how many products are available
+b. Inform us how many products are low in stock
+c. Categorize the products into Cold room items and Kitchen items
+
+Screen 2. Produts Database:
+a. Return all the products
+b. Group them based on Warehouse 
+c. Display each Warehouse with number of products, number of items and address
+d. Display the products in each warehouse with their code, price, name, image, quantity and low stock label (Yes or No)
+
+
+Screen 3: Products Creation
+a. Parameters for creating a product are; name, location, vendor, code, SKU, Barcode, Media (Image/Video), Price, Profit, Margin, Quantity, Unit.
+
+Screen 4: Products Details
+a. Display Product images, number of products at hand, number of products to be delivered, number of products ordered
+b. Display product Basic information (Product name, Location, vendor, code, SKU, Barcode), Sales information (Price, Profit, Margin), Inventory information (Quantity, Unit)
+
+Screen 5: Update Product
+a. Parameters for updating a product are; New quantity, Reason for the update, Notes
+b. Display on update modal; Quantity, Code, Name, Image.
+
+Screen 6: Product updated modal
+a. Display on update modal; Product name, Current quantity, New quantity, Reason for the update, Discrepancies of the update, Notes, Account user
+
+Screen 7: Inventory Tracker 
+a. Categorize the inventory based on Depleting Items, Unavailable Items, Available Items and KIV.
+b. Display product name, quantity, Warehouse (Location), Inventory Date, Status, Progress bar
+
+Screen 8: Inventory Details 
+a. Display Warehouse (Location), Inventory Date, Product number, user, progress bar.
+b. Display Number of products in Warehouse, product image, name, on hand, counted, difference
+
+Screen 9: Complete Inventory
+a. Display Warehouse (Location), Inventory Date, Duration of inventory, number of products, items counted, discrepancies.
+
+
+
+
+
+
+Entities and Relationships
+1. Users (Employees)
+2. Vendors
+3. Products
+4. Inventory
+5. Sales
+6. Inventory Plans (Stock Management)
+
+
+
+Schema Design
+
+1. Users (Employees) Table
+This table stores employee information.
+
+
+CREATE TABLE Users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    avatar_url VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
+
+2. Vendors Table
+Stores vendor details for product sourcing.
+
+
+CREATE TABLE Vendors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    contact_email VARCHAR(100),
+    address VARCHAR(255),
+    phone_number VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+3. Products Table
+Stores information about products with vendor association and stock management details.
+
+
+CREATE TABLE Products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    vendor_id INT,
+    location VARCHAR(100),
+    sku VARCHAR(50) UNIQUE,
+    barcode VARCHAR(50),
+    price DECIMAL(10, 2) NOT NULL,
+    profit DECIMAL(10, 2) NOT NULL,
+    margin INT NOT NULL,
+    quantity INT NOT NULL,
+    unit VARCHAR(50),
+    image_path VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (vendor_id) REFERENCES Vendors(id)
+);
+```
+
+---
+
+4. Inventory Table
+Manages inventory tracking and stock level alerts.
+
+
+CREATE TABLE Inventory (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT,
+    warehouse_location VARCHAR(100),
+    on_hand INT NOT NULL,
+    low_stock_alert BOOLEAN DEFAULT FALSE,
+    to_be_delivered INT DEFAULT 0,
+    to_be_ordered INT DEFAULT 0,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES Products(id)
+);
+
+
+5. Sales Table
+Tracks sales data, including the quantity sold and product details.
+
+
+CREATE TABLE Sales (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT,
+    quantity INT NOT NULL,
+    sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (product_id) REFERENCES Products(id)
+);
+
+
+6. Inventory Plans Table
+Stores inventory plans and manages stock for events and warehouses.
+
+
+CREATE TABLE InventoryPlans (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    warehouse_location VARCHAR(100),
+    plan_date DATE NOT NULL,
+    total_items INT,
+    discrepancies INT DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'Pending',
+    assigned_to INT,
+    FOREIGN KEY (assigned_to) REFERENCES Users(id)
+);
+```
+
+---
+
+### Entity Relationship Diagram (ERD) Overview
+
+- Users are assigned to manage Inventory Plans.
+- Vendors supply Products.
+- Products are tracked in Inventory.
+- Sales record product transactions.
+- Inventory Plans manage product levels for events and operations.
+
+---
+
+### Sample Queries
+
+1. Fetch low-stock products:
+   ```sql
+   SELECT p.name, i.on_hand
+   FROM Products p
+   JOIN Inventory i ON p.id = i.product_id
+   WHERE i.low_stock_alert = TRUE;
+   ```
+
+2. Get total sales for a specific product:
+   ```sql
+   SELECT p.name, SUM(s.quantity) AS total_sold, SUM(s.total_amount) AS total_revenue
+   FROM Sales s
+   JOIN Products p ON s.product_id = p.id
+   WHERE p.name = 'Chicken Stock'
+   GROUP BY p.name;
+   ```
+
+3. Fetch all products managed by a specific user:
+   ```sql
+   SELECT ip.name, ip.plan_date, u.name AS manager
+   FROM InventoryPlans ip
+   JOIN Users u ON ip.assigned_to = u.id
+   WHERE u.name = 'John Doe';
+   ```
+
+---
+
+### Summary
+
+This schema aligns with the data extracted from the PDF and supports:
+- Employee management (Users)
+- Vendor and product tracking
+- Sales tracking
+- Inventory management with stock alerts
+- Inventory plans for events or warehouse monitoring
+
+
+
+
+
+Based on your outline, here’s a detailed **backend schema** that reflects your requirements. This schema will handle **inventory tracking, product creation, updates, categorization by warehouses, inventory statuses, and detailed product information**.
+
+---
+
+## **Backend Database Schema**
+
+---
+
+### **Entities**
+1. **Products**
+2. **Warehouses**
+3. **Vendors**
+4. **Inventory Tracker**
+5. **Inventory Details**
+6. **Product Updates**
+7. **Users (Account User)**
+
+---
+
+### **Schema Design**
+
+---
+
+#### 1. **Products Table**
+Stores information about individual products, including stock details.
+
+```sql
+CREATE TABLE Products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    vendor_id INT,
+    location VARCHAR(100) NOT NULL,  -- Warehouse location
+    code VARCHAR(20) UNIQUE NOT NULL,
+    sku VARCHAR(50) UNIQUE,
+    barcode VARCHAR(50),
+    media_path VARCHAR(255),  -- Image or Video path
+    price DECIMAL(10, 2) NOT NULL,
+    profit DECIMAL(10, 2) NOT NULL,
+    margin INT NOT NULL,
+    quantity INT NOT NULL,
+    unit VARCHAR(50) NOT NULL,
+    low_stock_alert BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (vendor_id) REFERENCES Vendors(id) ON DELETE SET NULL
+);
+```
+
+---
+
+#### 2. **Vendors Table**
+Stores vendor information.
+
+```sql
+CREATE TABLE Vendors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    contact_email VARCHAR(100),
+    address VARCHAR(255),
+    phone_number VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+#### 3. **Warehouses Table**
+Tracks individual warehouses with product counts and addresses.
+
+```sql
+CREATE TABLE Warehouses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    address VARCHAR(255) NOT NULL,
+    product_count INT DEFAULT 0,
+    item_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+#### 4. **Inventory Tracker Table**
+Manages product statuses such as "Depleting", "Unavailable", or "KIV".
+
+```sql
+CREATE TABLE InventoryTracker (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT,
+    warehouse_id INT,
+    status ENUM('Available', 'Depleting', 'Unavailable', 'KIV') DEFAULT 'Available',
+    inventory_date DATE NOT NULL,
+    progress DECIMAL(5, 2) NOT NULL,  -- Progress bar percentage
+    FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE CASCADE,
+    FOREIGN KEY (warehouse_id) REFERENCES Warehouses(id) ON DELETE CASCADE
+);
+```
+
+---
+
+#### 5. **Inventory Details Table**
+Stores detailed counts and discrepancies for each product during an inventory check.
+
+```sql
+CREATE TABLE InventoryDetails (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    warehouse_id INT,
+    product_id INT,
+    user_id INT,
+    inventory_date DATE NOT NULL,
+    on_hand INT NOT NULL,  -- Quantity currently in stock
+    counted INT NOT NULL,  -- Quantity counted during inventory
+    difference INT NOT NULL,  -- Difference between on_hand and counted
+    FOREIGN KEY (warehouse_id) REFERENCES Warehouses(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE SET NULL
+);
+```
+
+---
+
+#### 6. **Product Updates Table**
+Stores details about product quantity updates.
+
+```sql
+CREATE TABLE ProductUpdates (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT,
+    user_id INT,
+    previous_quantity INT NOT NULL,
+    new_quantity INT NOT NULL,
+    reason VARCHAR(255) NOT NULL,
+    notes TEXT,
+    discrepancies INT NOT NULL,  -- Difference between old and new quantity
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE SET NULL
+);
+```
+
+---
+
+#### 7. **Users Table**
+Stores information about users who manage products and inventory.
+
+```sql
+CREATE TABLE Users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('Admin', 'Manager', 'Staff') DEFAULT 'Staff',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+### **Relationships**
+
+1. **Products** belong to **Warehouses** and **Vendors**.
+2. **Inventory Tracker** monitors product availability in warehouses.
+3. **Inventory Details** track inventory counts, discrepancies, and users responsible for audits.
+4. **Product Updates** capture quantity adjustments with notes and discrepancies.
+
+---
+
+### **Example Queries**
+
+#### 1. **Fetch Products Low in Stock:**
+```sql
+SELECT p.name, p.quantity, p.location, p.low_stock_alert
+FROM Products p
+WHERE p.low_stock_alert = TRUE;
+```
+
+#### 2. **Group Products by Warehouse:**
+```sql
+SELECT w.name AS warehouse_name, COUNT(p.id) AS product_count
+FROM Warehouses w
+JOIN Products p ON p.location = w.name
+GROUP BY w.name;
+```
+
+#### 3. **Get Inventory Details for a Specific Warehouse:**
+```sql
+SELECT p.name, i.on_hand, i.counted, i.difference, u.name AS user
+FROM InventoryDetails i
+JOIN Products p ON i.product_id = p.id
+JOIN Users u ON i.user_id = u.id
+WHERE i.warehouse_id = 1 AND i.inventory_date = '2024-10-14';
+```
+
+#### 4. **List Updated Products with Discrepancies:**
+```sql
+SELECT p.name, pu.previous_quantity, pu.new_quantity, pu.discrepancies, pu.reason, u.name AS user
+FROM ProductUpdates pu
+JOIN Products p ON pu.product_id = p.id
+JOIN Users u ON pu.user_id = u.id
+WHERE pu.discrepancies != 0;
+```
+
+---
+
+### **Summary**
+This schema supports:
+1. **Product management**: creation, updates, and tracking.
+2. **Warehouse categorization**: organizing products by warehouses and locations.
+3. **Inventory tracking**: monitoring product availability, depleting items, and discrepancies.
+4. **Product updates**: tracking quantity changes with detailed notes and reasons.
+5. **Inventory details**: capturing per-warehouse product counts and differences.
+
+This schema aligns with the functionality outlined in your Figma screens and provides the necessary structure for efficient backend operations. Let me know if you need further modifications!
