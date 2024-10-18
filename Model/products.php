@@ -81,7 +81,7 @@ class Product {
     // Return the total number of items
 
     public function getTotalItems(){
-        $query = "SELECT COUNT(*) FROM $this->table";
+        $query = "SELECT COUNT(*) as item_count FROM $this->table";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);  
@@ -90,7 +90,7 @@ class Product {
     // Return total number of low stock alerts 
 
     public function getLowStockAlerts(){
-        $query = "SELECT COUNT(*) FROM $this->table WHERE quantity <= 50";
+        $query = "SELECT COUNT(*) as low_count_alert FROM $this->table WHERE quantity <= 50";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
