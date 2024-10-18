@@ -5,7 +5,6 @@ require_once __DIR__ ."/../db.php";
 class Product {
     private $conn;
     private $table = 'products';
-    private $warehouse = 'warehouse';
 
     public function __construct() {
         $db = new Database();

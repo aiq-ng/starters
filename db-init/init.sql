@@ -11,8 +11,6 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
-
 CREATE TABLE products (
  id INT AUTO_INCREMENT PRIMARY KEY,
  name VARCHAR(100) NOT NULL,
@@ -51,3 +49,17 @@ CREATE TABLE inventory (
   
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 );
+
+CREATE TABLE ProductUpdates (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT,
+    user_id INT,
+    previous_quantity INT NOT NULL,
+    new_quantity INT NOT NULL,
+    reason VARCHAR(255) NOT NULL,
+    notes TEXT,
+    discrepancies INT NOT NULL,  -- Difference between old and new quantity
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+);
+  
