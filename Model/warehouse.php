@@ -29,7 +29,7 @@ class Wh {
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':name', $name);
         $stmt->execute();
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
 }

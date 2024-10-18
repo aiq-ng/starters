@@ -26,6 +26,10 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $_SERVER['REQUEST_URI'] === '/p
 elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $_SERVER['REQUEST_URI'] === '/products') {
     $productController->getAll();
 }
+
+elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $_SERVER['REQUEST_URI'] === '/products/1') {
+    $productController->get($id);
+}
 // Route for getting total number of products
 elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $_SERVER['REQUEST_URI'] === '/products/noofproducts') {
     $productController->getTotalItems();
@@ -51,6 +55,13 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $_SERVER['REQUEST_URI'] === '/pr
     $productController->getWhA();
 }
 
+elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $_SERVER['REQUEST_URI'] === '/products/warehouseb') {
+    $productController->getWhB();
+}
+
+elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $_SERVER['REQUEST_URI'] === '/products/lowstockalertsa') {
+    $productController->getLowStockAlertsA();
+}
 // Route for getting a single product
 elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && preg_match('/\/products\/(\d+)/', $_SERVER['REQUEST_URI'], $matches)) {
     $id = $matches[1];

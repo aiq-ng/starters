@@ -115,14 +115,30 @@ class Product {
     }
 
 
-    //Display all the products in warehouse A
+    //Display the  the products in warehouse A
     public function getWhA(){
-        $query = "SELECT *, COUNT(*) AS product_count FROM $this->table WHERE location = 'Warehouse A'";
+        $query = "SELECT * FROM $this->table WHERE location = 'Warehouse A'";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    //Display the  the products in warehouse B
+
+    public function getWhB(){
+        $query = "SELECT * FROM $this->table WHERE location = 'Warehouse B'";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+        //Display low stock alerts in Warehouse A
+        public function getLowStockAlertsA(){
+            $query = "SELECT * FROM $this->table WHERE quantity <= 50 location = 'Warehouse A'";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        }
 
 
 

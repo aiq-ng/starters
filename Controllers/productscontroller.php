@@ -113,6 +113,14 @@ class ProductsController {
         echo json_encode( $this->product->getWhA());
     }
 
+    //Get all products in warehouse B
+    public function getLowStockAlertsA() {
+        echo json_encode( $this->product->getLowStockAlertsA());
+    }
+
+    public function getWhB() {
+        echo json_encode( $this->product->getWhB());
+    }
     // Update Product
     public function update($id) {
         $data = json_decode(file_get_contents('php://input'), true);

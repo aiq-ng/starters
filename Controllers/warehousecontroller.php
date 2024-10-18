@@ -25,7 +25,7 @@ public function createWh() {
     }
 
 
-// public function getWh($name) {
+// public function getWh() {
 //     echo json_encode($this->wh->getWh($name));
 // }
 
