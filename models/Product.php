@@ -1,16 +1,17 @@
 <?php
 
+namespace Models;
 
-require_once __DIR__ ."/../db.php";
+use Database\Database;
 
 class Product
 {
-    private $conn;
+    private $db;
     private $table = 'products';
 
     public function __construct()
     {
-        $this->conn = Database::getInstance()->getConnection();
+        $this->db = Database::getInstance()->getConnection();
     }
 
     //Create a new Product
@@ -18,7 +19,7 @@ class Product
     public function create($name, $location, $vendor, $code, $sku, $barcode, $price, $quantity, $unit, $media_path)
     {
         $query = "INSERT INTO " . $this->table . "(name, location, vendor, code, sku, barcode, price, quantity, unit, media_path) VALUES (:name, :location, :vendor, :code, :sku, :barcode, :price, :quantity, :unit, :media_path)";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
         $stmt->bindParam(':name', $name);
         $stmt->bindParam(':location', $location);
         $stmt->bindParam(':vendor', $vendor);
@@ -43,7 +44,7 @@ class Product
         $query = "SELECT * FROM " . $this->table;
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
 
@@ -54,7 +55,7 @@ class Product
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 
     // Update a Product
@@ -92,7 +93,7 @@ class Product
         $query = "SELECT COUNT(*) as item_count FROM $this->table";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 
     // Return total number of low stock alerts
@@ -102,7 +103,7 @@ class Product
         $query = "SELECT COUNT(*) as low_count_alert FROM $this->table WHERE quantity <= 50";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 
     //Classify based on warehouses, warehouse A = Cold room, warehouse B = Kitchen
@@ -113,7 +114,7 @@ class Product
         $query = "SELECT location, COUNT(*) AS product_count FROM $this->table WHERE location IN ('Warehouse A', 'Warehouse B') GROUP BY location ORDER BY location";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
     //Display the number of items in both warehouses
     public function getWhItems()
@@ -121,7 +122,7 @@ class Product
         $query = "SELECT location, SUM(quantity) AS quantity_count FROM $this->table WHERE location IN ('Warehouse A', 'Warehouse B') GROUP BY location ORDER BY location";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
 
@@ -131,7 +132,7 @@ class Product
         $query = "SELECT * FROM $this->table WHERE location = 'Warehouse A'";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     //Display the  the products in warehouse B
@@ -141,7 +142,7 @@ class Product
         $query = "SELECT * FROM $this->table WHERE location = 'Warehouse B'";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     //Display low stock alerts in Warehouse A
@@ -150,7 +151,7 @@ class Product
         $query = "SELECT * FROM $this->table WHERE quantity <= 50 location = 'Warehouse A'";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 
 

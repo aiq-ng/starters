@@ -38,3 +38,133 @@ Stack trace:
 #2 /home/odun/starters/index.php(10): require_once('...')
 #3 {main}
   thrown in /home/odun/starters/Model/products.php on line 10
+[19-Oct-2024 21:25:53 UTC] PHP Fatal error:  Uncaught Error: Class "BaseController" not found in /home/odun/starters/Controllers/auth.php:8
+Stack trace:
+#0 /home/odun/starters/Routes/api.php(3): require_once()
+#1 /home/odun/starters/index.php(10): require_once('...')
+#2 {main}
+  thrown in /home/odun/starters/Controllers/auth.php on line 8
+[19-Oct-2024 21:37:35 UTC] PHP Fatal error:  Uncaught Error: Class "Controllers\BaseController" not found in /home/odun/starters/Controllers/auth.php:10
+Stack trace:
+#0 /home/odun/starters/Routes/api.php(3): require_once()
+#1 /home/odun/starters/index.php(10): require_once('...')
+#2 {main}
+  thrown in /home/odun/starters/Controllers/auth.php on line 10
+[19-Oct-2024 21:37:45 UTC] PHP Fatal error:  Uncaught Error: Class "Controllers\BaseController" not found in /home/odun/starters/Controllers/auth.php:10
+Stack trace:
+#0 /home/odun/starters/Routes/api.php(3): require_once()
+#1 /home/odun/starters/index.php(10): require_once('...')
+#2 {main}
+  thrown in /home/odun/starters/Controllers/auth.php on line 10
+[19-Oct-2024 21:42:58 UTC] PHP Fatal error:  Uncaught Error: Class "Controllers\BaseController" not found in /home/odun/starters/Controllers/auth.php:10
+Stack trace:
+#0 /home/odun/starters/Routes/api.php(3): require_once()
+#1 /home/odun/starters/index.php(5): require_once('...')
+#2 {main}
+  thrown in /home/odun/starters/Controllers/auth.php on line 10
+[19-Oct-2024 21:43:03 UTC] PHP Fatal error:  Uncaught Error: Class "Controllers\BaseController" not found in /home/odun/starters/Controllers/auth.php:10
+Stack trace:
+#0 /home/odun/starters/Routes/api.php(3): require_once()
+#1 /home/odun/starters/index.php(5): require_once('...')
+#2 {main}
+  thrown in /home/odun/starters/Controllers/auth.php on line 10
+[19-Oct-2024 21:43:14 UTC] PHP Fatal error:  Uncaught Error: Class "Controllers\BaseController" not found in /home/odun/starters/Controllers/auth.php:10
+Stack trace:
+#0 /home/odun/starters/Routes/api.php(3): require_once()
+#1 /home/odun/starters/index.php(5): require_once('...')
+#2 {main}
+  thrown in /home/odun/starters/Controllers/auth.php on line 10
+[19-Oct-2024 21:43:16 UTC] PHP Fatal error:  Uncaught Error: Class "Controllers\BaseController" not found in /home/odun/starters/Controllers/auth.php:10
+Stack trace:
+#0 /home/odun/starters/Routes/api.php(3): require_once()
+#1 /home/odun/starters/index.php(5): require_once('...')
+#2 {main}
+  thrown in /home/odun/starters/Controllers/auth.php on line 10
+[19-Oct-2024 21:47:30 UTC] PHP Fatal error:  Uncaught Error: Class "Controllers\BaseController" not found in /home/odun/starters/Controllers/auth.php:9
+Stack trace:
+#0 /home/odun/starters/Routes/api.php(3): require_once()
+#1 /home/odun/starters/index.php(5): require_once('...')
+#2 {main}
+  thrown in /home/odun/starters/Controllers/auth.php on line 9
+[19-Oct-2024 22:03:34 UTC] PHP Warning:  require_once(/home/odun/starters/Routes/api.php): Failed to open stream: No such file or directory in /home/odun/starters/index.php on line 5
+[19-Oct-2024 22:03:34 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/odun/starters/Routes/api.php' (include_path='.:/usr/share/php') in /home/odun/starters/index.php:5
+Stack trace:
+#0 {main}
+  thrown in /home/odun/starters/index.php on line 5
+[19-Oct-2024 22:07:38 UTC] PHP Warning:  require_once(/home/odun/starters/routes/../Controllers/auth.php): Failed to open stream: No such file or directory in /home/odun/starters/routes/api.php on line 3
+[19-Oct-2024 22:07:38 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/odun/starters/routes/../Controllers/auth.php' (include_path='.:/usr/share/php') in /home/odun/starters/routes/api.php:3
+Stack trace:
+#0 /home/odun/starters/index.php(11): require_once()
+#1 {main}
+  thrown in /home/odun/starters/routes/api.php on line 3
+[19-Oct-2024 22:09:11 UTC] PHP Fatal error:  Uncaught Error: Class "Controllers\AuthController" not found in /home/odun/starters/routes/api.php:7
+Stack trace:
+#0 /home/odun/starters/index.php(11): require_once()
+#1 {main}
+  thrown in /home/odun/starters/routes/api.php on line 7
+[19-Oct-2024 22:12:25 UTC] PHP Fatal error:  Uncaught Error: Class "Model\User" not found in /home/odun/starters/controllers/AuthController.php:16
+Stack trace:
+#0 /home/odun/starters/routes/api.php(7): Controllers\AuthController->__construct()
+#1 /home/odun/starters/index.php(11): require_once('...')
+#2 {main}
+  thrown in /home/odun/starters/controllers/AuthController.php on line 16
+[19-Oct-2024 22:14:34 UTC] PHP Fatal error:  Uncaught Error: Class "Models\User" not found in /home/odun/starters/controllers/AuthController.php:16
+Stack trace:
+#0 /home/odun/starters/routes/api.php(7): Controllers\AuthController->__construct()
+#1 /home/odun/starters/index.php(11): require_once('...')
+#2 {main}
+  thrown in /home/odun/starters/controllers/AuthController.php on line 16
+[19-Oct-2024 22:15:06 UTC] PHP Fatal error:  Uncaught Error: Class "Models\User" not found in /home/odun/starters/controllers/AuthController.php:16
+Stack trace:
+#0 /home/odun/starters/routes/api.php(7): Controllers\AuthController->__construct()
+#1 /home/odun/starters/index.php(11): require_once('...')
+#2 {main}
+  thrown in /home/odun/starters/controllers/AuthController.php on line 16
+[19-Oct-2024 22:15:08 UTC] PHP Fatal error:  Uncaught Error: Class "Models\User" not found in /home/odun/starters/controllers/AuthController.php:16
+Stack trace:
+#0 /home/odun/starters/routes/api.php(7): Controllers\AuthController->__construct()
+#1 /home/odun/starters/index.php(11): require_once('...')
+#2 {main}
+  thrown in /home/odun/starters/controllers/AuthController.php on line 16
+[19-Oct-2024 22:15:17 UTC] PHP Fatal error:  Uncaught Error: Class "Models\User" not found in /home/odun/starters/controllers/AuthController.php:16
+Stack trace:
+#0 /home/odun/starters/routes/api.php(7): Controllers\AuthController->__construct()
+#1 /home/odun/starters/index.php(11): require_once('...')
+#2 {main}
+  thrown in /home/odun/starters/controllers/AuthController.php on line 16
+[19-Oct-2024 22:15:19 UTC] PHP Fatal error:  Uncaught Error: Class "Models\User" not found in /home/odun/starters/controllers/AuthController.php:16
+Stack trace:
+#0 /home/odun/starters/routes/api.php(7): Controllers\AuthController->__construct()
+#1 /home/odun/starters/index.php(11): require_once('...')
+#2 {main}
+  thrown in /home/odun/starters/controllers/AuthController.php on line 16
+[19-Oct-2024 22:16:27 UTC] PHP Warning:  require_once(/home/odun/starters/database/vendor/autoload.php): Failed to open stream: No such file or directory in /home/odun/starters/database/Database.php on line 5
+[19-Oct-2024 22:16:27 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/odun/starters/database/vendor/autoload.php' (include_path='.:/usr/share/php') in /home/odun/starters/database/Database.php:5
+Stack trace:
+#0 /home/odun/starters/vendor/composer/ClassLoader.php(576): include()
+#1 /home/odun/starters/vendor/composer/ClassLoader.php(427): Composer\Autoload\{closure}()
+#2 /home/odun/starters/models/User.php(14): Composer\Autoload\ClassLoader->loadClass()
+#3 /home/odun/starters/controllers/AuthController.php(16): Models\User->__construct()
+#4 /home/odun/starters/routes/api.php(7): Controllers\AuthController->__construct()
+#5 /home/odun/starters/index.php(11): require_once('...')
+#6 {main}
+  thrown in /home/odun/starters/database/Database.php on line 5
+[19-Oct-2024 22:16:51 UTC] PHP Fatal error:  Uncaught Error: Class "Controllers\ProductsController" not found in /home/odun/starters/routes/api.php:8
+Stack trace:
+#0 /home/odun/starters/index.php(11): require_once()
+#1 {main}
+  thrown in /home/odun/starters/routes/api.php on line 8
+[19-Oct-2024 22:39:11 UTC] PHP Fatal error:  Uncaught TypeError: call_user_func(): Argument #1 ($callback) must be a valid callback, non-static method Controllers\AuthController::register() cannot be called statically in /home/odun/starters/routes/api.php:52
+Stack trace:
+#0 /home/odun/starters/index.php(11): require_once()
+#1 {main}
+  thrown in /home/odun/starters/routes/api.php on line 52
+[19-Oct-2024 22:42:38 UTC] PHP Fatal error:  Namespace declaration statement has to be the very first statement or after any declare call in the script in /home/odun/starters/controllers/ProductController.php on line 4
+[19-Oct-2024 22:48:51 UTC] PHP Fatal error:  Namespace declaration statement has to be the very first statement or after any declare call in the script in /home/odun/starters/controllers/ProductController.php on line 4
+[19-Oct-2024 22:49:12 UTC] PHP Fatal error:  Namespace declaration statement has to be the very first statement or after any declare call in the script in /home/odun/starters/controllers/ProductController.php on line 4
+[19-Oct-2024 22:50:33 UTC] PHP Fatal error:  Namespace declaration statement has to be the very first statement or after any declare call in the script in /home/odun/starters/controllers/ProductController.php on line 4
+[19-Oct-2024 22:50:39 UTC] PHP Fatal error:  Namespace declaration statement has to be the very first statement or after any declare call in the script in /home/odun/starters/controllers/ProductController.php on line 4
+[19-Oct-2024 22:52:11 UTC] PHP Fatal error:  Namespace declaration statement has to be the very first statement or after any declare call in the script in /home/odun/starters/controllers/ProductController.php on line 4
+[19-Oct-2024 22:52:36 UTC] PHP Fatal error:  Namespace declaration statement has to be the very first statement or after any declare call in the script in /home/odun/starters/controllers/ProductController.php on line 4
+[19-Oct-2024 22:53:25 UTC] PHP Fatal error:  Namespace declaration statement has to be the very first statement or after any declare call in the script in /home/odun/starters/controllers/ProductController.php on line 4
+[19-Oct-2024 22:56:46 UTC] PHP Fatal error:  Namespace declaration statement has to be the very first statement or after any declare call in the script in /home/odun/starters/controllers/WarehouseController.php on line 4

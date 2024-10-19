@@ -1,17 +1,18 @@
 <?php
 
-require_once __DIR__ ."/../db.php";
+namespace Models;
 
+use Database\Database;
 
 class Inventory
 {
-    private $conn;
+    private $db;
 
     private $table = 'inventory';
 
     public function __construct()
     {
-        $this->conn = Database::getInstance()->getConnection();
+        $this->db = Database::getInstance()->getConnection();
 
     }
 

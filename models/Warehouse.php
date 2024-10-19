@@ -1,17 +1,18 @@
 <?php
 
+namespace Models;
 
-require_once __DIR__ ."/../db.php";
+use Database\Database;
 
-class Wh
+class Warehouse
 {
-    private $conn;
+    private $db;
 
     private $warehouse = 'warehouses';
 
     public function __construct()
     {
-        $this->conn = Database::getInstance()->getConnection();
+        $this->db = Database::getInstance()->getConnection();
     }
 
 
@@ -20,7 +21,7 @@ class Wh
     public function createWh($name, $address)
     {
         $query = "INSERT INTO " . $this->warehouse . "(name, address) VALUES (:name, :address)";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
         $stmt->bindParam(':name', $name);
         $stmt->bindParam(':address', $address);
         return $stmt->execute();
@@ -30,10 +31,10 @@ class Wh
     public function getWh($name)
     {
         $query = 'SELECT * FROM $this->warehouse WHERE name = :name';
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
         $stmt->bindParam(':name', $name);
         $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 
 }

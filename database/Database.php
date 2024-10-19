@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/vendor/autoload.php';
+namespace Database;
 
 class Database
 {
@@ -23,10 +23,9 @@ class Database
         try {
             // Create the PDO connection string
             $dsn = "pgsql:host={$this->host};port={$this->port};dbname={$this->db_name};";
-            $this->conn = new PDO($dsn, $this->user, $this->password);
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            echo "DB Connected successfully";
-        } catch (PDOException $exception) {
+            $this->conn = new \PDO($dsn, $this->user, $this->password);
+            $this->conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        } catch (\PDOException $exception) {
             echo "Connection failed: " . $exception->getMessage();
         }
     }
