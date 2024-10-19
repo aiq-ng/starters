@@ -24,3 +24,17 @@ Stack trace:
 #4 {main}
   thrown in /home/odun/starters/db.php on line 20
 [19-Oct-2024 15:41:02 UTC] PHP Warning:  file_get_contents(/home/odun/starters.env): Failed to open stream: No such file or directory in /home/odun/starters/loadenv.php on line 5
+[19-Oct-2024 18:45:18 UTC] PHP Fatal error:  Uncaught Error: Call to private Database::__construct() from scope User in /home/odun/starters/Model/user.php:9
+Stack trace:
+#0 /home/odun/starters/Controllers/auth.php(12): User->__construct()
+#1 /home/odun/starters/Routes/api.php(8): AuthController->__construct()
+#2 /home/odun/starters/index.php(10): require_once('...')
+#3 {main}
+  thrown in /home/odun/starters/Model/user.php on line 9
+[19-Oct-2024 18:47:59 UTC] PHP Fatal error:  Uncaught Error: Call to private Database::__construct() from scope Product in /home/odun/starters/Model/products.php:10
+Stack trace:
+#0 /home/odun/starters/Controllers/productscontroller.php(11): Product->__construct()
+#1 /home/odun/starters/Routes/api.php(9): ProductsController->__construct()
+#2 /home/odun/starters/index.php(10): require_once('...')
+#3 {main}
+  thrown in /home/odun/starters/Model/products.php on line 10

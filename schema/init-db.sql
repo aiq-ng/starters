@@ -1,27 +1,23 @@
-CREATE DATABASE IF NOT EXISTS startersDB;
-
-USE startersDB;
-
 -- Table to store user roles
-CREATE TABLE IF NOT EXISTS roles (
+CREATE TABLE roles (
 	id SERIAL PRIMARY KEY,
 	name VARCHAR(50) UNIQUE NOT NULL
 );
 
 -- Table to store user details
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE users (
 	id SERIAL PRIMARY KEY,
 	name VARCHAR(255) NOT NULL,
 	email VARCHAR(255) UNIQUE NOT NULL,
 	password VARCHAR(255) NOT NULL,
 	role_id INT DEFAULT 3,
 	avatar_url TEXT,
-	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET DEFAULT
+	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT fk_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET DEFAULT
 );
 
 -- Table to store information about products
-CREATE TABLE IF NOT EXISTS products (
+CREATE TABLE products (
 	id SERIAL PRIMARY KEY,
 	code VARCHAR(50) UNIQUE NOT NULL,
 	name VARCHAR(255) NOT NULL,
@@ -39,14 +35,14 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 -- Table to store information about warehouses
-CREATE TABLE IF NOT EXISTS warehouses (
+CREATE TABLE warehouses (
 	id SERIAL PRIMARY KEY,
 	name VARCHAR(255) NOT NULL,
 	location TEXT NOT NULL
 );
 
 -- Table to manage stock levels of products within warehouses
-CREATE TABLE IF NOT EXISTS inventory (
+CREATE TABLE inventory (
 	id SERIAL PRIMARY KEY,
 	product_id INT REFERENCES products(id) ON DELETE CASCADE,
 	warehouse_id INT REFERENCES warehouses(id) ON DELETE CASCADE,
@@ -58,7 +54,7 @@ CREATE TABLE IF NOT EXISTS inventory (
 );
 
 -- Table to manage inventory plans
-CREATE TABLE IF NOT EXISTS inventory_plans (
+CREATE TABLE inventory_plans (
 	id SERIAL PRIMARY KEY,
 	name VARCHAR(255) NOT NULL,
 	inventory_date DATE NOT NULL,
@@ -68,7 +64,7 @@ CREATE TABLE IF NOT EXISTS inventory_plans (
 );
 
 -- Linking inventory plans with specific products
-CREATE TABLE IF NOT EXISTS inventory_plan_items (
+CREATE TABLE inventory_plan_items (
 	id SERIAL PRIMARY KEY,
 	inventory_plan_id INT REFERENCES inventory_plans(id) ON DELETE CASCADE,
 	product_id INT REFERENCES products(id) ON DELETE CASCADE,
@@ -79,7 +75,7 @@ CREATE TABLE IF NOT EXISTS inventory_plan_items (
 );
 
 -- Table for vendors information
-CREATE TABLE IF NOT EXISTS vendors (
+CREATE TABLE vendors (
 	id SERIAL PRIMARY KEY,
 	name VARCHAR(255) NOT NULL,
 	email VARCHAR(255),
@@ -88,19 +84,20 @@ CREATE TABLE IF NOT EXISTS vendors (
 );
 
 -- Linking products with vendors
-CREATE TABLE IF NOT EXISTS product_vendors (
+CREATE TABLE product_vendors (
 	id SERIAL PRIMARY KEY,
 	product_id INT REFERENCES products(id) ON DELETE CASCADE,
 	vendor_id INT REFERENCES vendors(id) ON DELETE CASCADE,
 	UNIQUE (product_id, vendor_id)
 );
 
--- Table to track inventory activities by employees
-CREATE TABLE IF NOT EXISTS inventory_activities (
-	id SERIAL PRIMARY KEY,
-	inventory_plan_id INT REFERENCES inventory_plans(id) ON DELETE CASCADE,
-	employee_id INT REFERENCES employees(id) ON DELETE CASCADE,
-	action VARCHAR(50) CHECK (action IN ('create', 'update', 'complete')),
-	timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+-- Table to track inventory activities by users
+CREATE TABLE inventory_activities (
+    id SERIAL PRIMARY KEY,
+    inventory_plan_id INT REFERENCES inventory_plans(id) ON DELETE CASCADE,
+    user_id INT,
+    action VARCHAR(50) CHECK (action IN ('create', 'update', 'complete')),
+    timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 

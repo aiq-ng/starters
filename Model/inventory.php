@@ -3,15 +3,16 @@
 require_once __DIR__ ."/../db.php";
 
 
-class Inventory {
-
+class Inventory
+{
     private $conn;
-    
+
     private $table = 'inventory';
 
-    public function __construct() {
-        $db = new Database();
-        $this->conn = $db->getConnection();
+    public function __construct()
+    {
+        $this->conn = Database::getInstance()->getConnection();
+
     }
 
     // public function {}

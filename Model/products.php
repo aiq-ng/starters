@@ -1,19 +1,22 @@
-<?php 
+<?php
+
 
 require_once __DIR__ ."/../db.php";
 
-class Product {
+class Product
+{
     private $conn;
     private $table = 'products';
 
-    public function __construct() {
-        $db = new Database();
-        $this->conn = $db->getConnection();
+    public function __construct()
+    {
+        $this->conn = Database::getInstance()->getConnection();
     }
 
     //Create a new Product
 
-    public function create($name, $location, $vendor, $code, $sku, $barcode, $price, $quantity, $unit, $media_path) {
+    public function create($name, $location, $vendor, $code, $sku, $barcode, $price, $quantity, $unit, $media_path)
+    {
         $query = "INSERT INTO " . $this->table . "(name, location, vendor, code, sku, barcode, price, quantity, unit, media_path) VALUES (:name, :location, :vendor, :code, :sku, :barcode, :price, :quantity, :unit, :media_path)";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':name', $name);
@@ -29,13 +32,14 @@ class Product {
         return $stmt->execute();
     }
 
-    
 
 
-   
 
-      // Get All Products
-      public function getAll() {
+
+
+    // Get All Products
+    public function getAll()
+    {
         $query = "SELECT * FROM " . $this->table;
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -44,7 +48,8 @@ class Product {
 
 
     // Get Single Product
-    public function get($id) {
+    public function get($id)
+    {
         $query = "SELECT * FROM $this->table WHERE id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id);
@@ -53,7 +58,8 @@ class Product {
     }
 
     // Update a Product
-    public function update($id, $name, $location, $vendor, $code, $price, $profit, $margin, $quantity, $unit, $image_path) {
+    public function update($id, $name, $location, $vendor, $code, $price, $profit, $margin, $quantity, $unit, $image_path)
+    {
         $query = "UPDATE ". $this->table. " SET name = :name, location = :location, vendor = :vendor, code = :code, price = :price, profit = :profit, margin = :margin, quantity = :quantity, unit = :unit, image_path = :image_path WHERE id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':name', $name);
@@ -66,12 +72,13 @@ class Product {
         $stmt->bindParam(':quantity', $quantity);
         $stmt->bindParam(':unit', $unit);
         $stmt->bindParam(':image_path', $image_path);
-        $stmt->bindParam(':id', $id); 
+        $stmt->bindParam(':id', $id);
         return $stmt->execute();
     }
 
-      // Delete Product
-      public function delete($id) {
+    // Delete Product
+    public function delete($id)
+    {
         $query = "DELETE FROM $this->table WHERE id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id);
@@ -80,16 +87,18 @@ class Product {
 
     // Return the total number of items
 
-    public function getTotalItems(){
+    public function getTotalItems()
+    {
         $query = "SELECT COUNT(*) as item_count FROM $this->table";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);  
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Return total number of low stock alerts 
+    // Return total number of low stock alerts
 
-    public function getLowStockAlerts(){
+    public function getLowStockAlerts()
+    {
         $query = "SELECT COUNT(*) as low_count_alert FROM $this->table WHERE quantity <= 50";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -98,15 +107,17 @@ class Product {
 
     //Classify based on warehouses, warehouse A = Cold room, warehouse B = Kitchen
 
-    //Display the number of products in both warehouse 
-    public function getWhNo(){
+    //Display the number of products in both warehouse
+    public function getWhNo()
+    {
         $query = "SELECT location, COUNT(*) AS product_count FROM $this->table WHERE location IN ('Warehouse A', 'Warehouse B') GROUP BY location ORDER BY location";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     //Display the number of items in both warehouses
-    public function getWhItems(){
+    public function getWhItems()
+    {
         $query = "SELECT location, SUM(quantity) AS quantity_count FROM $this->table WHERE location IN ('Warehouse A', 'Warehouse B') GROUP BY location ORDER BY location";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -115,7 +126,8 @@ class Product {
 
 
     //Display the  the products in warehouse A
-    public function getWhA(){
+    public function getWhA()
+    {
         $query = "SELECT * FROM $this->table WHERE location = 'Warehouse A'";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
@@ -124,25 +136,27 @@ class Product {
 
     //Display the  the products in warehouse B
 
-    public function getWhB(){
+    public function getWhB()
+    {
         $query = "SELECT * FROM $this->table WHERE location = 'Warehouse B'";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-        //Display low stock alerts in Warehouse A
-        public function getLowStockAlertsA(){
-            $query = "SELECT * FROM $this->table WHERE quantity <= 50 location = 'Warehouse A'";
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        }
+    //Display low stock alerts in Warehouse A
+    public function getLowStockAlertsA()
+    {
+        $query = "SELECT * FROM $this->table WHERE quantity <= 50 location = 'Warehouse A'";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 
 
 
-    
-   
+
+
 
 
 

@@ -1,5 +1,3 @@
-use startersDB;
-
 -- Insert default roles
 INSERT INTO roles (name) VALUES
 ('Admin'),
@@ -7,7 +5,7 @@ INSERT INTO roles (name) VALUES
 ('Staff');
 
 -- Seed data for users
-INSERT INTO users (name, email, password, role, avatar_url) VALUES
+INSERT INTO users (name, email, password, role_id, avatar_url) VALUES
 ('Alice Johnson', 'alice@example.com', 'password123', 1, 'https://example.com/avatars/alice.jpg'),
 ('Bob Smith', 'bob@example.com', 'password123', 2, 'https://example.com/avatars/bob.jpg'),
 ('Charlie Brown', 'charlie@example.com', 'password123', 3, 'https://example.com/avatars/charlie.jpg');
@@ -55,7 +53,7 @@ VALUES
 (2, 2);
 
 -- Seed data for inventory activities
-INSERT INTO inventory_activities (inventory_plan_id, employee_id, action)
+INSERT INTO inventory_activities (inventory_plan_id, user_id, action)
 VALUES
 (1, 1, 'create'),
 (2, 2, 'update');

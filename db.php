@@ -4,25 +4,21 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 class Database
 {
+    private static $instance = null;
+    private $conn;
     private $host;
     private $db_name;
     private $username;
     private $password;
     private $port;
-    private $conn;
 
-    public function __construct()
+    private function __construct()
     {
         $this->host = getenv('DB_HOST');
         $this->db_name = getenv('DB_NAME');
         $this->username = getenv('DB_USERNAME');
         $this->password = getenv('DB_PASSWORD');
         $this->port = getenv('DB_PORT');
-    }
-
-    public function getConnection()
-    {
-        $this->conn = null;
 
         try {
             // Create the PDO connection string
@@ -33,6 +29,21 @@ class Database
         } catch (PDOException $exception) {
             echo "Connection failed: " . $exception->getMessage();
         }
+    }
+
+    // Singleton method to get the instance
+    public static function getInstance()
+    {
+        if (!self::$instance) {
+            self::$instance = new Database();
+        }
+        return self::$instance;
+    }
+
+    public function getConnection()
+    {
         return $this->conn;
     }
 }
+
+$db = Database::getInstance()->getConnection();

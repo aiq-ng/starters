@@ -1,21 +1,24 @@
-<?php 
+<?php
+
 
 require_once __DIR__ ."/../db.php";
 
-class Wh {
+class Wh
+{
     private $conn;
 
     private $warehouse = 'warehouses';
 
-    public function __construct() {
-        $db = new Database();
-        $this->conn = $db->getConnection();
+    public function __construct()
+    {
+        $this->conn = Database::getInstance()->getConnection();
     }
 
-    
+
     //Create Warehouse and Store Address
 
-    public function createWh($name, $address) {
+    public function createWh($name, $address)
+    {
         $query = "INSERT INTO " . $this->warehouse . "(name, address) VALUES (:name, :address)";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':name', $name);
@@ -24,7 +27,8 @@ class Wh {
     }
 
     //Get Warehouse information
-    public function getWh($name) {
+    public function getWh($name)
+    {
         $query = 'SELECT * FROM $this->warehouse WHERE name = :name';
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':name', $name);

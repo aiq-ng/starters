@@ -4,6 +4,7 @@
 run_sql_scripts() {
 	echo "Running SQL scripts in order..."
 	sql_files=(
+		"/workspace/starters/schema/drop-tables.sql"
 		"/workspace/starters/schema/init-db.sql"
 		"/workspace/starters/schema/init_data.sql"
 	)
@@ -11,7 +12,7 @@ run_sql_scripts() {
 	for sql_file in "${sql_files[@]}"; do
 		if [ -f "$sql_file" ]; then
 			echo "Executing $sql_file"
-			psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -f "$sql_file"
+			PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -f "$sql_file"
 		else
 			echo "SQL file not found: $sql_file"
 		fi
