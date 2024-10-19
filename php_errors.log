@@ -1,0 +1,26 @@
+[19-Oct-2024 15:22:28 UTC] PHP Fatal error:  Uncaught Error: Class "Dotenv\Dotenv\Dotenv" not found in /home/odun/starters/db.php:19
+Stack trace:
+#0 /home/odun/starters/Model/user.php(9): Database->__construct()
+#1 /home/odun/starters/Controllers/auth.php(12): User->__construct()
+#2 /home/odun/starters/Routes/api.php(8): AuthController->__construct()
+#3 /home/odun/starters/index.php(7): require_once('...')
+#4 {main}
+  thrown in /home/odun/starters/db.php on line 19
+[19-Oct-2024 15:24:41 UTC] PHP Warning:  require_once(/home/odun/startersvendor/autoload.php): Failed to open stream: No such file or directory in /home/odun/starters/db.php on line 3
+[19-Oct-2024 15:24:41 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/odun/startersvendor/autoload.php' (include_path='.:/usr/share/php') in /home/odun/starters/db.php:3
+Stack trace:
+#0 /home/odun/starters/Model/user.php(2): require_once()
+#1 /home/odun/starters/Controllers/auth.php(3): require_once('...')
+#2 /home/odun/starters/Routes/api.php(2): require_once('...')
+#3 /home/odun/starters/index.php(7): require_once('...')
+#4 {main}
+  thrown in /home/odun/starters/db.php on line 3
+[19-Oct-2024 15:25:00 UTC] PHP Fatal error:  Uncaught Error: Class "Dotenv\Dotenv\Dotenv" not found in /home/odun/starters/db.php:20
+Stack trace:
+#0 /home/odun/starters/Model/user.php(9): Database->__construct()
+#1 /home/odun/starters/Controllers/auth.php(12): User->__construct()
+#2 /home/odun/starters/Routes/api.php(8): AuthController->__construct()
+#3 /home/odun/starters/index.php(7): require_once('...')
+#4 {main}
+  thrown in /home/odun/starters/db.php on line 20
+[19-Oct-2024 15:41:02 UTC] PHP Warning:  file_get_contents(/home/odun/starters.env): Failed to open stream: No such file or directory in /home/odun/starters/loadenv.php on line 5

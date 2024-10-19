@@ -1,32 +1,39 @@
+FROM php:8.3-cli
 
-FROM php:8.1-apache
+# Install required packages
+# Install required packages
+RUN apt-get update && \
+    apt-get install -y \
+        libzip-dev \
+        libpng-dev \
+        libjpeg-dev \
+        libfreetype6-dev \
+        unzip \
+        postgresql-client \
+        libpq-dev \ 
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd mysqli pdo pdo_mysql pdo_pgsql zip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y \
-    libzip-dev \
-    unzip \
-    && docker-php-ext-install zip
+# Set the working directory
+WORKDIR /workspace/starters
 
+# Copy the application files to the working directory
+COPY . .
 
-RUN docker-php-ext-install mysqli pdo pdo_mysql
+# Install Composer globally
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Copy the entrypoint script
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
-RUN a2enmod rewrite
+# Make the script executable
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-RUN docker-php-ext-install mysqli pdo pdo_mysql
+# Expose the port
+EXPOSE 8000
 
-WORKDIR /var/www/html
-
-COPY . /var/www/html
-
-RUN composer install
-
-RUN chown -R www-data:www-data /var/www/html
-
-EXPOSE 80
-
-CMD ["apache2-foreground"]
-
-
-
+# Set the entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 

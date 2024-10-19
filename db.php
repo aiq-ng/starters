@@ -1,24 +1,38 @@
 <?php
 
-class Database {
-    private $host = "db";
-    private $db_name = "inventory_db";
-    private $username = "root";
-    private $password = "rootpassword";
+require_once __DIR__ . '/vendor/autoload.php';
+
+class Database
+{
+    private $host;
+    private $db_name;
+    private $username;
+    private $password;
+    private $port;
     private $conn;
 
-
-public function getConnection() {
-    $this->conn = null;
-
-    try {
-        $this->conn = new PDO("mysql:host=". $this->host. ";dbname=". $this->db_name, $this->username, $this->password);
-        $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    public function __construct()
+    {
+        $this->host = getenv('DB_HOST');
+        $this->db_name = getenv('DB_NAME');
+        $this->username = getenv('DB_USERNAME');
+        $this->password = getenv('DB_PASSWORD');
+        $this->port = getenv('DB_PORT');
     }
-    catch(PDOException $exception) {
-        echo "Connection failed: ". $exception->getMessage();
-    }
-    return $this->conn;
-}
 
+    public function getConnection()
+    {
+        $this->conn = null;
+
+        try {
+            // Create the PDO connection string
+            $dsn = "pgsql:host={$this->host};port={$this->port};dbname={$this->db_name};";
+            $this->conn = new PDO($dsn, $this->username, $this->password);
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            echo "DB Connected successfully";
+        } catch (PDOException $exception) {
+            echo "Connection failed: " . $exception->getMessage();
+        }
+        return $this->conn;
+    }
 }
