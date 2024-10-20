@@ -105,25 +105,23 @@ class Product
     {
         $offset = ($page - 1) * $pageSize;
 
-        $countQuery = "SELECT COUNT(*) as total FROM $this->table";
-        $countStmt = $this->db->query($countQuery);
-        $total = $countStmt->fetchColumn();
+        $total = $this->countProduct();
 
         $query = "
-        SELECT 
-            p.id,
-            p.code,
-            p.name,
-            p.price,
-            p.low_stock_alert,
-            i.on_hand || ' ' || u.name || CASE WHEN i.on_hand > 1 THEN 's' ELSE '' END AS on_hand,
-            i.warehouse_id,
-            p.media
-        FROM $this->table p
-        LEFT JOIN inventory i ON p.id = i.product_id
-        LEFT JOIN units u ON p.unit_id = u.id
-        LIMIT :pageSize OFFSET :offset
-    ";
+		SELECT 
+			p.id,
+			p.code,
+			p.name,
+			p.price,
+			p.low_stock_alert,
+			i.on_hand || ' ' || u.name || CASE WHEN i.on_hand > 1 THEN 's' ELSE '' END AS on_hand,
+			i.warehouse_id,
+			p.media
+		FROM $this->table p
+		LEFT JOIN inventory i ON p.id = i.product_id
+		LEFT JOIN units u ON p.unit_id = u.id
+		LIMIT :pageSize OFFSET :offset
+	";
 
         $stmt = $this->db->prepare($query);
         $stmt->bindValue(':pageSize', $pageSize, \PDO::PARAM_INT);
@@ -150,6 +148,91 @@ class Product
         ];
     }
 
+    public function getTotalUnitCount($filter = [])
+    {
+        $query = "
+            SELECT 
+                SUM(i.on_hand) AS total_items,
+                COUNT(CASE WHEN p.low_stock_alert = true THEN 1 END) AS low_stock_alerts,
+                SUM(i.to_be_delivered) AS total_to_be_delivered,
+                SUM(i.to_be_ordered) AS total_to_be_ordered
+            FROM $this->table p
+            LEFT JOIN inventory i ON p.id = i.product_id
+            LEFT JOIN units u ON p.unit_id = u.id
+            ";
+
+        $conditions = [];
+        $bindings = [];
+
+        // Low Stock Filter (Only affects low_stock_alerts count)
+        if (isset($filter['low_stock']) && $filter['low_stock'] === true) {
+            $conditions[] = "p.low_stock_alert = true";
+        }
+
+        // Warehouse ID Filter
+        if (isset($filter['warehouse_id'])) {
+            $conditions[] = "i.warehouse_id = :warehouse_id";
+            $bindings[':warehouse_id'] = $filter['warehouse_id'];
+        }
+
+        // Optional Unit ID Filter
+        if (isset($filter['unit_id'])) {
+            $conditions[] = "u.id = :unit_id";
+            $bindings[':unit_id'] = $filter['unit_id'];
+        }
+
+        // Apply Conditions
+        if (!empty($conditions)) {
+            $query .= " WHERE " . implode(" AND ", $conditions);
+        }
+
+        $countStmt = $this->db->prepare($query);
+
+        // Bind Values
+        foreach ($bindings as $key => $value) {
+            $countStmt->bindValue($key, $value);
+        }
+
+        $countStmt->execute();
+
+        // Return results directly
+        return $countStmt->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    public function countProduct($filter = [])
+    {
+        $query = "
+            SELECT COUNT(*) AS total 
+            FROM $this->table p
+            LEFT JOIN units u ON p.unit_id = u.id
+            ";
+
+        $conditions = [];
+        $bindings = [];
+
+        // Optional Unit ID Filter
+        if (isset($filter['unit_id'])) {
+            $conditions[] = "u.id = :unit_id";
+            $bindings[':unit_id'] = $filter['unit_id'];
+        }
+
+        // Apply Conditions
+        if (!empty($conditions)) {
+            $query .= " WHERE " . implode(" AND ", $conditions);
+        }
+
+        $countStmt = $this->db->prepare($query);
+
+        // Bind Values
+        foreach ($bindings as $key => $value) {
+            $countStmt->bindValue($key, $value);
+        }
+
+        $countStmt->execute();
+
+        // Return the count
+        return $countStmt->fetchColumn();
+    }
 
 
 

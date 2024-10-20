@@ -75,6 +75,31 @@ class ProductController extends BaseController
         }
     }
 
+    public function count()
+    {
+        // Define available filters and map query parameters to them
+        $filterParams = [
+            'low_stock' => isset($_GET['low_stock']) ? (bool)$_GET['low_stock'] : null,
+            'warehouse_id' => isset($_GET['warehouse_id']) ? (int)$_GET['warehouse_id'] : null,
+            'to_be_delivered' => isset($_GET['to_be_delivered']) ? (bool)$_GET['to_be_delivered'] : null,
+            'to_be_ordered' => isset($_GET['to_be_ordered']) ? (bool)$_GET['to_be_ordered'] : null,
+            'unit_id' => isset($_GET['unit_id']) ? (int)$_GET['unit_id'] : null,
+        ];
+
+        error_log(print_r($filterParams, true));
+
+        // Remove null values from filters
+        $filters = array_filter($filterParams, function ($value) {
+            return $value !== null;
+        });
+
+        // Get the product count based on the filters
+        $totalCount = $this->product->getTotalUnitCount($filters);
+
+        // Send the response with the total count
+        $this->sendResponse('Success', 200, ['total' => $totalCount]);
+    }
+
     public function getVendors()
     {
         $result = $this->fetchVendors();

@@ -20,6 +20,7 @@ $routes = [
         '/auth/logout' => [$authController, 'logout'],
         '/roles' => [$authController, 'getRoles'],
         '/products' => [$productController, 'index'],
+        '/products/count' => [$productController, 'count'],
         '/vendors' => [$productController, 'getVendors'],
         '/units' => [$productController, 'getUnits'],
         '/products/lowstockalerts' => [$productController, 'getLowStockAlerts'],
