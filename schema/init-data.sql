@@ -4,6 +4,15 @@ INSERT INTO roles (name) VALUES
 ('Manager'),
 ('Staff');
 
+-- Seed data for units
+INSERT INTO units (name, abbreviation) VALUES
+('Item', 'pcs'),
+('Kilogram', 'kg'),
+('Liter', 'L'),
+('Box', 'box'),
+('Meter', 'm'),
+('Dozen', 'doz');
+
 -- Seed data for users
 INSERT INTO users (name, email, password, role_id, avatar_url) VALUES
 ('Alice Johnson', 'alice@example.com', 'password123', 1, 'https://example.com/avatars/alice.jpg'),
@@ -11,22 +20,27 @@ INSERT INTO users (name, email, password, role_id, avatar_url) VALUES
 ('Charlie Brown', 'charlie@example.com', 'password123', 3, 'https://example.com/avatars/charlie.jpg');
 
 -- Seed data for products
-INSERT INTO products (code, name, sku, price, profit, margin, barcode, quantity, unit, low_stock_alert, medias)
+INSERT INTO products (code, name, sku, price, profit, margin, barcode, unit_id, low_stock_alert, media)
 VALUES
-('P001', 'Product 1', 'SKU001', 10.00, 2.00, 20.00, '1234567890123', 100, 'item', FALSE, '{"images": ["url1", "url2"]}'),
-('P002', 'Product 2', 'SKU002', 20.00, 5.00, 25.00, '1234567890124', 200, 'item', TRUE, '{"images": ["url3"]}');
+('PROD001', 'Product 1', 'SKU001', 10.00, 2.00, 20.00, '1234567890123', 1, FALSE, '{"images": ["url1", "url2"]}'),
+('PROD002', 'Product 2', 'SKU002', 20.00, 5.00, 25.00, '1234567890124', 1, TRUE, '{"images": ["url3"]}');
 
 -- Seed data for warehouses
-INSERT INTO warehouses (name, location)
+INSERT INTO warehouses (name, address)
 VALUES
-('Warehouse A', 'Location A'),
-('Warehouse B', 'Location B');
+('Warehouse A', 'No 2 B Close off 11 crescent, Kado'),
+('Warehouse B', 'No 5 C Close off 22 crescent, Gwarinpa');
+
+-- Seed data for warehouse_storages
+INSERT INTO warehouse_storages (name, warehouse_id) VALUES
+('Cold Room', 1),
+('Kitchen', 2);
 
 -- Seed data for inventory
-INSERT INTO inventory (product_id, warehouse_id, quantity, on_hand)
+INSERT INTO inventory (product_id, warehouse_id, storage_id, quantity, on_hand)
 VALUES
-(1, 1, 50, 45),
-(2, 2, 75, 70);
+(1, 1, 1, 50, 45),
+(2, 2, 2, 75, 70);
 
 -- Seed data for inventory plans
 INSERT INTO inventory_plans (name, inventory_date, warehouse_id, status, progress)
@@ -43,8 +57,10 @@ VALUES
 -- Seed data for vendors
 INSERT INTO vendors (name, email, phone, address)
 VALUES
-('Vendor A', 'vendorA@example.com', '1234567890', 'Vendor Address A'),
-('Vendor B', 'vendorB@example.com', '0987654321', 'Vendor Address B');
+('Mrs Abubakar Global Enterprises', 'info@acmesupplies.com', '08123456789', '12 Builders Lane, Abuja, Nigeria'),
+('Jumbo Foods Nigeria Ltd.', 'contact@jumbofoods.com.ng', '08012345678', '45 Olufemi Street, Lagos, Nigeria'),
+('Easy Fresh Farms', 'info@easyfreshfarms.com', '09012345678', '25 Greenfield Avenue, Ibadan, Oyo State, Nigeria'),
+('Sunshine Beverages', 'info@sunshinebeverages.com.ng', '08134567890', '55 Refreshment Avenue, Kaduna, Kaduna State, Nigeria');
 
 -- Seed data for product_vendors
 INSERT INTO product_vendors (product_id, vendor_id)

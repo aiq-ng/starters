@@ -32,7 +32,7 @@ class User
 
 
         if ($stmt->execute()) {
-            return true;
+            return $this->db->lastInsertId();
         } else {
             return false;
         }

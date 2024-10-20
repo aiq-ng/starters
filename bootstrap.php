@@ -11,6 +11,7 @@ set_error_handler(function ($severity, $message, $file, $line) {
     // Clear any existing output
     ob_clean();
     http_response_code(500);
+    error_log("Error: $message in $file on line $line");
     echo json_encode([
         'message' => "Error: $message in $file on line $line"
     ]);
@@ -22,6 +23,7 @@ set_exception_handler(function ($exception) {
     // Clear any existing output
     ob_clean();
     http_response_code(500);
+    error_log('Exception: ' . $exception->getMessage());
     echo json_encode([
         'message' => $exception->getMessage()
     ]);
@@ -35,6 +37,7 @@ register_shutdown_function(function () {
         // Clear any existing output
         ob_clean();
         http_response_code(500);
+        error_log("Fatal Error: {$error['message']} in {$error['file']} on line {$error['line']}");
         echo json_encode([
             'message' => "Fatal Error: {$error['message']}"
         ]);

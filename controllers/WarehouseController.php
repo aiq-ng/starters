@@ -4,33 +4,52 @@ namespace Controllers;
 
 use Models\Warehouse;
 
-class WarehouseController
+class WarehouseController extends BaseController
 {
-    private $wh;
+    private $warehouse;
 
     public function __construct()
     {
-        $this->wh = new Warehouse();
+        parent::__construct();
+        $this->warehouse = new Warehouse();
     }
 
-
-    public function createWh()
+    public function index()
     {
-        $data = json_decode(file_get_contents('php://input'), true);
-        $name = $data['name'] ?? null;
-        $address = $data['address'] ?? null;
-        if (empty($name) || empty($address)) {
-            echo json_encode(['message' => 'All fields are required']);
-            return;
+        $warehouses = $this->warehouse->getWarehouses();
+
+        if ($warehouses) {
+            $this->sendResponse('success', 200, $warehouses);
         } else {
-            $this->wh->createWh($name, $address);
-            echo json_encode(['message' => 'Warehouse stored successfully']);
+            $this->sendResponse('Warehouses not found', 404);
         }
     }
 
+    public function create()
+    {
+        $data = $this->getRequestData();
+        if (!$this->validateFields($data['name'], $data['address'])) {
+            $this->sendResponse('Invalid input data', 400);
+        }
 
-    // public function getWh() {
-    //     echo json_encode($this->wh->getWh($name));
-    // }
+        $result = $this->warehouse->create($data);
+
+        if ($result) {
+            $this->sendResponse('success', 201, ['warehouse_id' => $result]);
+        } else {
+            $this->sendResponse('Warehouse not created', 500);
+        }
+    }
+
+    public function show($id)
+    {
+        $warehouse = $this->warehouse->getWarehouse($id);
+
+        if ($warehouse) {
+            $this->sendResponse('success', 200, $warehouse);
+        } else {
+            $this->sendResponse('Warehouse not found', 404);
+        }
+    }
 
 }

@@ -13,6 +13,7 @@ class AuthController extends BaseController
 
     public function __construct()
     {
+        parent::__construct();
         $this->user = new User();
         $this->config = include(__DIR__ . '/../config.php');
     }
@@ -32,8 +33,10 @@ class AuthController extends BaseController
             return;
         }
 
-        if ($this->user->register($data)) {
-            $this->sendResponse('User registered successfully', 201);
+        $result = $this->user->register($data);
+
+        if ($result) {
+            $this->sendResponse('success', 201, ['user_id' => $result]);
         } else {
             $this->sendResponse('Error registering user', 500);
         }
@@ -83,5 +86,12 @@ class AuthController extends BaseController
         session_destroy();
 
         $this->sendResponse('Logout successful', 200);
+    }
+
+    public function getRoles()
+    {
+        $result = $this->fetchRoles();
+
+        $this->sendResponse('success', 200, $result);
     }
 }

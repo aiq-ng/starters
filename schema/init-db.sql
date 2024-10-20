@@ -13,7 +13,16 @@ CREATE TABLE users (
 	role_id INT DEFAULT 3,
 	avatar_url TEXT,
 	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-	CONSTRAINT fk_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET DEFAULT
+	CONSTRAINT fk_user_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET DEFAULT
+);
+
+-- Table to store information about units of measurement
+CREATE TABLE units (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(50) UNIQUE NOT NULL,
+	abbreviation VARCHAR(10) UNIQUE,
+	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Table to store information about products
@@ -26,10 +35,9 @@ CREATE TABLE products (
 	profit DECIMAL(10, 2),
 	margin DECIMAL(5, 2),
 	barcode VARCHAR(100),
-	quantity INT NOT NULL,
-	unit VARCHAR(50) DEFAULT 'item',
+	unit_id INT REFERENCES units(id) ON DELETE SET NULL,
 	low_stock_alert BOOLEAN DEFAULT FALSE,
-	medias JSONB,
+	media JSONB,
 	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -38,7 +46,14 @@ CREATE TABLE products (
 CREATE TABLE warehouses (
 	id SERIAL PRIMARY KEY,
 	name VARCHAR(255) NOT NULL,
-	location TEXT NOT NULL
+	address TEXT NOT NULL
+);
+
+-- Table to store storage locations within warehouses
+CREATE TABLE warehouse_storages (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(50) UNIQUE NOT NULL,
+	warehouse_id INT REFERENCES warehouses(id) ON DELETE CASCADE
 );
 
 -- Table to manage stock levels of products within warehouses
@@ -46,11 +61,12 @@ CREATE TABLE inventory (
 	id SERIAL PRIMARY KEY,
 	product_id INT REFERENCES products(id) ON DELETE CASCADE,
 	warehouse_id INT REFERENCES warehouses(id) ON DELETE CASCADE,
+	storage_id INT REFERENCES warehouse_storages(id) ON DELETE CASCADE,
 	quantity INT NOT NULL,
 	on_hand INT NOT NULL,
 	to_be_delivered INT DEFAULT 0,
 	to_be_ordered INT DEFAULT 0,
-	UNIQUE (product_id, warehouse_id)
+	UNIQUE (product_id, warehouse_id, storage_id)
 );
 
 -- Table to manage inventory plans
@@ -93,11 +109,11 @@ CREATE TABLE product_vendors (
 
 -- Table to track inventory activities by users
 CREATE TABLE inventory_activities (
-    id SERIAL PRIMARY KEY,
-    inventory_plan_id INT REFERENCES inventory_plans(id) ON DELETE CASCADE,
-    user_id INT,
-    action VARCHAR(50) CHECK (action IN ('create', 'update', 'complete')),
-    timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	id SERIAL PRIMARY KEY,
+	inventory_plan_id INT REFERENCES inventory_plans(id) ON DELETE CASCADE,
+	user_id INT,
+	action VARCHAR(50) CHECK (action IN ('create', 'update', 'complete')),
+	timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT fk_inventory_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 

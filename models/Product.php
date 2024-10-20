@@ -14,23 +14,95 @@ class Product
         $this->db = Database::getInstance()->getConnection();
     }
 
-    //Create a new Product
 
-    public function create($name, $location, $vendor, $code, $sku, $barcode, $price, $quantity, $unit, $media_path)
+    // Create a new Product
+    public function create($data)
     {
-        $query = "INSERT INTO " . $this->table . "(name, location, vendor, code, sku, barcode, price, quantity, unit, media_path) VALUES (:name, :location, :vendor, :code, :sku, :barcode, :price, :quantity, :unit, :media_path)";
+        $this->db->beginTransaction();
+
+        try {
+            $query = "
+            INSERT INTO " . $this->table . "
+            (name, code, sku, barcode, price, unit_id, media)
+            VALUES 
+            (:name, :code, :sku, :barcode, :price, :unit_id, :media)";
+
+            $stmt = $this->db->prepare($query);
+
+            $params = [
+                ':name' => $data['name'],
+                ':code' => $data['code'],
+                ':sku' => $data['sku'],
+                ':barcode' => $data['barcode'],
+                ':price' => $data['price'],
+                ':unit_id' => $data['unit'],
+                ':media' => json_encode($data['media']),
+            ];
+
+            // Bind parameters
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+
+            if (!$stmt->execute()) {
+                throw new \Exception('Failed to create product.');
+            }
+
+            $productId = $this->db->lastInsertId();
+            $this->createProductVendorRelationship($productId, $data['vendor']);
+            $this->createInventoryRelationship($productId, $data);
+
+            $this->db->commit();
+
+            return $productId;
+
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            error_log('Error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function createProductVendorRelationship($productId, $vendorId)
+    {
+        $query = "
+            INSERT INTO product_vendors (product_id, vendor_id)
+            VALUES (:product_id, :vendor_id)
+            ON CONFLICT (product_id, vendor_id) DO NOTHING";
+
         $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':name', $name);
-        $stmt->bindParam(':location', $location);
-        $stmt->bindParam(':vendor', $vendor);
-        $stmt->bindParam(':code', $code);
-        $stmt->bindParam(':sku', $sku);
-        $stmt->bindParam(':barcode', $barcode);
-        $stmt->bindParam(':price', $price);
-        $stmt->bindParam(':quantity', $quantity);
-        $stmt->bindParam(':unit', $unit);
-        $stmt->bindParam(':media_path', $media_path);
-        return $stmt->execute();
+        $stmt->bindValue(':product_id', $productId);
+        $stmt->bindValue(':vendor_id', $vendorId);
+
+        if (!$stmt->execute()) {
+            throw new \Exception('Failed to create product-vendor relationship.');
+        }
+    }
+
+    private function createInventoryRelationship($productId, $data)
+    {
+        // Debugging: Check the structure of $data
+        error_log('Data received: ' . print_r($data, true));
+
+        // Ensure $data is an array
+        if (!is_array($data)) {
+            throw new \Exception('Invalid data provided. Expected an array.');
+        }
+        $query = "
+            INSERT INTO inventory (product_id, warehouse_id, quantity, on_hand, storage_id)
+            VALUES (:product_id, :warehouse_id, :quantity, :on_hand, :storage_id)
+            ON CONFLICT (product_id, warehouse_id, storage_id) DO NOTHING";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bindValue(':product_id', $productId);
+        $stmt->bindValue(':warehouse_id', $data['location']);
+        $stmt->bindValue(':quantity', $data['quantity']);
+        $stmt->bindValue(':on_hand', $data['quantity']);
+        $stmt->bindValue(':storage_id', $data['storage_id'] ?? 1);
+
+        if (!$stmt->execute()) {
+            throw new \Exception('Failed to create inventory relationship.');
+        }
     }
 
 

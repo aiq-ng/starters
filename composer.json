@@ -3,10 +3,12 @@
       "psr-4": {
         "Controllers\\": "controllers/",
         "Models\\": "models/",
-        "Database\\": "database/"
+        "Database\\": "database/",
+        "Services\\": "services/"
       }
     },
     "require": {
-        "firebase/php-jwt": "^6.10"
+        "firebase/php-jwt": "^6.10",
+        "cloudinary/cloudinary_php": "^2.14"
     }
 }

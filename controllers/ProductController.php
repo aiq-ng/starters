@@ -3,85 +3,70 @@
 namespace Controllers;
 
 use Models\Product;
+use Services\MediaHandler;
 
-class ProductController
+class ProductController extends BaseController
 {
     private $product;
+    private $mediaHandler;
 
     public function __construct()
     {
+        parent::__construct();
         $this->product = new Product();
+        $this->mediaHandler = new MediaHandler();
     }
-
-
-
 
     public function create()
     {
-        // Get raw JSON input data
-        $data = json_decode(file_get_contents('php://input'), true);
+        $data = $this->getRequestData();
 
+        $formData = $data['form_data'];
+        $mediaFiles = $data['files']['media'] ?? [];
 
+        $requiredFields = [
+            'name', 'location', 'vendor', 'code',
+            'sku', 'barcode', 'price', 'quantity', 'unit'
+        ];
 
+        $dataToValidate = array_intersect_key($formData, array_flip($requiredFields));
 
-        // Check if data is an array of multiple products or a single product
-        if (is_array($data)) {
-            // Check if the array contains multiple objects (array of products)
-            if (isset($data[0]) && is_array($data[0])) {
-                // Handle multiple products
-                foreach ($data as $product) {
-                    // Extract data for each product
-                    $name = $product['name'] ?? null;
-                    $location = $product['location'] ?? null;
-                    $vendor = $product['vendor'] ?? null;
-                    $code = $product['code'] ?? null;
-                    $sku = $product['sku'] ?? null;
-                    $barcode = $product['barcode'] ?? null;
-                    $price = $product['price'] ?? null;
-                    $quantity = $product['quantity'] ?? null;
-                    $unit = $product['unit'] ?? null;
-                    $media_path = $product['media_path'] ?? null;
+        if (!$this->validateFields(...array_values($dataToValidate))) {
+            $this->sendResponse('Invalid input data', 400);
+        }
 
-                    // Validate required fields
-                    if (empty($name) || empty($location) || empty($vendor) || empty($code) || empty($sku) || empty($barcode) || empty($price) || empty($quantity) || empty($unit) || empty($media_path)) {
-                        echo json_encode(['message' => 'All fields are required for each product']);
-                        return;
-                    }
+        // Handle media files using MediaHandler
+        if (!empty($mediaFiles)) {
+            $mediaLinks = $this->mediaHandler->handleMediaFiles($mediaFiles);
 
-                    // Call the create method in the Product model
-                    $this->product->create($name, $location, $vendor, $code, $sku, $barcode, $price, $quantity, $unit, $media_path);
-                }
-                echo json_encode(['message' => 'All products created successfully']);
-            } else {
-                // Handle a single product (when it's just a single object, not an array of products)
-                $name = $data['name'] ?? null;
-                $location = $data['location'] ?? null;
-                $vendor = $data['vendor'] ?? null;
-                $code = $data['code'] ?? null;
-                $sku = $data['sku'] ?? null;
-                $barcode = $data['barcode'] ?? null;
-                $price = $data['price'] ?? null;
-                $quantity = $data['quantity'] ?? null;
-                $unit = $data['unit'] ?? null;
-                $media_path = $data['media_path'] ?? null;
-
-                // Validate required fields
-                if (empty($name) || empty($location) || empty($vendor) || empty($code) || empty($sku) || empty($barcode) || empty($price) || empty($quantity) || empty($unit) || empty($media_path)) {
-                    echo json_encode(['message' => 'All fields are required']);
-                    return;
-                }
-
-                // Call the create method in the Product model
-                $this->product->create($name, $location, $vendor, $code, $sku, $barcode, $price, $quantity, $unit, $media_path);
-
-                echo json_encode(['message' => 'Product created successfully']);
+            if ($mediaLinks === false) {
+                $this->sendResponse('Error uploading media files', 500);
             }
+
+            $formData['media'] = $mediaLinks;
+        }
+
+        $result = $this->product->create($formData);
+
+        if ($this->product->create($result)) {
+            $this->sendResponse('Success', 201, ['product_id' => $result]);
         } else {
-            echo json_encode(['message' => 'Invalid input data']);
+            $this->sendResponse('Failed to create product', 500);
         }
     }
 
+    public function getVendors()
+    {
+        $result = $this->fetchVendors();
+        $this->sendResponse('Success', 200, $result);
 
+    }
+
+    public function getUnits()
+    {
+        $result = $this->fetchUnits();
+        $this->sendResponse('Success', 200, $result);
+    }
 
 
     // Get All Products

@@ -18,7 +18,10 @@ $routes = [
         },
         '/auth/login' => [$authController, 'login'],
         '/auth/logout' => [$authController, 'logout'],
+        '/roles' => [$authController, 'getRoles'],
         '/products' => [$productController, 'getAll'],
+        '/vendors' => [$productController, 'getVendors'],
+        '/units' => [$productController, 'getUnits'],
         '/products/lowstockalerts' => [$productController, 'getLowStockAlerts'],
         '/products/warehouseno' => [$productController, 'getWhNo'],
         '/products/warehouseitems' => [$productController, 'getWhItems'],
@@ -30,7 +33,7 @@ $routes = [
     'POST' => [
         '/auth/register' => [$authController, 'register'],
         '/products' => [$productController, 'create'],
-        '/warehouse' => [$warehouseController, 'createWh'],
+        '/warehouses' => [$warehouseController, 'create'],
     ],
     'PUT' => [
         '/products/(\d+)' => [$productController, 'update'],

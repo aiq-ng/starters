@@ -16,11 +16,17 @@ DROP TABLE IF EXISTS product_vendors CASCADE;
 -- Drop vendors table
 DROP TABLE IF EXISTS vendors CASCADE;
 
+-- Drop warehouse_storages table
+DROP TABLE IF EXISTS warehouse_storages CASCADE;
+
 -- Drop warehouses table
 DROP TABLE IF EXISTS warehouses CASCADE;
 
 -- Drop products table
 DROP TABLE IF EXISTS products CASCADE;
+
+--Drop units table
+DROP TABLE IF EXISTS units CASCADE;
 
 -- Drop users table
 DROP TABLE IF EXISTS users CASCADE;
