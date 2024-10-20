@@ -17,11 +17,32 @@ class ProductController extends BaseController
         $this->mediaHandler = new MediaHandler();
     }
 
+    public function index()
+    {
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $pageSize = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+
+        $result = $this->product->fetchProducts($page, $pageSize);
+
+        $this->sendResponse('Success', 200, $result['products'], $result['meta']);
+    }
+
+    public function show($id)
+    {
+        $product = $this->product->fetchProduct($id);
+        if ($product) {
+            $this->sendResponse('Success', 200, $product);
+        } else {
+            $this->sendResponse('Product not found', 404);
+        }
+    }
+
     public function create()
     {
         $data = $this->getRequestData();
 
         $formData = $data['form_data'];
+        $formData['storage'] = 1; // Cold Room
         $mediaFiles = $data['files']['media'] ?? [];
 
         $requiredFields = [
@@ -43,12 +64,11 @@ class ProductController extends BaseController
                 $this->sendResponse('Error uploading media files', 500);
             }
 
-            $formData['media'] = $mediaLinks;
         }
 
-        $result = $this->product->create($formData);
+        $result = $this->product->create($formData, $mediaLinks);
 
-        if ($this->product->create($result)) {
+        if ($result) {
             $this->sendResponse('Success', 201, ['product_id' => $result]);
         } else {
             $this->sendResponse('Failed to create product', 500);

@@ -6,12 +6,12 @@ INSERT INTO roles (name) VALUES
 
 -- Seed data for units
 INSERT INTO units (name, abbreviation) VALUES
-('Item', 'pcs'),
-('Kilogram', 'kg'),
-('Liter', 'L'),
-('Box', 'box'),
-('Meter', 'm'),
-('Dozen', 'doz');
+('item', 'pcs'),
+('kilogram', 'kg'),
+('liter', 'L'),
+('box', 'box'),
+('meter', 'm'),
+('dozen', 'doz');
 
 -- Seed data for users
 INSERT INTO users (name, email, password, role_id, avatar_url) VALUES
@@ -22,8 +22,26 @@ INSERT INTO users (name, email, password, role_id, avatar_url) VALUES
 -- Seed data for products
 INSERT INTO products (code, name, sku, price, profit, margin, barcode, unit_id, low_stock_alert, media)
 VALUES
-('PROD001', 'Product 1', 'SKU001', 10.00, 2.00, 20.00, '1234567890123', 1, FALSE, '{"images": ["url1", "url2"]}'),
-('PROD002', 'Product 2', 'SKU002', 20.00, 5.00, 25.00, '1234567890124', 1, TRUE, '{"images": ["url3"]}');
+('PROD001', 'Beef', 'SKU001', 10.00, 2.00, 20.00, '1234567890123', 1, FALSE, '["https://i.imgur.com/VWBa2bd.jpg"]'),
+('PROD002', 'Chicken', 'SKU002', 20.00, 5.00, 25.00, '1234567890124', 1, TRUE, '["https://i.imgur.com/um74W0V.jpg"]'),
+('PROD003', 'Catfish', 'SKU003', 15.00, 3.00, 15.00, '1234567890125', 1, FALSE, '["https://i.imgur.com/Y79flwf.jpg"]'),
+('PROD004', 'Pork', 'SKU004', 12.00, 3.00, 25.00, '1234567890126', 1, FALSE, '["https://i.imgur.com/27GAjK0.jpg"]'),
+('PROD005', 'Lamb', 'SKU005', 25.00, 7.00, 28.00, '1234567890127', 1, TRUE, '["https://i.imgur.com/JoxlcBj.jpg"]'),
+('PROD006', 'Salmon', 'SKU006', 30.00, 10.00, 33.33, '1234567890128', 1, FALSE, '["https://i.imgur.com/c4g5zbh.jpg"]'),
+('PROD007', 'Eggs', 'SKU011', 5.00, 1.00, 20.00, '1234567890133', 1, TRUE, '["https://i.imgur.com/B0aX5T9.jpg"]'),
+('PROD008', 'Cheese', 'SKU012', 3.50, 0.50, 14.29, '1234567890134', 1, FALSE, '["https://i.imgur.com/dZKuOVe.jpg"]'),
+('PROD009', 'Milk', 'SKU013', 2.00, 0.20, 10.00, '1234567890135', 1, TRUE, '["https://i.imgur.com/9cG2ytM.jpg"]'),
+('PROD010', 'Yogurt', 'SKU014', 1.80, 0.30, 16.67, '1234567890136', 1, FALSE, '["https://i.imgur.com/5Fo2yGh.jpg"]'),
+('PROD011', 'Bread', 'SKU016', 1.50, 0.10, 6.67, '1234567890138', 1, FALSE, '["https://i.imgur.com/FW8FhaG.jpg"]'),
+('PROD012', 'Rice', 'SKU017', 2.50, 0.20, 8.00, '1234567890139', 1, TRUE, '["https://i.imgur.com/Od3ZGlR.jpg"]'),
+('PROD013', 'Pasta', 'SKU018', 1.00, 0.15, 15.00, '1234567890140', 1, FALSE, '["https://i.imgur.com/yMGoY4S.jpg"]'),
+('PROD014', 'Honey', 'SKU023', 5.00, 1.00, 20.00, '1234567890145', 1, TRUE, '["https://i.imgur.com/mV5e3RG.jpg"]'),
+('PROD015', 'Olive Oil', 'SKU024', 6.00, 1.50, 25.00, '1234567890146', 1, FALSE, '["https://i.imgur.com/E0LgHx0.jpg"]'),
+('PROD016', 'Vegetable Oil', 'SKU025', 3.50, 0.50, 14.29, '1234567890147', 1, TRUE, '["https://i.imgur.com/BlUMbuG.jpg"]'),
+('PROD017', 'Mustard', 'SKU029', 1.50, 0.10, 6.67, '1234567890151', 1, TRUE, '["https://i.imgur.com/ZxYcHRo.jpg"]'),
+('PROD018', 'Ketchup', 'SKU030', 1.50, 0.20, 13.33, '1234567890152', 1, FALSE, '["https://i.imgur.com/4FmJgfE.jpg"]'),
+('PROD019', 'Mayonnaise', 'SKU031', 2.00, 0.30, 15.00, '1234567890153', 1, TRUE, '["https://i.imgur.com/D2z2gwN.jpg"]'),
+('PROD020', 'Soy Sauce', 'SKU032', 1.00, 0.15, 15.00, '1234567890154', 1, FALSE, '["https://i.imgur.com/xMxtjOl.jpg"]');
 
 -- Seed data for warehouses
 INSERT INTO warehouses (name, address)
@@ -39,8 +57,26 @@ INSERT INTO warehouse_storages (name, warehouse_id) VALUES
 -- Seed data for inventory
 INSERT INTO inventory (product_id, warehouse_id, storage_id, quantity, on_hand)
 VALUES
-(1, 1, 1, 50, 45),
-(2, 2, 2, 75, 70);
+(1, 1, 1, 50, 45),  -- Beef
+(2, 2, 2, 75, 70),  -- Chicken
+(3, 1, 1, 30, 25),  -- Catfish
+(4, 2, 2, 60, 55),  -- Pork
+(5, 1, 1, 40, 35),  -- Lamb
+(6, 2, 2, 20, 15),  -- Salmon
+(7, 1, 1, 100, 90), -- Eggs
+(8, 2, 2, 80, 75),  -- Cheese
+(9, 1, 1, 120, 110),-- Milk
+(10, 2, 2, 50, 45), -- Yogurt
+(11, 1, 1, 90, 85), -- Bread
+(12, 2, 2, 40, 35), -- Rice
+(13, 1, 1, 55, 50), -- Pasta
+(14, 2, 2, 25, 20), -- Honey
+(15, 1, 1, 35, 30), -- Olive Oil
+(16, 2, 2, 60, 55), -- Vegetable Oil
+(17, 1, 1, 20, 18), -- Mustard
+(18, 2, 2, 80, 75), -- Ketchup
+(19, 1, 1, 30, 25), -- Mayonnaise
+(20, 2, 2, 50, 45); -- Soy Sauce
 
 -- Seed data for inventory plans
 INSERT INTO inventory_plans (name, inventory_date, warehouse_id, status, progress)

@@ -19,7 +19,7 @@ $routes = [
         '/auth/login' => [$authController, 'login'],
         '/auth/logout' => [$authController, 'logout'],
         '/roles' => [$authController, 'getRoles'],
-        '/products' => [$productController, 'getAll'],
+        '/products' => [$productController, 'index'],
         '/vendors' => [$productController, 'getVendors'],
         '/units' => [$productController, 'getUnits'],
         '/products/lowstockalerts' => [$productController, 'getLowStockAlerts'],
@@ -28,7 +28,7 @@ $routes = [
         '/products/warehousea' => [$productController, 'getWhA'],
         '/products/warehouseb' => [$productController, 'getWhB'],
         '/products/lowstockalertsa' => [$productController, 'getLowStockAlertsA'],
-        '/products/(\d+)' => [$productController, 'get'],
+        '/products/(\d+)' => [$productController, 'show'],
     ],
     'POST' => [
         '/auth/register' => [$authController, 'register'],
@@ -47,6 +47,13 @@ $routes = [
 $requestMethod = $_SERVER['REQUEST_METHOD'];
 $requestUri = $_SERVER['REQUEST_URI'];
 
+// Handle query parameters for pagination
+$queryParams = [];
+if (strpos($requestUri, '?') !== false) {
+    list($requestUri, $queryString) = explode('?', $requestUri, 2);
+    parse_str($queryString, $queryParams);
+}
+
 // Dispatch the request
 $found = false;
 foreach ($routes[$requestMethod] as $route => $handler) {
@@ -55,9 +62,9 @@ foreach ($routes[$requestMethod] as $route => $handler) {
         if (is_array($handler)) {
             $id = isset($matches[1]) ? $matches[1] : null;
             if ($id !== null) {
-                call_user_func($handler, $id);
+                call_user_func($handler, $id, $queryParams);
             } else {
-                call_user_func($handler);
+                call_user_func($handler, $queryParams);
             }
         } else {
             call_user_func($handler);
@@ -66,9 +73,9 @@ foreach ($routes[$requestMethod] as $route => $handler) {
     }
 }
 
-// Handle invalid requests
+// Handle 404 if route not found
 if (!$found) {
     http_response_code(404);
-    header('Content-Type: application/json');
-    echo json_encode(['message' => 'Invalid Request']);
+    echo json_encode(['message' => 'Invalid request']);
+    exit;
 }

@@ -62,7 +62,7 @@ class BaseController
         return true;
     }
 
-    protected function sendResponse($message, $statusCode, $additionalData = [])
+    protected function sendResponse($message, $statusCode, $data = [], $meta = [])
     {
         http_response_code($statusCode);
         header('Content-Type: application/json');
@@ -71,8 +71,12 @@ class BaseController
             'message' => $message,
         ];
 
-        if (!empty($additionalData)) {
-            $response['data'] = $additionalData;
+        if (!empty($data)) {
+            $response['data'] = $data;
+        }
+
+        if (!empty($meta)) {
+            $response['meta'] = $meta;
         }
 
         echo json_encode($response);

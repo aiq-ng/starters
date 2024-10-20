@@ -16,33 +16,26 @@ class Product
 
 
     // Create a new Product
-    public function create($data)
+    public function create($data, $files = [])
     {
         $this->db->beginTransaction();
 
         try {
             $query = "
-            INSERT INTO " . $this->table . "
-            (name, code, sku, barcode, price, unit_id, media)
-            VALUES 
-            (:name, :code, :sku, :barcode, :price, :unit_id, :media)";
+                INSERT INTO " . $this->table . "
+                (name, code, sku, barcode, price, unit_id, media)
+                VALUES 
+                (:name, :code, :sku, :barcode, :price, :unit_id, :media)";
 
             $stmt = $this->db->prepare($query);
 
-            $params = [
-                ':name' => $data['name'],
-                ':code' => $data['code'],
-                ':sku' => $data['sku'],
-                ':barcode' => $data['barcode'],
-                ':price' => $data['price'],
-                ':unit_id' => $data['unit'],
-                ':media' => json_encode($data['media']),
-            ];
-
-            // Bind parameters
-            foreach ($params as $key => $value) {
-                $stmt->bindValue($key, $value);
-            }
+            $stmt->bindValue(':name', $data['name']);
+            $stmt->bindValue(':code', $data['code']);
+            $stmt->bindValue(':sku', $data['sku']);
+            $stmt->bindValue(':barcode', $data['barcode']);
+            $stmt->bindValue(':price', $data['price']);
+            $stmt->bindValue(':unit_id', $data['unit']);
+            $stmt->bindValue(':media', json_encode($files) ?? null);
 
             if (!$stmt->execute()) {
                 throw new \Exception('Failed to create product.');
@@ -51,15 +44,16 @@ class Product
             $productId = $this->db->lastInsertId();
             $this->createProductVendorRelationship($productId, $data['vendor']);
             $this->createInventoryRelationship($productId, $data);
-
             $this->db->commit();
 
             return $productId;
 
+        } catch (\PDOException $e) {
+            $this->db->rollBack();
+            throw $e;
         } catch (\Exception $e) {
             $this->db->rollBack();
-            error_log('Error: ' . $e->getMessage());
-            return null;
+            throw $e;
         }
     }
 
@@ -81,13 +75,6 @@ class Product
 
     private function createInventoryRelationship($productId, $data)
     {
-        // Debugging: Check the structure of $data
-        error_log('Data received: ' . print_r($data, true));
-
-        // Ensure $data is an array
-        if (!is_array($data)) {
-            throw new \Exception('Invalid data provided. Expected an array.');
-        }
         $query = "
             INSERT INTO inventory (product_id, warehouse_id, quantity, on_hand, storage_id)
             VALUES (:product_id, :warehouse_id, :quantity, :on_hand, :storage_id)
@@ -98,13 +85,70 @@ class Product
         $stmt->bindValue(':warehouse_id', $data['location']);
         $stmt->bindValue(':quantity', $data['quantity']);
         $stmt->bindValue(':on_hand', $data['quantity']);
-        $stmt->bindValue(':storage_id', $data['storage_id'] ?? 1);
+        $stmt->bindValue(':storage_id', $data['storage'] ?? 1);
 
         if (!$stmt->execute()) {
             throw new \Exception('Failed to create inventory relationship.');
         }
     }
 
+    public function fetchProduct($id)
+    {
+        $query = "SELECT * FROM $this->table WHERE id = :id";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    public function fetchProducts($page, $pageSize)
+    {
+        $offset = ($page - 1) * $pageSize;
+
+        $countQuery = "SELECT COUNT(*) as total FROM $this->table";
+        $countStmt = $this->db->query($countQuery);
+        $total = $countStmt->fetchColumn();
+
+        $query = "
+        SELECT 
+            p.id,
+            p.code,
+            p.name,
+            p.price,
+            p.low_stock_alert,
+            i.on_hand || ' ' || u.name || CASE WHEN i.on_hand > 1 THEN 's' ELSE '' END AS on_hand,
+            i.warehouse_id,
+            p.media
+        FROM $this->table p
+        LEFT JOIN inventory i ON p.id = i.product_id
+        LEFT JOIN units u ON p.unit_id = u.id
+        LIMIT :pageSize OFFSET :offset
+    ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bindValue(':pageSize', $pageSize, \PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        $products = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        foreach ($products as &$product) {
+            if (!empty($product['media'])) {
+                $product['media'] = json_decode($product['media'], true);
+            }
+        }
+
+        $meta = [
+            'current_page' => $page,
+            'last_page' => ceil($total / $pageSize),
+            'total' => $total
+        ];
+
+        return [
+            'products' => $products,
+            'meta' => $meta
+        ];
+    }
 
 
 

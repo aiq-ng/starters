@@ -39,8 +39,6 @@ class MediaHandler
                 }
             }
 
-            error_log('Media links: ' . json_encode($mediaLinks));
-
             return !empty($mediaLinks) ? $mediaLinks : false;
         } catch (\Exception $e) {
             error_log('Error uploading media files: ' . $e->getMessage());
