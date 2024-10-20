@@ -105,7 +105,7 @@ class Product
     {
         $offset = ($page - 1) * $pageSize;
 
-        $total = $this->countProduct();
+        $total = $this->countProducts()['total_products'];
 
         $query = "
 		SELECT 
@@ -148,91 +148,99 @@ class Product
         ];
     }
 
-    public function getTotalUnitCount($filter = [])
+    public function countProducts($filter = [])
     {
         $query = "
-            SELECT 
-                SUM(i.on_hand) AS total_items,
-                COUNT(CASE WHEN p.low_stock_alert = true THEN 1 END) AS low_stock_alerts,
-                SUM(i.to_be_delivered) AS total_to_be_delivered,
-                SUM(i.to_be_ordered) AS total_to_be_ordered
+            SELECT COUNT(*) AS total_products, 
+                   COUNT(u.id) AS total_units
             FROM $this->table p
-            LEFT JOIN inventory i ON p.id = i.product_id
             LEFT JOIN units u ON p.unit_id = u.id
-            ";
+        ";
 
         $conditions = [];
         $bindings = [];
 
-        // Low Stock Filter (Only affects low_stock_alerts count)
-        if (isset($filter['low_stock']) && $filter['low_stock'] === true) {
-            $conditions[] = "p.low_stock_alert = true";
-        }
-
-        // Warehouse ID Filter
-        if (isset($filter['warehouse_id'])) {
-            $conditions[] = "i.warehouse_id = :warehouse_id";
-            $bindings[':warehouse_id'] = $filter['warehouse_id'];
-        }
-
-        // Optional Unit ID Filter
         if (isset($filter['unit_id'])) {
             $conditions[] = "u.id = :unit_id";
             $bindings[':unit_id'] = $filter['unit_id'];
         }
 
-        // Apply Conditions
         if (!empty($conditions)) {
             $query .= " WHERE " . implode(" AND ", $conditions);
         }
 
         $countStmt = $this->db->prepare($query);
 
-        // Bind Values
         foreach ($bindings as $key => $value) {
             $countStmt->bindValue($key, $value);
         }
 
         $countStmt->execute();
 
-        // Return results directly
         return $countStmt->fetch(\PDO::FETCH_ASSOC);
     }
 
-    public function countProduct($filter = [])
-    {
-        $query = "
-            SELECT COUNT(*) AS total 
-            FROM $this->table p
-            LEFT JOIN units u ON p.unit_id = u.id
-            ";
 
+    public function countUnits($filter = [])
+    {
+        $query = "SELECT";
+        $selects = [];
         $conditions = [];
         $bindings = [];
 
-        // Optional Unit ID Filter
+        if (isset($filter['low_stock']) && $filter['low_stock'] === true) {
+            $selects[] = "COUNT(CASE WHEN p.low_stock_alert = true THEN 1 END)";
+            $conditions[] = "p.low_stock_alert = true";
+        }
+
+        if (isset($filter['to_be_delivered']) && $filter['to_be_delivered'] === true) {
+            $selects[] = "SUM(i.to_be_delivered)";
+            $conditions[] = "i.to_be_delivered > 0";
+        }
+
+        if (isset($filter['to_be_ordered']) && $filter['to_be_ordered'] === true) {
+            $selects[] = "SUM(i.to_be_ordered)";
+            $conditions[] = "i.to_be_ordered > 0";
+        }
+
+        // Default selection if no specific filter is provided
+        if (empty($selects)) {
+            $selects[] = "SUM(i.on_hand)";
+        }
+
+        $query .= " " . implode(", ", $selects) . "
+		FROM $this->table p
+		LEFT JOIN inventory i ON p.id = i.product_id
+		LEFT JOIN units u ON p.unit_id = u.id";
+
+        // Apply additional filters
         if (isset($filter['unit_id'])) {
             $conditions[] = "u.id = :unit_id";
             $bindings[':unit_id'] = $filter['unit_id'];
         }
 
-        // Apply Conditions
+        // Storage ID filter
+        if (isset($filter['storage_id'])) {
+            $conditions[] = "i.storage_id = :storage_id";
+            $bindings[':storage_id'] = $filter['storage_id'];
+        }
+
+        // Apply conditions if any
         if (!empty($conditions)) {
             $query .= " WHERE " . implode(" AND ", $conditions);
         }
 
         $countStmt = $this->db->prepare($query);
 
-        // Bind Values
+        // Bind values
         foreach ($bindings as $key => $value) {
             $countStmt->bindValue($key, $value);
         }
-
         $countStmt->execute();
 
-        // Return the count
         return $countStmt->fetchColumn();
     }
+
 
 
 

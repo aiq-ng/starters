@@ -1,3 +1,6 @@
+-- Drop sales table
+DROP TABLE IF EXISTS sales CASCADE;
+
 -- Drop inventory_activities table
 DROP TABLE IF EXISTS inventory_activities CASCADE;
 

@@ -117,3 +117,14 @@ CREATE TABLE inventory_activities (
 	CONSTRAINT fk_inventory_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Table to store sales information
+CREATE TABLE sales (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id),
+    product_id INT REFERENCES products(id),
+    quantity INT NOT NULL,
+    sale_price NUMERIC(10, 2) NOT NULL,
+    total_price NUMERIC(10, 2) NOT NULL,
+    sale_date DATE NOT NULL
+);
+

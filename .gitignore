@@ -1,3 +1,5 @@
 dc.logs
 .php-cs-fixer.cache
 php_error.log
+.env
+env

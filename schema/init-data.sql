@@ -55,28 +55,28 @@ INSERT INTO warehouse_storages (name, warehouse_id) VALUES
 ('Kitchen', 2);
 
 -- Seed data for inventory
-INSERT INTO inventory (product_id, warehouse_id, storage_id, quantity, on_hand)
+INSERT INTO inventory (product_id, warehouse_id, storage_id, quantity, on_hand, to_be_delivered, to_be_ordered)
 VALUES
-(1, 1, 1, 50, 45),  -- Beef
-(2, 2, 2, 75, 70),  -- Chicken
-(3, 1, 1, 30, 25),  -- Catfish
-(4, 2, 2, 60, 55),  -- Pork
-(5, 1, 1, 40, 35),  -- Lamb
-(6, 2, 2, 20, 15),  -- Salmon
-(7, 1, 1, 100, 90), -- Eggs
-(8, 2, 2, 80, 75),  -- Cheese
-(9, 1, 1, 120, 110),-- Milk
-(10, 2, 2, 50, 45), -- Yogurt
-(11, 1, 1, 90, 85), -- Bread
-(12, 2, 2, 40, 35), -- Rice
-(13, 1, 1, 55, 50), -- Pasta
-(14, 2, 2, 25, 20), -- Honey
-(15, 1, 1, 35, 30), -- Olive Oil
-(16, 2, 2, 60, 55), -- Vegetable Oil
-(17, 1, 1, 20, 18), -- Mustard
-(18, 2, 2, 80, 75), -- Ketchup
-(19, 1, 1, 30, 25), -- Mayonnaise
-(20, 2, 2, 50, 45); -- Soy Sauce
+(1, 1, 1, 50, 45, 10, 5),   -- Beef
+(2, 2, 2, 75, 70, 15, 10),  -- Chicken
+(3, 1, 1, 30, 25, 5, 3),    -- Catfish
+(4, 2, 2, 60, 55, 12, 7),   -- Pork
+(5, 1, 1, 40, 35, 8, 6),    -- Lamb
+(6, 2, 2, 20, 15, 4, 2),    -- Salmon
+(7, 1, 1, 100, 90, 20, 10), -- Eggs
+(8, 2, 2, 80, 75, 18, 9),   -- Cheese
+(9, 1, 1, 120, 110, 25, 15),-- Milk
+(10, 2, 2, 50, 45, 7, 5),   -- Yogurt
+(11, 1, 1, 90, 85, 12, 8),  -- Bread
+(12, 2, 2, 40, 35, 6, 4),   -- Rice
+(13, 1, 1, 55, 50, 10, 5),  -- Pasta
+(14, 2, 2, 25, 20, 4, 3),   -- Honey
+(15, 1, 1, 35, 30, 5, 2),   -- Olive Oil
+(16, 2, 2, 60, 55, 10, 7),  -- Vegetable Oil
+(17, 1, 1, 20, 18, 2, 1),   -- Mustard
+(18, 2, 2, 80, 75, 16, 12), -- Ketchup
+(19, 1, 1, 30, 25, 4, 3),   -- Mayonnaise
+(20, 2, 2, 50, 45, 8, 6);   -- Soy Sauce
 
 -- Seed data for inventory plans
 INSERT INTO inventory_plans (name, inventory_date, warehouse_id, status, progress)
@@ -110,3 +110,13 @@ VALUES
 (1, 1, 'create'),
 (2, 2, 'update');
 
+-- Seed data for sales
+INSERT INTO sales (user_id, product_id, quantity, sale_price, total_price, sale_date) VALUES
+(1, 1, 10, 10.00, 100.00, '2024-01-15'),  -- Alice sold 10 Beef
+(2, 2, 5, 20.00, 100.00, '2024-01-20'),  -- Bob sold 5 Chicken
+(3, 3, 8, 15.00, 120.00, '2024-01-25'),  -- Charlie sold 8 Catfish
+(1, 4, 12, 12.00, 144.00, '2024-01-30'), -- Alice sold 12 Pork
+(2, 5, 15, 25.00, 375.00, '2024-02-05'), -- Bob sold 15 Lamb
+(3, 6, 3, 30.00, 90.00, '2024-02-10'),   -- Charlie sold 3 Salmon
+(1, 7, 20, 5.00, 100.00, '2024-02-15'),   -- Alice sold 20 Eggs
+(2, 8, 10, 3.50, 35.00, '2024-02-20');     -- Bob sold 10 Cheese
