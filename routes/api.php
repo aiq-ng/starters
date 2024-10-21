@@ -16,7 +16,6 @@ $routes = [
             echo json_encode(['status' => 'ok']);
             exit;
         },
-        '/auth/login' => [$authController, 'login'],
         '/auth/logout' => [$authController, 'logout'],
         '/roles' => [$authController, 'getRoles'],
         '/products' => [$productController, 'index'],
@@ -35,6 +34,7 @@ $routes = [
     ],
     'POST' => [
         '/auth/register' => [$authController, 'register'],
+        '/auth/login' => [$authController, 'login'],
         '/products' => [$productController, 'create'],
         '/warehouses' => [$warehouseController, 'create'],
     ],
