@@ -16,24 +16,24 @@ class Sale
     public function getSales()
     {
         $query = "
-		SELECT 
-			DATE(s.sale_date) AS sale_date,
-			COUNT(s.id) AS total_sales,
-			SUM(s.quantity) AS total_quantity,
-			SUM(s.sale_price) AS total_sale_amount,
-			JSON_ARRAYAGG(
-				JSON_BUILD_OBJECT(
-					'time', TO_CHAR(s.sale_date, 'HH12:MI AM'), -- Format sale date for time
-					'product', p.name,
-					'quantity', s.quantity,
-					'sale_amount', s.sale_price
-				)
-			) AS sale_details
-		FROM sales s
-		JOIN products p ON s.product_id = p.id -- Join with products to get names
-		GROUP BY DATE(s.sale_date)
-		ORDER BY sale_date DESC;
-	";
+			SELECT 
+				DATE(s.sale_date) AS date,
+				COUNT(s.id) AS sales,
+				SUM(s.quantity) AS quantities,
+				SUM(s.sale_price) AS revenue,
+				JSON_ARRAYAGG(
+					JSON_BUILD_OBJECT(
+						'time', TO_CHAR(s.sale_date, 'HH12:MI AM'), -- Format sale date for time
+						'product', p.name,
+						'quantity', s.quantity,
+						'sale_amount', s.sale_price
+					)
+				) AS sale_details
+			FROM sales s
+			JOIN products p ON s.product_id = p.id
+			GROUP BY DATE(s.sale_date)
+			ORDER BY sale_date DESC;
+		";
 
         $statement = $this->db->prepare($query);
         $statement->execute();
@@ -52,42 +52,14 @@ class Sale
         $quantity = $data['quantity'];
         $salePrice = $data['price'];
         $userID = $data['user_id'];
+        $saleDate = $data['date'];
 
         $this->db->beginTransaction();
 
         try {
-            $query = "
-            INSERT INTO sales (user_id, product_id, quantity, sale_price)
-            VALUES (:user_id, :product_id, :quantity, :sale_price);
-        ";
-
-            $statement = $this->db->prepare($query);
-            $statement->bindValue(':user_id', $userID, \PDO::PARAM_INT);
-            $statement->bindValue(':product_id', $productId, \PDO::PARAM_INT);
-            $statement->bindValue(':quantity', $quantity, \PDO::PARAM_INT);
-            $statement->bindValue(':sale_price', $salePrice, \PDO::PARAM_INT);
-            $statement->execute();
-
-            $updateInventoryQuery = "
-            UPDATE inventory
-            SET quantity = quantity - :quantity,
-                on_hand = on_hand - :quantity
-            WHERE product_id = :product_id;
-        ";
-
-            $updateStatement = $this->db->prepare($updateInventoryQuery);
-            $updateStatement->bindValue(':quantity', $quantity, \PDO::PARAM_INT);
-            $updateStatement->bindValue(':product_id', $productId, \PDO::PARAM_INT);
-            $updateStatement->execute();
-
-            $activityQuery = "
-            INSERT INTO inventory_activities (inventory_plan_id, user_id, action)
-            VALUES (NULL, :user_id, 'sale');
-        ";
-
-            $activityStatement = $this->db->prepare($activityQuery);
-            $activityStatement->bindValue(':user_id', $userID, \PDO::PARAM_INT);
-            $activityStatement->execute();
+            $this->insertSale($userID, $productId, $quantity, $salePrice, $saleDate);
+            $this->updateInventory($productId, $quantity);
+            $this->logActivity($userID);
 
             $this->db->commit();
 
@@ -96,6 +68,49 @@ class Sale
             $this->db->rollBack();
             throw $e;
         }
+    }
+
+    private function insertSale($userID, $productId, $quantity, $salePrice, $saleDate)
+    {
+        $query = "
+			INSERT INTO sales (user_id, product_id, quantity, sale_price, sale_date)
+			VALUES (:user_id, :product_id, :quantity, :sale_price, :sale_date);
+		";
+
+        $statement = $this->db->prepare($query);
+        $statement->bindValue(':user_id', $userID, \PDO::PARAM_INT);
+        $statement->bindValue(':product_id', $productId, \PDO::PARAM_INT);
+        $statement->bindValue(':quantity', $quantity, \PDO::PARAM_INT);
+        $statement->bindValue(':sale_price', $salePrice, \PDO::PARAM_INT);
+        $statement->bindValue(':sale_date', $saleDate);
+        $statement->execute();
+    }
+
+    private function updateInventory($productId, $quantity)
+    {
+        $updateInventoryQuery = "
+			UPDATE inventory
+			SET quantity = quantity - :quantity,
+				on_hand = on_hand - :quantity
+			WHERE product_id = :product_id;
+		";
+
+        $updateStatement = $this->db->prepare($updateInventoryQuery);
+        $updateStatement->bindValue(':quantity', $quantity, \PDO::PARAM_INT);
+        $updateStatement->bindValue(':product_id', $productId, \PDO::PARAM_INT);
+        $updateStatement->execute();
+    }
+
+    private function logActivity($userID)
+    {
+        $activityQuery = "
+			INSERT INTO inventory_activities (inventory_plan_id, user_id, action)
+			VALUES (NULL, :user_id, 'sale');
+		";
+
+        $activityStatement = $this->db->prepare($activityQuery);
+        $activityStatement->bindValue(':user_id', $userID, \PDO::PARAM_INT);
+        $activityStatement->execute();
     }
 
 }

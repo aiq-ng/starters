@@ -91,70 +91,87 @@ class Purchase
         $purchaseDate = $data['date'];
         $supplierId = $data['supplier'];
         $items = $data['items'];
+        $userId = $data['user_id'];
 
         $this->db->beginTransaction();
 
         try {
-            $query = "
-                INSERT INTO purchases (purchase_date, supplier_id)
-                VALUES (:purchase_date, :supplier_id) RETURNING id;
-            ";
-
-            $stmt = $this->db->prepare($query);
-            $stmt->execute([
-                ':purchase_date' => $purchaseDate,
-                ':supplier_id' => $supplierId
-            ]);
-
-            $purchaseId = $stmt->fetchColumn();
-
-            $itemQuery = "
-                INSERT INTO purchase_items (purchase_id, product_id, quantity, price_per_unit)
-                VALUES (:purchase_id, :product_id, :quantity, :price_per_unit);
-            ";
-
-            $itemStmt = $this->db->prepare($itemQuery);
-
-            foreach ($items as $item) {
-                $itemStmt->execute([
-                    ':purchase_id' => $purchaseId,
-                    ':product_id' => $item['product_id'],
-                    ':quantity' => $item['quantity'],
-                    ':price_per_unit' => $item['price_per_unit'],
-                ]);
-
-                $updateInventoryQuery = "
-                    INSERT INTO inventory (product_id, warehouse_id, storage_id, quantity, on_hand)
-                    VALUES (:product_id, NULL, NULL, :quantity, :quantity)
-                    ON CONFLICT (product_id, warehouse_id, storage_id) DO NOTHING;
-                ";
-
-                $updateStmt = $this->db->prepare($updateInventoryQuery);
-                $updateStmt->execute([
-                    ':product_id' => $item['product_id'],
-                    ':quantity' => $item['quantity'],
-                ]);
-            }
-
-            foreach ($items as $item) {
-                $activityQuery = "
-                    INSERT INTO inventory_activities (inventory_plan_id, user_id, action)
-                    VALUES (NULL, :user_id, 'purchase');
-                ";
-
-                $activityStmt = $this->db->prepare($activityQuery);
-                $activityStmt->execute([
-                    ':user_id' => $data['user_id'],
-                ]);
-            }
+            $purchaseId = $this->insertPurchase($purchaseDate, $supplierId);
+            $this->insertPurchaseItems($purchaseId, $items);
+            $this->logInventoryActivity($userId);
 
             $this->db->commit();
             return $purchaseId;
-
         } catch (\Exception $e) {
             $this->db->rollBack();
             throw $e;
         }
+    }
+
+    private function insertPurchase($purchaseDate, $supplierId)
+    {
+        $query = "
+            INSERT INTO purchases (purchase_date, supplier_id)
+            VALUES (:purchase_date, :supplier_id) RETURNING id;
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([
+            ':purchase_date' => $purchaseDate,
+            ':supplier_id' => $supplierId
+        ]);
+
+        return $stmt->fetchColumn();
+    }
+
+    private function insertPurchaseItems($purchaseId, $items)
+    {
+        $itemQuery = "
+            INSERT INTO purchase_items (purchase_id, product_id, quantity, price_per_unit)
+            VALUES (:purchase_id, :product_id, :quantity, :price_per_unit);
+        ";
+
+        $itemStmt = $this->db->prepare($itemQuery);
+
+        foreach ($items as $item) {
+            $itemStmt->execute([
+                ':purchase_id' => $purchaseId,
+                ':product_id' => $item['product_id'],
+                ':quantity' => $item['quantity'],
+                ':price_per_unit' => $item['price_per_unit'],
+            ]);
+
+            $this->updateInventory($item);
+        }
+    }
+
+    private function updateInventory($item)
+    {
+        $updateInventoryQuery = "
+            INSERT INTO inventory (product_id, warehouse_id, storage_id, quantity, on_hand)
+            VALUES (:product_id, NULL, NULL, :quantity, :quantity)
+            ON CONFLICT (product_id, warehouse_id, storage_id) DO NOTHING;
+        ";
+
+        $updateStmt = $this->db->prepare($updateInventoryQuery);
+        $updateStmt->execute([
+            ':product_id' => $item['product_id'],
+            ':quantity' => $item['quantity'],
+        ]);
+    }
+
+    private function logInventoryActivity($userId)
+    {
+
+        $activityQuery = "
+            INSERT INTO inventory_activities (inventory_plan_id, user_id, action)
+            VALUES (NULL, :user_id, 'purchase');
+        ";
+
+        $activityStmt = $this->db->prepare($activityQuery);
+        $activityStmt->execute([
+            ':user_id' => $userId,
+        ]);
     }
 
 }
