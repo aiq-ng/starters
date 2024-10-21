@@ -43,8 +43,8 @@ $routes = [
         '/inventory/status' => [$inventoryController, 'getInventoryByStatus'],
         '/inventory/:id' => [$inventoryController, 'getInventoryPlan'],
         '/inventory/stock' => [$inventoryController, 'getStockProgress'],
-        
- 
+
+
 
     ],
     'POST' => [
@@ -53,6 +53,7 @@ $routes = [
         '/products' => [$productController, 'create'],
         '/warehouses' => [$warehouseController, 'create'],
         '/purchases' => [$tradeController, 'createPurchase'],
+        '/sales' => [$tradeController, 'createSale'],
         '/inventoryplans' => [$inventoryController, 'createInventoryPlan'],
     ],
     'PUT' => [

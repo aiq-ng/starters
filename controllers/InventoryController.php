@@ -6,8 +6,8 @@ use Models\Inventory;
 use Models\Warehouse;
 use Models\Product;
 
-
-class InventoryController extends BaseController {
+class InventoryController extends BaseController
+{
     private $inventory;
     private $warehouse;
     private $product;
@@ -20,7 +20,7 @@ class InventoryController extends BaseController {
         $this->warehouse = new Warehouse();
         $this->product = new Product();
     }
-    
+
     // Get All Inventory Plans with Warehouse Name
     public function getInventory()
     {
@@ -32,7 +32,7 @@ class InventoryController extends BaseController {
             $this->sendResponse('Inventory plan not found', 400);
         }
     }
-    
+
     // Get Inventory Items Grouped by Status (e.g., Available, Depleting, KIV)
     public function getInventoryByStatus($status)
     {
@@ -55,14 +55,14 @@ class InventoryController extends BaseController {
     {
         $planId = $this->inventory->createInventoryPlan($data);
         if ($planId) {
-            $this->sendResponse('Inventory Plan created',200, $planId);
+            $this->sendResponse('Inventory Plan created', 200, $planId);
         } else {
-            $this->sendResponse('Failed to create Inventory Plan',400);
-            
+            $this->sendResponse('Failed to create Inventory Plan', 400);
+
         }
     }
 
-  
+
 
     public function getInventoryPlan($id)
     {
@@ -74,25 +74,24 @@ class InventoryController extends BaseController {
         }
     }
 
-     // Update an Existing Inventory Plan
-     public function updateInventoryPlan($id, $data)
-     {
-         $updated = $this->inventory->update($id, $data);
-         if ($updated) {
-            $this->sendResponse('success',200, $updated);
-         } else {
-             $this->sendResponse('Failed to update Inventory Plan',400);
-         }
-     }
+    // Update an Existing Inventory Plan
+    public function updateInventoryPlan($id, $data)
+    {
+        $updated = $this->inventory->update($id, $data);
+        if ($updated) {
+            $this->sendResponse('success', 200, $updated);
+        } else {
+            $this->sendResponse('Failed to update Inventory Plan', 400);
+        }
+    }
 
-      // Get Stock Levels and Progress for a Warehouse
+    // Get Stock Levels and Progress for a Warehouse
     public function getStockProgress($warehouseId)
     {
         $inventory = $this->inventory->getInventoryByWarehouse($warehouseId);
         if ($inventory) {
-            $this->sendResponse('success',200, array_values($inventory));
-        }
-        else {
+            $this->sendResponse('success', 200, array_values($inventory));
+        } else {
             $this->sendResponse('Inventory not found', 400);
         }
     }
@@ -102,11 +101,11 @@ class InventoryController extends BaseController {
     {
         $updated = $this->inventory->updateStock($warehouseId, $productId, $quantity, $progress);
         if ($updated) {
-            $this->sendResponse('Stock updated successfully',200,$updated);
-           
+            $this->sendResponse('Stock updated successfully', 200, $updated);
+
         } else {
-            $this->sendResponse('Failed to update stock',400);
-           
+            $this->sendResponse('Failed to update stock', 400);
+
         }
     }
 
@@ -119,11 +118,11 @@ class InventoryController extends BaseController {
         });
 
         if ($filtered) {
-            $this->sendResponse('Stock updated successfully',200, array_values($filtered));
-           
+            $this->sendResponse('Stock updated successfully', 200, array_values($filtered));
+
         } else {
-            $this->sendResponse('Failed to update stock',400);
-           
+            $this->sendResponse('Failed to update stock', 400);
+
         }
 
 
@@ -131,12 +130,3 @@ class InventoryController extends BaseController {
 
 
 }
-
-
-
-    
-   
-
-   
-
-   

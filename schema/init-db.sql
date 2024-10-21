@@ -112,7 +112,7 @@ CREATE TABLE inventory_activities (
     id SERIAL PRIMARY KEY,
     inventory_plan_id INT REFERENCES inventory_plans(id) ON DELETE CASCADE,
     user_id INT REFERENCES users(id) ON DELETE CASCADE,
-    action VARCHAR(50) CHECK (action IN ('create', 'update', 'complete')),
+    action VARCHAR(50) CHECK (action IN ('create', 'update', 'complete', 'sale', 'purchase', 'audit')) NOT NULL,
     timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -124,7 +124,7 @@ CREATE TABLE sales (
     vendor_id INT REFERENCES vendors(id),
     quantity INT NOT NULL,
     sale_price NUMERIC(10, 2) NOT NULL,
-    total_price NUMERIC(10, 2) NOT NULL,
+    total_price NUMERIC(10, 2) GENERATED ALWAYS AS (quantity * sale_price) STORED,
     sale_date DATE NOT NULL
 );
 

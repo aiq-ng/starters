@@ -19,7 +19,7 @@ class TradeController extends BaseController
 
     public function purchaseIndex()
     {
-        // $this->authorizeRequest();
+        $this->authorizeRequest();
 
         $purchases = $this->purchase->getPurchases();
 
@@ -32,7 +32,7 @@ class TradeController extends BaseController
 
     public function createPurchase()
     {
-        // $this->authorizeRequest();
+        $this->authorizeRequest();
 
         $data = $this->getRequestData();
 
@@ -44,7 +44,7 @@ class TradeController extends BaseController
             $this->sendResponse('Items should be an array and not empty', 400);
         }
 
-        error_log('Creating purchase: ' . json_encode($data));
+        $data['user_id'] = $_SESSION['user_id'];
 
         $purchaseId = $this->purchase->createPurchase($data);
 
@@ -57,7 +57,7 @@ class TradeController extends BaseController
 
     public function saleIndex()
     {
-        // $this->authorizeRequest();
+        $this->authorizeRequest();
 
         $sales = $this->sale->getSales();
 
@@ -66,5 +66,25 @@ class TradeController extends BaseController
         } else {
             $this->sendResponse('Sales not found', 404);
         }
+    }
+
+    public function createSale()
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+
+        if (!$this->validateFields($data['product'], $data['quantity'], $data['price'])) {
+            $this->sendResponse('Invalid fields', 400);
+        }
+
+        $data['user_id'] = $_SESSION['user_id'];
+
+        $saleId = $this->sale->createSale($data);
+
+        if (!$saleId) {
+            $this->sendResponse('Failed to create sale', 500);
+        }
+        $this->sendResponse('success', 201, ['sale_id' => $saleId]);
     }
 }

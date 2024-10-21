@@ -19,7 +19,7 @@ class ProductController extends BaseController
 
     public function index()
     {
-        // $this->authorizeRequest();
+        $this->authorizeRequest();
 
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $pageSize = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
@@ -34,7 +34,7 @@ class ProductController extends BaseController
 
     public function show($id)
     {
-        // $this->authorizeRequest();
+        $this->authorizeRequest();
 
         $product = $this->product->fetchProduct($id);
         if ($product) {
@@ -46,7 +46,7 @@ class ProductController extends BaseController
 
     public function create()
     {
-        // $this->authorizeRequest();
+        $this->authorizeRequest();
 
         $data = $this->getRequestData();
 
@@ -86,7 +86,7 @@ class ProductController extends BaseController
 
     public function getDashboardMetrics()
     {
-        // $this->authorizeRequest();
+        $this->authorizeRequest();
         echo json_encode([
             'message' => 'Success',
             'data' => [
@@ -100,7 +100,7 @@ class ProductController extends BaseController
 
     public function getWarehouseDetailsMetrics()
     {
-        // $this->authorizeRequest();
+        $this->authorizeRequest();
 
         echo json_encode([
             'message' => 'Success',
@@ -114,7 +114,7 @@ class ProductController extends BaseController
 
     public function getTopSellingProducts()
     {
-        // $this->authorizeRequest();
+        $this->authorizeRequest();
 
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $pageSize = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
@@ -126,7 +126,7 @@ class ProductController extends BaseController
 
     public function getVendors()
     {
-        // $this->authorizeRequest();
+        $this->authorizeRequest();
 
         $result = $this->fetchVendors();
         $this->sendResponse('Success', 200, $result);
@@ -135,7 +135,7 @@ class ProductController extends BaseController
 
     public function getUnits()
     {
-        // $this->authorizeRequest();
+        $this->authorizeRequest();
 
         $result = $this->fetchUnits();
         $this->sendResponse('Success', 200, $result);
@@ -143,7 +143,7 @@ class ProductController extends BaseController
 
     public function getSuppliers()
     {
-        // $this->authorizeRequest();
+        $this->authorizeRequest();
 
         $result = $this->fetchSuppliers();
         $this->sendResponse('Success', 200, $result);

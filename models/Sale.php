@@ -40,10 +40,62 @@ class Sale
         $sales = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
         foreach ($sales as &$sale) {
-            $sale['sale_details'] = json_decode($sale['sale_details'], true); // Decode to associative array
+            $sale['sale_details'] = json_decode($sale['sale_details'], true);
         }
 
         return $sales;
+    }
+
+    public function createSale($data)
+    {
+        $productId = $data['product'];
+        $quantity = $data['quantity'];
+        $salePrice = $data['price'];
+        $userID = $data['user_id'];
+
+        $this->db->beginTransaction();
+
+        try {
+            $query = "
+            INSERT INTO sales (user_id, product_id, quantity, sale_price)
+            VALUES (:user_id, :product_id, :quantity, :sale_price);
+        ";
+
+            $statement = $this->db->prepare($query);
+            $statement->bindValue(':user_id', $userID, \PDO::PARAM_INT);
+            $statement->bindValue(':product_id', $productId, \PDO::PARAM_INT);
+            $statement->bindValue(':quantity', $quantity, \PDO::PARAM_INT);
+            $statement->bindValue(':sale_price', $salePrice, \PDO::PARAM_INT);
+            $statement->execute();
+
+            $updateInventoryQuery = "
+            UPDATE inventory
+            SET quantity = quantity - :quantity,
+                on_hand = on_hand - :quantity
+            WHERE product_id = :product_id;
+        ";
+
+            $updateStatement = $this->db->prepare($updateInventoryQuery);
+            $updateStatement->bindValue(':quantity', $quantity, \PDO::PARAM_INT);
+            $updateStatement->bindValue(':product_id', $productId, \PDO::PARAM_INT);
+            $updateStatement->execute();
+
+            $activityQuery = "
+            INSERT INTO inventory_activities (inventory_plan_id, user_id, action)
+            VALUES (NULL, :user_id, 'sale');
+        ";
+
+            $activityStatement = $this->db->prepare($activityQuery);
+            $activityStatement->bindValue(':user_id', $userID, \PDO::PARAM_INT);
+            $activityStatement->execute();
+
+            $this->db->commit();
+
+            return $this->db->lastInsertId();
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
     }
 
 }

@@ -111,15 +111,15 @@ VALUES
 (2, 2, 'update');
 
 -- Seed data for sales
-INSERT INTO sales (user_id, product_id, quantity, sale_price, total_price, sale_date) VALUES
-(1, 1, 10, 10.00, 100.00, '2024-01-15'),  -- Alice sold 10 Beef
-(2, 2, 5, 20.00, 100.00, '2024-01-20'),  -- Bob sold 5 Chicken
-(3, 3, 8, 15.00, 120.00, '2024-01-25'),  -- Charlie sold 8 Catfish
-(1, 4, 12, 12.00, 144.00, '2024-01-30'), -- Alice sold 12 Pork
-(2, 5, 15, 25.00, 375.00, '2024-02-05'), -- Bob sold 15 Lamb
-(3, 6, 3, 30.00, 90.00, '2024-02-10'),   -- Charlie sold 3 Salmon
-(1, 7, 20, 5.00, 100.00, '2024-02-15'),   -- Alice sold 20 Eggs
-(2, 8, 10, 3.50, 35.00, '2024-02-20');     -- Bob sold 10 Cheese
+INSERT INTO sales (user_id, product_id, quantity, sale_price, sale_date) VALUES
+(1, 1, 10, 10.00, '2024-01-15'),  -- Alice sold 10 Beef
+(2, 2, 5, 20.00, '2024-01-20'),  -- Bob sold 5 Chicken
+(3, 3, 8, 15.00, '2024-01-25'),  -- Charlie sold 8 Catfish
+(1, 4, 12, 12.00, '2024-01-30'), -- Alice sold 12 Pork
+(2, 5, 15, 25.00, '2024-02-05'), -- Bob sold 15 Lamb
+(3, 6, 3, 30.00, '2024-02-10'),   -- Charlie sold 3 Salmon
+(1, 7, 20, 5.00, '2024-02-15'),   -- Alice sold 20 Eggs
+(2, 8, 10, 3.50, '2024-02-20');     -- Bob sold 10 Cheese
 
 -- Seed data for suppliers
 INSERT INTO suppliers (name, email, phone, address) VALUES
