@@ -180,6 +180,11 @@ class Product
             $bindings[':unit_id'] = $filter['unit_id'];
         }
 
+        if (isset($filter['warehouse_id'])) {
+            $conditions[] = "i.warehouse_id = :warehouse_id";
+            $bindings[':warehouse_id'] = $filter['warehouse_id'];
+        }
+
         if (isset($filter['search']) && !empty($filter['search'])) {
             $searchTerm = $filter['search'];
             $conditions[] = "(p.name ILIKE :search OR p.code ILIKE :search)";
@@ -325,58 +330,67 @@ class Product
 
     public function updateProductQuantity($productId, $data)
     {
+        try {
+            $this->db->beginTransaction();
 
-        $currentQuantityQuery = "
+            $currentQuantityQuery = "
             SELECT quantity 
             FROM inventory 
             WHERE product_id = :product_id
         ";
-        $currentStmt = $this->db->prepare($currentQuantityQuery);
-        $currentStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
-        $currentStmt->execute();
-        $currentQuantity = $currentStmt->fetchColumn();
+            $currentStmt = $this->db->prepare($currentQuantityQuery);
+            $currentStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
+            $currentStmt->execute();
+            $currentQuantity = $currentStmt->fetchColumn();
 
-        if ($currentQuantity === false) {
-            return [
-                "message" => "Product not found in inventory."
-            ];
-        }
+            if ($currentQuantity === false) {
+                return [
+                    "message" => "Product not found in inventory."
+                ];
+            }
 
-        $discrepancy = $data['new_quantity'] - $currentQuantity;
+            $discrepancy = $data['new_quantity'] - $currentQuantity;
 
-        $updateQuery = "
+            $updateQuery = "
             UPDATE inventory
             SET quantity = :new_quantity
             WHERE product_id = :product_id
         ";
-        $updateStmt = $this->db->prepare($updateQuery);
-        $updateStmt->bindParam(':new_quantity', $data['new_quantity'], \PDO::PARAM_INT);
-        $updateStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
-        $updateStmt->execute();
+            $updateStmt = $this->db->prepare($updateQuery);
+            $updateStmt->bindParam(':new_quantity', $data['new_quantity'], \PDO::PARAM_INT);
+            $updateStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
+            $updateStmt->execute();
 
-        $auditQuery = "
-            INSERT INTO inventory_audit 
+            $auditQuery = "
+            INSERT INTO inventory_audits 
             (product_id, user_id, old_quantity, new_quantity, discrepancy, reason, notes, updated_at)
             VALUES (:product_id, :user_id, :old_quantity, :new_quantity, :discrepancy, :reason, :notes, NOW())
         ";
-        $auditStmt = $this->db->prepare($auditQuery);
-        $auditStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
-        $auditStmt->bindParam(':user_id', $data['user_id'], \PDO::PARAM_INT);
-        $auditStmt->bindParam(':old_quantity', $currentQuantity, \PDO::PARAM_INT);
-        $auditStmt->bindParam(':new_quantity', $data['new_quantity'], \PDO::PARAM_INT);
-        $auditStmt->bindParam(':discrepancy', $discrepancy, \PDO::PARAM_INT);
-        $auditStmt->bindParam(':reason', $data['reason'], \PDO::PARAM_STR);
-        $auditStmt->bindParam(':notes', $data['notes'], \PDO::PARAM_STR);
-        $auditStmt->execute();
+            $auditStmt = $this->db->prepare($auditQuery);
+            $auditStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
+            $auditStmt->bindParam(':user_id', $data['user_id'], \PDO::PARAM_INT);
+            $auditStmt->bindParam(':old_quantity', $currentQuantity, \PDO::PARAM_INT);
+            $auditStmt->bindParam(':new_quantity', $data['new_quantity'], \PDO::PARAM_INT);
+            $auditStmt->bindParam(':discrepancy', $discrepancy, \PDO::PARAM_INT);
+            $auditStmt->bindParam(':reason', $data['reason'], \PDO::PARAM_STR);
+            $auditStmt->bindParam(':notes', $data['notes'], \PDO::PARAM_STR);
+            $auditStmt->execute();
 
-        return [
-            "current_quantity" => $currentQuantity,
-            "new_quantity" => $data['new_quantity'],
-            "discrepancy" => $discrepancy,
-            "reason" => $data['reason'],
-            "notes" => $data['notes'],
-            "user_id" => $data['user_id'],
-        ];
+            // Commit transaction if all operations are successful
+            $this->db->commit();
+
+            return [
+                "current_quantity" => $currentQuantity,
+                "new_quantity" => $data['new_quantity'],
+                "discrepancy" => $discrepancy,
+                "reason" => $data['reason'],
+                "notes" => $data['notes'],
+                "user_id" => $data['user_id'],
+            ];
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
     }
 
 

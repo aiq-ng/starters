@@ -41,6 +41,7 @@ $routes = [
     ],
     'PUT' => [
         '/products/(\d+)' => [$productController, 'update'],
+        '/products/quantity/(\d+)' => [$productController, 'updateQuantity'],
     ],
     'DELETE' => [
         '/products/(\d+)' => [$productController, 'delete'],

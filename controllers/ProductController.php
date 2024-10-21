@@ -23,6 +23,7 @@ class ProductController extends BaseController
         $pageSize = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
         $search = isset($_GET['search']) ? $_GET['search'] : '';
         $filter['search'] = $search;
+        $filter['warehouse_id'] = isset($_GET['warehouse_id']) ? (int)$_GET['warehouse_id'] : null;
 
         $result = $this->product->fetchProducts($page, $pageSize, false, $filter);
 
@@ -132,7 +133,7 @@ class ProductController extends BaseController
         $data = $this->getRequestData();
         $data['user_id'] = $_SESSION['user_id'];
 
-        if (!$this->validateFields($data['quantity'], $data['reason'])) {
+        if (!$this->validateFields($data['new_quantity'], $data['reason'])) {
             $this->sendResponse('Invalid input data', 400);
         }
 
