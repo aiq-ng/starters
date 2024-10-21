@@ -24,6 +24,7 @@ $routes = [
         '/units' => [$productController, 'getUnits'],
         '/dashboard/metrics' => [$productController, 'getDashboardMetrics'],
         '/dashboard/warehouses/details' => [$productController, 'getWarehouseDetailsMetrics'],
+        '/dashboard/topsellingproducts' => [$productController, 'getTopSellingProducts'],
         '/products/lowstockalerts' => [$productController, 'getLowStockAlerts'],
         '/products/warehouseno' => [$productController, 'getWhNo'],
         '/products/warehouseitems' => [$productController, 'getWhItems'],

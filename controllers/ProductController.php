@@ -21,8 +21,10 @@ class ProductController extends BaseController
     {
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $pageSize = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $search = isset($_GET['search']) ? $_GET['search'] : '';
+        $filter['search'] = $search;
 
-        $result = $this->product->fetchProducts($page, $pageSize);
+        $result = $this->product->fetchProducts($page, $pageSize, false, $filter);
 
         $this->sendResponse('Success', 200, $result['products'], $result['meta']);
     }
@@ -98,6 +100,16 @@ class ProductController extends BaseController
                 'kitchen' => $this->product->countUnits(['storage_id' => 2]),
             ]
         ]);
+    }
+
+    public function getTopSellingProducts()
+    {
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $pageSize = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+
+        $result = $this->product->fetchProducts($page, $pageSize, true);
+
+        $this->sendResponse('Success', 200, $result['products'], $result['meta']);
     }
 
     public function getVendors()

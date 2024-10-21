@@ -101,29 +101,74 @@ class Product
         return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 
-    public function fetchProducts($page, $pageSize)
+    public function fetchProducts($page, $pageSize, $withTotalSold = false, $filter = [])
     {
         $offset = ($page - 1) * $pageSize;
 
-        $total = $this->countProducts()['total_products'];
+        $total = $this->countProducts($filter)['total_products'];
 
-        $query = "
-		SELECT 
-			p.id,
-			p.code,
-			p.name,
-			p.price,
-			p.low_stock_alert,
-			i.on_hand || ' ' || u.name || CASE WHEN i.on_hand > 1 THEN 's' ELSE '' END AS on_hand,
-			i.warehouse_id,
-			p.media
-		FROM $this->table p
-		LEFT JOIN inventory i ON p.id = i.product_id
-		LEFT JOIN units u ON p.unit_id = u.id
-		LIMIT :pageSize OFFSET :offset
-	";
+        $query = "SELECT p.id, p.name, p.media";
+
+        // Modify query to include total items sold if needed
+        if ($withTotalSold) {
+            $query .= ", COALESCE(SUM(s.quantity), 0) AS total_items_sold";
+        } else {
+            $query .= ",
+            p.code, 
+            p.price, 
+            p.low_stock_alert, 
+            i.on_hand || ' ' || u.name || CASE WHEN i.on_hand > 1 THEN 's' ELSE '' END AS on_hand, 
+            i.warehouse_id
+        ";
+        }
+
+        $query .= " FROM $this->table p";
+
+        // Common JOINs
+        if (!$withTotalSold) {
+            $query .= "
+            LEFT JOIN inventory i ON p.id = i.product_id
+            LEFT JOIN units u ON p.unit_id = u.id
+        ";
+        }
+
+        // Add sales JOIN if `total_items_sold` is required
+        if ($withTotalSold) {
+            $query .= " LEFT JOIN sales s ON p.id = s.product_id";
+        }
+
+        $conditions = [];
+        $bindings = [];
+
+        if (isset($filter['unit_id'])) {
+            $conditions[] = "p.unit_id = :unit_id";
+            $bindings[':unit_id'] = $filter['unit_id'];
+        }
+
+        if (isset($filter['search']) && !empty($filter['search'])) {
+            $searchTerm = $filter['search'];
+            $conditions[] = "(p.name ILIKE :search OR p.code ILIKE :search)";
+            $bindings[':search'] = "%$searchTerm%";
+        }
+
+        if (!empty($conditions)) {
+            $query .= " WHERE " . implode(" AND ", $conditions);
+        }
+
+        // Group by and Order if fetching total items sold
+        if ($withTotalSold) {
+            $query .= " GROUP BY p.id, p.name, p.media";
+            $query .= " ORDER BY total_items_sold DESC";
+        }
+
+        $query .= " LIMIT :pageSize OFFSET :offset";
 
         $stmt = $this->db->prepare($query);
+
+        foreach ($bindings as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+
         $stmt->bindValue(':pageSize', $pageSize, \PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
         $stmt->execute();
@@ -147,6 +192,7 @@ class Product
             'meta' => $meta
         ];
     }
+
 
     public function countProducts($filter = [])
     {
