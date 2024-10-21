@@ -119,24 +119,25 @@ CREATE TABLE inventory_activities (
 
 -- Table to store sales information
 CREATE TABLE sales (
-    id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(id),
-    product_id INT REFERENCES products(id),
-    quantity INT NOT NULL,
-    sale_price NUMERIC(10, 2) NOT NULL,
-    total_price NUMERIC(10, 2) NOT NULL,
-    sale_date DATE NOT NULL
+	id SERIAL PRIMARY KEY,
+	user_id INT REFERENCES users(id),
+	product_id INT REFERENCES products(id),
+	quantity INT NOT NULL,
+	sale_price NUMERIC(10, 2) NOT NULL,
+	total_price NUMERIC(10, 2) NOT NULL,
+	sale_date DATE NOT NULL
 );
 
 -- Table to store inventory audit trail
-CREATE TABLE inventory_audit (
-    id SERIAL PRIMARY KEY,
-    product_id INT NOT NULL REFERENCES inventory(product_id) ON DELETE CASCADE,
-    account_id INT NOT NULL,
-    old_quantity INT NOT NULL,
-    new_quantity INT NOT NULL,
-    discrepancy INT NOT NULL,
-    reason TEXT,
-    notes TEXT,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE inventory_audits (
+	id SERIAL PRIMARY KEY,
+	product_id INT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+	user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+	old_quantity INT NOT NULL,
+	new_quantity INT NOT NULL,
+	discrepancy INT NOT NULL,
+	reason TEXT CHECK (reason IN ('damaged', 'stolen', 'returned', 'adjustment')),
+	notes TEXT,
+	updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+

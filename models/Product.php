@@ -323,14 +323,14 @@ class Product
     }
 
 
-    public function updateProductQuantity($productId, $newQuantity, $accountId, $reason = null, $notes = null)
+    public function updateProductQuantity($productId, $data)
     {
-        // Fetch the current quantity
+
         $currentQuantityQuery = "
-        SELECT quantity 
-        FROM inventory 
-        WHERE product_id = :product_id
-    ";
+            SELECT quantity 
+            FROM inventory 
+            WHERE product_id = :product_id
+        ";
         $currentStmt = $this->db->prepare($currentQuantityQuery);
         $currentStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
         $currentStmt->execute();
@@ -342,44 +342,42 @@ class Product
             ];
         }
 
-        // Calculate the discrepancy
-        $discrepancy = $newQuantity - $currentQuantity;
+        $discrepancy = $data['new_quantity'] - $currentQuantity;
 
         $updateQuery = "
-        UPDATE inventory
-        SET quantity = :new_quantity
-        WHERE product_id = :product_id
-    ";
+            UPDATE inventory
+            SET quantity = :new_quantity
+            WHERE product_id = :product_id
+        ";
         $updateStmt = $this->db->prepare($updateQuery);
-        $updateStmt->bindParam(':new_quantity', $newQuantity, \PDO::PARAM_INT);
+        $updateStmt->bindParam(':new_quantity', $data['new_quantity'], \PDO::PARAM_INT);
         $updateStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
         $updateStmt->execute();
 
         $auditQuery = "
-        INSERT INTO inventory_audit 
-        (product_id, account_id, old_quantity, new_quantity, discrepancy, reason, notes, updated_at)
-        VALUES (:product_id, :account_id, :old_quantity, :new_quantity, :discrepancy, :reason, :notes, NOW())
-    ";
+            INSERT INTO inventory_audit 
+            (product_id, user_id, old_quantity, new_quantity, discrepancy, reason, notes, updated_at)
+            VALUES (:product_id, :user_id, :old_quantity, :new_quantity, :discrepancy, :reason, :notes, NOW())
+        ";
         $auditStmt = $this->db->prepare($auditQuery);
         $auditStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
-        $auditStmt->bindParam(':account_id', $accountId, \PDO::PARAM_INT);
+        $auditStmt->bindParam(':user_id', $data['user_id'], \PDO::PARAM_INT);
         $auditStmt->bindParam(':old_quantity', $currentQuantity, \PDO::PARAM_INT);
-        $auditStmt->bindParam(':new_quantity', $newQuantity, \PDO::PARAM_INT);
+        $auditStmt->bindParam(':new_quantity', $data['new_quantity'], \PDO::PARAM_INT);
         $auditStmt->bindParam(':discrepancy', $discrepancy, \PDO::PARAM_INT);
-        $auditStmt->bindParam(':reason', $reason, \PDO::PARAM_STR);
-        $auditStmt->bindParam(':notes', $notes, \PDO::PARAM_STR);
+        $auditStmt->bindParam(':reason', $data['reason'], \PDO::PARAM_STR);
+        $auditStmt->bindParam(':notes', $data['notes'], \PDO::PARAM_STR);
         $auditStmt->execute();
 
         return [
             "current_quantity" => $currentQuantity,
-            "new_quantity" => $newQuantity,
+            "new_quantity" => $data['new_quantity'],
             "discrepancy" => $discrepancy,
-            "reason" => $reason,
-            "notes" => $notes,
-            "account_id" => $accountId,
+            "reason" => $data['reason'],
+            "notes" => $data['notes'],
+            "user_id" => $data['user_id'],
         ];
     }
-
 
 
     // Get All Products

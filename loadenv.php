@@ -2,6 +2,10 @@
 
 function loadEnv($filePath)
 {
+    if (!file_exists($filePath)) {
+        return;
+    }
+
     $env = file_get_contents($filePath);
     $lines = explode("\n", $env);
 
