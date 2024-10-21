@@ -144,4 +144,11 @@ class BaseController
         $stmt = $this->db->query($query);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
+
+    public function fetchSuppliers()
+    {
+        $query = "SELECT * FROM suppliers";
+        $stmt = $this->db->query($query);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 }

@@ -3,11 +3,13 @@
 use Controllers\AuthController;
 use Controllers\ProductController;
 use Controllers\WarehouseController;
+use Controllers\TradeController;
 
 // Create instances of the controllers
 $authController = new AuthController();
 $productController = new ProductController();
 $warehouseController = new WarehouseController();
+$tradeController = new TradeController();
 
 // Define routes
 $routes = [
@@ -21,10 +23,13 @@ $routes = [
         '/products' => [$productController, 'index'],
         '/warehouses' => [$warehouseController, 'index'],
         '/vendors' => [$productController, 'getVendors'],
+        '/suppliers' => [$productController, 'getSuppliers'],
         '/units' => [$productController, 'getUnits'],
         '/dashboard/metrics' => [$productController, 'getDashboardMetrics'],
         '/dashboard/warehouses/details' => [$productController, 'getWarehouseDetailsMetrics'],
         '/dashboard/topsellingproducts' => [$productController, 'getTopSellingProducts'],
+        '/purchases' => [$tradeController, 'purchaseIndex'],
+        '/sales' => [$tradeController, 'saleIndex'],
         '/products/lowstockalerts' => [$productController, 'getLowStockAlerts'],
         '/products/warehouseno' => [$productController, 'getWhNo'],
         '/products/warehouseitems' => [$productController, 'getWhItems'],
@@ -38,6 +43,7 @@ $routes = [
         '/auth/login' => [$authController, 'login'],
         '/products' => [$productController, 'create'],
         '/warehouses' => [$warehouseController, 'create'],
+        '/purchases' => [$tradeController, 'createPurchase'],
     ],
     'PUT' => [
         '/products/(\d+)' => [$productController, 'update'],

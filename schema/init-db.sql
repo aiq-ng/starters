@@ -121,6 +121,7 @@ CREATE TABLE sales (
     id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users(id),
     product_id INT REFERENCES products(id),
+    vendor_id INT REFERENCES vendors(id),
     quantity INT NOT NULL,
     sale_price NUMERIC(10, 2) NOT NULL,
     total_price NUMERIC(10, 2) NOT NULL,
