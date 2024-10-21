@@ -3,11 +3,13 @@
 use Controllers\AuthController;
 use Controllers\ProductController;
 use Controllers\WarehouseController;
+use Controllers\InventoryController;
 
 // Create instances of the controllers
 $authController = new AuthController();
 $productController = new ProductController();
 $warehouseController = new WarehouseController();
+$inventoryController = new InventoryController();
 
 // Define routes
 $routes = [
@@ -32,12 +34,20 @@ $routes = [
         '/products/warehouseb' => [$productController, 'getWhB'],
         '/products/lowstockalertsa' => [$productController, 'getLowStockAlertsA'],
         '/products/(\d+)' => [$productController, 'show'],
+        '/inventory' => [$inventoryController, 'getInventory'],
+        '/inventory/status' => [$inventoryController, 'getInventoryByStatus'],
+        '/inventory/:id' => [$inventoryController, 'getInventoryPlan'],
+        '/inventory/stock' => [$inventoryController, 'getStockProgress'],
+        
+ 
+
     ],
     'POST' => [
         '/auth/register' => [$authController, 'register'],
         '/auth/login' => [$authController, 'login'],
         '/products' => [$productController, 'create'],
         '/warehouses' => [$warehouseController, 'create'],
+        '/inventoryplans' => [$inventoryController, 'createInventoryPlan'],
     ],
     'PUT' => [
         '/products/(\d+)' => [$productController, 'update'],
