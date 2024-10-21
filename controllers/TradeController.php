@@ -19,7 +19,7 @@ class TradeController extends BaseController
 
     public function purchaseIndex()
     {
-        $this->authorizeRequest();
+        // $this->authorizeRequest();
 
         $purchases = $this->purchase->getPurchases();
 
@@ -32,7 +32,7 @@ class TradeController extends BaseController
 
     public function createPurchase()
     {
-        $this->authorizeRequest();
+        // $this->authorizeRequest();
 
         $data = $this->getRequestData();
 
@@ -57,7 +57,7 @@ class TradeController extends BaseController
 
     public function saleIndex()
     {
-        $this->authorizeRequest();
+        // $this->authorizeRequest();
 
         $sales = $this->sale->getSales();
 
