@@ -19,10 +19,13 @@ class ProductController extends BaseController
 
     public function index()
     {
+        $this->authorizeRequest();
+
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $pageSize = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
         $search = isset($_GET['search']) ? $_GET['search'] : '';
         $filter['search'] = $search;
+        $filter['warehouse_id'] = isset($_GET['warehouse_id']) ? (int)$_GET['warehouse_id'] : null;
 
         $result = $this->product->fetchProducts($page, $pageSize, false, $filter);
 
@@ -31,6 +34,8 @@ class ProductController extends BaseController
 
     public function show($id)
     {
+        $this->authorizeRequest();
+
         $product = $this->product->fetchProduct($id);
         if ($product) {
             $this->sendResponse('Success', 200, $product);
@@ -41,6 +46,8 @@ class ProductController extends BaseController
 
     public function create()
     {
+        $this->authorizeRequest();
+
         $data = $this->getRequestData();
 
         $formData = $data['form_data'];
@@ -93,6 +100,8 @@ class ProductController extends BaseController
 
     public function getWarehouseDetailsMetrics()
     {
+        $this->authorizeRequest();
+
         echo json_encode([
             'message' => 'Success',
             'data' => [
@@ -105,6 +114,8 @@ class ProductController extends BaseController
 
     public function getTopSellingProducts()
     {
+        $this->authorizeRequest();
+
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $pageSize = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
 
@@ -115,6 +126,8 @@ class ProductController extends BaseController
 
     public function getVendors()
     {
+        $this->authorizeRequest();
+
         $result = $this->fetchVendors();
         $this->sendResponse('Success', 200, $result);
 
@@ -122,17 +135,28 @@ class ProductController extends BaseController
 
     public function getUnits()
     {
+        $this->authorizeRequest();
+
         $result = $this->fetchUnits();
+        $this->sendResponse('Success', 200, $result);
+    }
+
+    public function getSuppliers()
+    {
+        $this->authorizeRequest();
+
+        $result = $this->fetchSuppliers();
         $this->sendResponse('Success', 200, $result);
     }
 
     public function updateQuantity($id)
     {
         $this->authorizeRequest();
+
         $data = $this->getRequestData();
         $data['user_id'] = $_SESSION['user_id'];
 
-        if (!$this->validateFields($data['quantity'], $data['reason'])) {
+        if (!$this->validateFields($data['new_quantity'], $data['reason'])) {
             $this->sendResponse('Invalid input data', 400);
         }
 
