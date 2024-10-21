@@ -50,11 +50,8 @@ class Warehouse
     public function getWarehouses()
     {
         $query = "SELECT * FROM " . $this->warehouse;
-
-        $stmt = $this->db->prepare($query);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        $stmt = $this->db->query($query);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     //Get Warehouse Products

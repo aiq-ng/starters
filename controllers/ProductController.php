@@ -79,6 +79,7 @@ class ProductController extends BaseController
 
     public function getDashboardMetrics()
     {
+        $this->authorizeRequest();
         echo json_encode([
             'message' => 'Success',
             'data' => [

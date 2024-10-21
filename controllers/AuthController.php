@@ -2,20 +2,17 @@
 
 namespace Controllers;
 
-require_once __DIR__ . '/../config.php';
 use Firebase\JWT\JWT;
 use Models\User;
 
 class AuthController extends BaseController
 {
     private $user;
-    private $config;
 
     public function __construct()
     {
         parent::__construct();
         $this->user = new User();
-        $this->config = include(__DIR__ . '/../config.php');
     }
 
     // Handle registration
@@ -60,16 +57,13 @@ class AuthController extends BaseController
         if ($user && password_verify($data['password'], $user['password'])) {
 
             $token = [
-                'iss' => $this->config['iss'],
-                'aud' => $this->config['aud'],
-                'iat' => $this->config['iat'],
-                'exp' => $this->config['exp'],
+                'iat' => time(),
+                'exp' => time() + $this->exp_time * 60,
                 'data' => [
                     'id' => $user['id'],
-                    'email' => $user['email']
                 ]
             ];
-            $jwt = JWT::encode($token, $this->config['secret_key'], 'HS256');
+            $jwt = JWT::encode($token, $this->secret_key, $this->algorithm);
 
             $_SESSION['user_id'] = $user['id'];
 

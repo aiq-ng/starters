@@ -2,15 +2,24 @@
 
 namespace Controllers;
 
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 use Database\Database;
+use Exception;
 
 class BaseController
 {
     protected $db;
+    protected $secret_key;
+    protected $algorithm;
+    protected $exp_time;
 
     public function __construct()
     {
         $this->db = Database::getInstance()->getConnection();
+        $this->secret_key = getenv('SECRET_KEY');
+        $this->algorithm = getenv('ALGORITHM');
+        $this->exp_time = getenv('ACCESS_TOKEN_EXPIRE_MINUTES');
     }
 
     protected function getRequestData()
@@ -51,6 +60,38 @@ class BaseController
             'files' => $files
         ];
     }
+
+    public function authorizeRequest()
+    {
+        if (!isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $this->sendResponse('Authorization header not found', 401);
+            return;
+        }
+
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+        list($bearer, $token) = explode(' ', $authHeader, 2);
+
+        if (strcasecmp($bearer, 'Bearer') !== 0) {
+            $this->sendResponse('Invalid authorization format', 401);
+            return;
+        }
+
+        try {
+            $decoded = JWT::decode($token, new Key($this->secret_key, $this->algorithm));
+
+            if (!isset($decoded->data->id)) {
+                $this->sendResponse('Invalid token structure', 401);
+                return;
+            }
+
+            $_SESSION['user_id'] = $decoded->data->id;
+
+        } catch (Exception $e) {
+            $this->sendResponse($e->getMessage(), 401);
+            return;
+        }
+    }
+
 
     protected function validateFields(...$fields)
     {

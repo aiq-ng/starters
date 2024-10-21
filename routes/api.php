@@ -19,6 +19,7 @@ $routes = [
         '/auth/logout' => [$authController, 'logout'],
         '/roles' => [$authController, 'getRoles'],
         '/products' => [$productController, 'index'],
+        '/warehouses' => [$warehouseController, 'index'],
         '/vendors' => [$productController, 'getVendors'],
         '/units' => [$productController, 'getUnits'],
         '/dashboard/metrics' => [$productController, 'getDashboardMetrics'],
