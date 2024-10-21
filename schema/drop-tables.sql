@@ -1,3 +1,12 @@
+-- Drop suppliers table
+DROP TABLE IF EXISTS suppliers CASCADE;
+
+-- Drop purchases table
+DROP TABLE IF EXISTS purchases CASCADE;
+
+-- Drop purchase_items table
+DROP TABLE IF EXISTS purchase_items CASCADE;
+
 -- Drop inventory_audits table
 DROP TABLE IF EXISTS inventory_audits CASCADE;
 

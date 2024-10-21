@@ -16,6 +16,8 @@ class WarehouseController extends BaseController
 
     public function index()
     {
+        $this->authorizeRequest();
+
         $warehouses = $this->warehouse->getWarehouses();
 
         if ($warehouses) {
@@ -27,6 +29,8 @@ class WarehouseController extends BaseController
 
     public function create()
     {
+        $this->authorizeRequest();
+
         $data = $this->getRequestData();
         if (!$this->validateFields($data['name'], $data['address'])) {
             $this->sendResponse('Invalid input data', 400);
@@ -43,6 +47,8 @@ class WarehouseController extends BaseController
 
     public function show($id)
     {
+        $this->authorizeRequest();
+
         $warehouse = $this->warehouse->getWarehouse($id);
 
         if ($warehouse) {

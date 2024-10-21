@@ -120,3 +120,23 @@ INSERT INTO sales (user_id, product_id, quantity, sale_price, total_price, sale_
 (3, 6, 3, 30.00, 90.00, '2024-02-10'),   -- Charlie sold 3 Salmon
 (1, 7, 20, 5.00, 100.00, '2024-02-15'),   -- Alice sold 20 Eggs
 (2, 8, 10, 3.50, 35.00, '2024-02-20');     -- Bob sold 10 Cheese
+
+-- Seed data for suppliers
+INSERT INTO suppliers (name, email, phone, address) VALUES
+('Supplier A', 'supplierone@example.com', '123-456-7890', '123 Supplier St, City, Country'),
+('Supplier B', 'suppliertwo@example.com', '987-654-3210', '456 Supplier Ave, City, Country'),
+('Supplier C', 'supplierthree@example.com', '456-789-1230', '789 Supplier Blvd, City, Country');
+
+-- Seed data for purchases
+INSERT INTO purchases (purchase_date, supplier_id, total_cost) VALUES
+('2024-10-01', 1, 1500.00),
+('2024-10-05', 2, 2000.00),
+('2024-10-10', 3, 2500.00);
+
+-- Seed data for purchase_items
+INSERT INTO purchase_items (purchase_id, product_id, quantity, price_per_unit) VALUES
+(1, 1, 100, 8.00),
+(1, 2, 50, 15.00),
+(2, 3, 30, 10.00),
+(2, 4, 60, 9.00),
+(3, 5, 40, 12.00);

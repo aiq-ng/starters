@@ -380,12 +380,12 @@ class Product
             $this->db->commit();
 
             return [
-                "current_quantity" => $currentQuantity,
-                "new_quantity" => $data['new_quantity'],
-                "discrepancy" => $discrepancy,
+                "current_quantity" => (int) $currentQuantity,
+                "new_quantity" => (int) $data['new_quantity'],
+                "discrepancy" => (int) $discrepancy,
                 "reason" => $data['reason'],
                 "notes" => $data['notes'],
-                "user_id" => $data['user_id'],
+                "user_id" => (int) $data['user_id'],
             ];
         } catch (\Exception $e) {
             $this->db->rollBack();

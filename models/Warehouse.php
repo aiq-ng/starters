@@ -49,7 +49,25 @@ class Warehouse
     //Update Warehouse information
     public function getWarehouses()
     {
-        $query = "SELECT * FROM " . $this->warehouse;
+        $query = "
+            SELECT 
+                w.id,
+                w.name,
+                w.address,
+                COUNT(DISTINCT i.product_id) AS total_products,
+                COALESCE(SUM(i.quantity), 0) AS total_product_units
+            FROM 
+                " . $this->warehouse . " w
+            LEFT JOIN 
+                inventory i ON w.id = i.warehouse_id
+            LEFT JOIN 
+                products p ON i.product_id = p.id
+            GROUP BY 
+                w.id, w.name, w.address
+            ORDER BY 
+                w.id;
+        ";
+
         $stmt = $this->db->query($query);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
