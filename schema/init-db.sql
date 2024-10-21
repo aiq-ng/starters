@@ -128,3 +128,15 @@ CREATE TABLE sales (
     sale_date DATE NOT NULL
 );
 
+-- Table to store inventory audit trail
+CREATE TABLE inventory_audit (
+    id SERIAL PRIMARY KEY,
+    product_id INT NOT NULL REFERENCES inventory(product_id) ON DELETE CASCADE,
+    account_id INT NOT NULL,
+    old_quantity INT NOT NULL,
+    new_quantity INT NOT NULL,
+    discrepancy INT NOT NULL,
+    reason TEXT,
+    notes TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

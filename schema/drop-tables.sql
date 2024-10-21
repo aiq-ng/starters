@@ -1,3 +1,6 @@
+-- Drop inventory_audits table
+DROP TABLE IF EXISTS inventory_audits CASCADE;
+
 -- Drop sales table
 DROP TABLE IF EXISTS sales CASCADE;
 

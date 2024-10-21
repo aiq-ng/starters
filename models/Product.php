@@ -94,11 +94,46 @@ class Product
 
     public function fetchProduct($id)
     {
-        $query = "SELECT * FROM $this->table WHERE id = :id";
+        $query = "
+		SELECT
+			p.media, 
+			COALESCE(SUM(i.on_hand), 0) AS on_hand, 
+			COALESCE(SUM(i.to_be_delivered), 0) AS to_be_delivered, 
+			COALESCE(SUM(i.to_be_ordered), 0) AS to_be_ordered,
+			p.name, 
+			w.name AS location, 
+			v.name AS top_vendor,
+			p.code,
+			p.sku,
+			p.barcode,
+			p.price,
+			p.profit,
+			p.margin,
+			COALESCE(SUM(i.quantity), 0) AS quantity,
+			u.name AS unit
+		FROM $this->table p
+		LEFT JOIN inventory i ON p.id = i.product_id
+		LEFT JOIN product_vendors pv ON p.id = pv.product_id
+		LEFT JOIN vendors v ON pv.vendor_id = v.id
+		LEFT JOIN warehouses w ON i.warehouse_id = w.id
+		LEFT JOIN units u ON p.unit_id = u.id
+		WHERE p.id = :id
+		GROUP BY p.id, p.media, p.name, w.name, v.name, u.name, p.code, p.sku, p.barcode, p.price, p.profit, p.margin
+		ORDER BY on_hand DESC
+		LIMIT 1
+	";
+
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        $product = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if ($product && isset($product['media'])) {
+            $product['media'] = json_decode($product['media'], true);
+        }
+
+        return $product;
     }
 
     public function fetchProducts($page, $pageSize, $withTotalSold = false, $filter = [])
