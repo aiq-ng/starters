@@ -323,6 +323,62 @@ class Product
     }
 
 
+    public function updateProductQuantity($productId, $newQuantity, $accountId, $reason = null, $notes = null)
+    {
+        // Fetch the current quantity
+        $currentQuantityQuery = "
+        SELECT quantity 
+        FROM inventory 
+        WHERE product_id = :product_id
+    ";
+        $currentStmt = $this->db->prepare($currentQuantityQuery);
+        $currentStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
+        $currentStmt->execute();
+        $currentQuantity = $currentStmt->fetchColumn();
+
+        if ($currentQuantity === false) {
+            return [
+                "message" => "Product not found in inventory."
+            ];
+        }
+
+        // Calculate the discrepancy
+        $discrepancy = $newQuantity - $currentQuantity;
+
+        $updateQuery = "
+        UPDATE inventory
+        SET quantity = :new_quantity
+        WHERE product_id = :product_id
+    ";
+        $updateStmt = $this->db->prepare($updateQuery);
+        $updateStmt->bindParam(':new_quantity', $newQuantity, \PDO::PARAM_INT);
+        $updateStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
+        $updateStmt->execute();
+
+        $auditQuery = "
+        INSERT INTO inventory_audit 
+        (product_id, account_id, old_quantity, new_quantity, discrepancy, reason, notes, updated_at)
+        VALUES (:product_id, :account_id, :old_quantity, :new_quantity, :discrepancy, :reason, :notes, NOW())
+    ";
+        $auditStmt = $this->db->prepare($auditQuery);
+        $auditStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
+        $auditStmt->bindParam(':account_id', $accountId, \PDO::PARAM_INT);
+        $auditStmt->bindParam(':old_quantity', $currentQuantity, \PDO::PARAM_INT);
+        $auditStmt->bindParam(':new_quantity', $newQuantity, \PDO::PARAM_INT);
+        $auditStmt->bindParam(':discrepancy', $discrepancy, \PDO::PARAM_INT);
+        $auditStmt->bindParam(':reason', $reason, \PDO::PARAM_STR);
+        $auditStmt->bindParam(':notes', $notes, \PDO::PARAM_STR);
+        $auditStmt->execute();
+
+        return [
+            "current_quantity" => $currentQuantity,
+            "new_quantity" => $newQuantity,
+            "discrepancy" => $discrepancy,
+            "reason" => $reason,
+            "notes" => $notes,
+            "account_id" => $accountId,
+        ];
+    }
 
 
 

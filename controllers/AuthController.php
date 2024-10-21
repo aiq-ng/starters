@@ -56,6 +56,7 @@ class AuthController extends BaseController
         }
 
         $user = $this->user->getUser($data['email']);
+
         if ($user && password_verify($data['password'], $user['password'])) {
 
             $token = [
@@ -76,6 +77,8 @@ class AuthController extends BaseController
                 'user_id' => $user['id'],
                 'token' => $jwt
             ]);
+        } else {
+            $this->sendResponse('Invalid credentials', 400);
         }
     }
 
