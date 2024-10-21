@@ -164,11 +164,10 @@ CREATE TABLE purchases (
 CREATE TABLE purchase_items (
     id SERIAL PRIMARY KEY,
     purchase_id INT REFERENCES purchases(id) ON DELETE CASCADE,
-    product_id INT REFERENCES products(id) ON DELETE CASCADE,
+    product_name VARCHAR(255) NOT NULL,
     quantity INT NOT NULL,
     price_per_unit DECIMAL(10, 2) NOT NULL,
     total_price DECIMAL(10, 2) GENERATED ALWAYS AS (quantity * price_per_unit) STORED,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (purchase_id, product_id)
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 

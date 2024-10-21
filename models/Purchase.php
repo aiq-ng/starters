@@ -16,11 +16,10 @@ class Purchase
     private function getTotalPurchasesCount()
     {
         $countQuery = "
-            SELECT COUNT(*) AS total
+            SELECT COUNT(DISTINCT p.id) AS total
             FROM purchases p
             JOIN suppliers s ON p.supplier_id = s.id
-            LEFT JOIN purchase_items pi ON p.id = pi.purchase_id
-            LEFT JOIN products prod ON pi.product_id = prod.id;
+            LEFT JOIN purchase_items pi ON p.id = pi.purchase_id;
         ";
 
         $countStmt = $this->db->query($countQuery);
@@ -38,11 +37,11 @@ class Purchase
             SELECT 
                 p.purchase_date,
                 s.name AS supplier,
-                COUNT(pi.product_id) AS items,
+                COUNT(pi.product_name) AS items,
                 COALESCE(SUM(pi.total_price), 0) AS total_cost,
                 JSON_AGG(
                     JSON_BUILD_OBJECT(
-                        'product', prod.name,
+                        'product', pi.product_name,
                         'quantity', pi.quantity,
                         'price_per_unit', pi.price_per_unit,
                         'total_price', pi.total_price
@@ -54,8 +53,6 @@ class Purchase
                 suppliers s ON p.supplier_id = s.id
             LEFT JOIN 
                 purchase_items pi ON p.id = pi.purchase_id
-            LEFT JOIN 
-                products prod ON pi.product_id = prod.id
             GROUP BY 
                 p.purchase_date, s.name
             ORDER BY 
@@ -127,7 +124,7 @@ class Purchase
     private function insertPurchaseItems($purchaseId, $items)
     {
         $itemQuery = "
-            INSERT INTO purchase_items (purchase_id, product_id, quantity, price_per_unit)
+            INSERT INTO purchase_items (purchase_id, product_name, quantity, price_per_unit)
             VALUES (:purchase_id, :product_id, :quantity, :price_per_unit);
         ";
 
@@ -136,28 +133,12 @@ class Purchase
         foreach ($items as $item) {
             $itemStmt->execute([
                 ':purchase_id' => $purchaseId,
-                ':product_id' => $item['product_id'],
+                ':product_id' => $item['product'],
                 ':quantity' => $item['quantity'],
                 ':price_per_unit' => $item['price_per_unit'],
             ]);
 
-            $this->updateInventory($item);
         }
-    }
-
-    private function updateInventory($item)
-    {
-        $updateInventoryQuery = "
-            INSERT INTO inventory (product_id, warehouse_id, storage_id, quantity, on_hand)
-            VALUES (:product_id, NULL, NULL, :quantity, :quantity)
-            ON CONFLICT (product_id, warehouse_id, storage_id) DO NOTHING;
-        ";
-
-        $updateStmt = $this->db->prepare($updateInventoryQuery);
-        $updateStmt->execute([
-            ':product_id' => $item['product_id'],
-            ':quantity' => $item['quantity'],
-        ]);
     }
 
     private function logInventoryActivity($userId)
