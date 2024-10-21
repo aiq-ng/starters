@@ -168,6 +168,6 @@ CREATE TABLE purchase_items (
     quantity INT NOT NULL,
     price_per_unit DECIMAL(10, 2) NOT NULL,
     total_price DECIMAL(10, 2) GENERATED ALWAYS AS (quantity * price_per_unit) STORED,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    purchased_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 

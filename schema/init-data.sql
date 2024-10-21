@@ -134,9 +134,9 @@ INSERT INTO purchases (purchase_date, supplier_id, total_cost) VALUES
 ('2024-10-10', 3, 2500.00);
 
 -- Seed data for purchase_items
-INSERT INTO purchase_items (purchase_id, product_name, quantity, price_per_unit) VALUES
-(1, 'sugar', 100, 8.00),
-(1, 'milk', 50, 15.00),
-(2, 'flour', 30, 10.00),
-(2, 'salt', 60, 9.00),
-(3, 'oil', 40, 12.00);
+INSERT INTO purchase_items (purchase_id, product_name, quantity, price_per_unit, purchased_at) VALUES
+(1, 'sugar', 10, 8.00, '2024-01-15'),
+(1, 'beans', 15, 12.00, '2024-01-20'),
+(2, 'milk', 5, 15.00, '2024-01-25'),
+(2, 'flour', 3, 10.00, '2024-02-05'),
+(3, 'oil', 4, 12.00, '2024-02-10');

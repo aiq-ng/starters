@@ -21,9 +21,11 @@ class Sale
 				COUNT(s.id) AS sales,
 				SUM(s.quantity) AS quantities,
 				SUM(s.sale_price) AS revenue,
+				COALESCE(expenses.total_cost, 0) AS expenses,
+				(SUM(s.sale_price) - COALESCE(expenses.total_cost, 0)) AS profit,
 				JSON_ARRAYAGG(
 					JSON_BUILD_OBJECT(
-						'time', TO_CHAR(s.sale_date, 'HH12:MI AM'), -- Format sale date for time
+						'time', TO_CHAR(s.sale_date, 'HH12:MI AM'),
 						'product', p.name,
 						'quantity', s.quantity,
 						'sale_amount', s.sale_price
@@ -31,8 +33,16 @@ class Sale
 				) AS sale_details
 			FROM sales s
 			JOIN products p ON s.product_id = p.id
-			GROUP BY DATE(s.sale_date)
-			ORDER BY sale_date DESC;
+			LEFT JOIN (
+				SELECT 
+					DATE(p.purchase_date) AS expense_date,
+					SUM(pi.total_price) AS total_cost
+				FROM purchase_items pi
+				JOIN purchases p ON pi.purchase_id = p.id
+				GROUP BY DATE(p.purchase_date)
+			) expenses ON DATE(s.sale_date) = expenses.expense_date
+			GROUP BY DATE(s.sale_date), expenses.total_cost
+			ORDER BY s.sale_date DESC;
 		";
 
         $statement = $this->db->prepare($query);
