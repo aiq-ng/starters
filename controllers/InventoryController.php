@@ -96,6 +96,27 @@ class InventoryController extends BaseController
         $this->sendResponse('success', 200, $inventory['data'], $inventory['meta']);
     }
 
+    public function completeInventory()
+    {
+        $this->authorizeRequest();
+        $data = $this->getRequestData();
+
+        if (!isset($data['products']) || !is_array($data['products'])) {
+            $this->sendResponse('Invalid data format', 400);
+            return;
+        }
+
+
+        $updated = $this->inventory->updateInventoryCount($data['products']);
+
+        if (!$updated) {
+            $this->sendResponse('Failed to update Inventory for some products', 400);
+            return;
+        }
+
+        $this->sendResponse('Success', 200, $updated);
+    }
+
 
 
 
