@@ -78,43 +78,43 @@ VALUES
 (20, 2, 2, 50, 45, 8, 6);   -- Soy Sauce
 
 -- Seed data for inventory plans
-INSERT INTO inventory_plans (name, warehouse_id, progress, inventory_date)
+INSERT INTO inventory_plans (name, warehouse_id, progress, status, plan_date)
 VALUES
-('Fresh Food Stock Level', 1, 15.00, '2024-10-01'),
-('Perishable Goods Stock Level', 2, 50.00, '2024-10-02'),
-('Presidential Dinner Stock Items', 1, 75.00, '2024-10-03'),
-('Event XYZ Stock Items', 2, 65.00, '2024-10-04');
+('Fresh Food Stock Level', 1, 15.00, 'todo', '2024-10-01'),
+('Perishable Goods Stock Level', 2, 50.00, 'processing', '2024-10-02'),
+('Presidential Dinner Stock Items', 1, 75.00, 'todo', '2024-10-03'),
+('Event XYZ Stock Items', 2, 65.00, 'completed', '2024-10-04');
 
 -- Seed data for inventory_plan_items
-INSERT INTO inventory_plan_products (inventory_plan_id, product_id, quantity, on_hand, counted)
+INSERT INTO inventory_plan_products (inventory_plan_id, product_id, quantity, on_hand)
 VALUES
-(1, 1, 50, 45, 48),
-(2, 2, 75, 70, 72),
-(3, 1, 50, 45, 48),
-(3, 2, 75, 70, 72),
-(3, 3, 30, 25, 28),
-(3, 4, 60, 55, 58),
-(3, 5, 40, 35, 38),
-(3, 6, 20, 15, 18),
-(3, 7, 100, 90, 95),
-(3, 8, 80, 75, 78),
-(3, 9, 120, 110, 115),
-(3, 10, 50, 45, 48),
-(3, 11, 90, 85, 88),
-(3, 12, 40, 35, 38),
-(3, 13, 55, 50, 53),
-(3, 14, 25, 20, 23),
-(3, 15, 35, 30, 33),
-(3, 16, 60, 55, 58),
-(3, 17, 20, 18, 19),
-(3, 18, 80, 75, 78),
-(3, 19, 30, 25, 28),
-(3, 20, 50, 45, 48),
-(4, 1, 50, 45, 48),
-(4, 2, 75, 70, 72),
-(4, 3, 30, 25, 28),
-(4, 4, 60, 55, 58),
-(4, 20, 50, 45, 48);
+(1, 1, 50, 45),
+(2, 2, 75, 70),
+(3, 1, 50, 45),
+(3, 2, 75, 70),
+(3, 3, 30, 25),
+(3, 4, 60, 55),
+(3, 5, 40, 35),
+(3, 6, 20, 15),
+(3, 7, 100, 90),
+(3, 8, 80, 75),
+(3, 9, 120, 110),
+(3, 10, 50, 45),
+(3, 11, 90, 85),
+(3, 12, 40, 35),
+(3, 13, 55, 50),
+(3, 14, 25, 20),
+(3, 15, 35, 30),
+(3, 16, 60, 55),
+(3, 17, 20, 18),
+(3, 18, 80, 75),
+(3, 19, 30, 25),
+(3, 20, 50, 45),
+(4, 1, 50, 45),
+(4, 2, 75, 70),
+(4, 3, 30, 25),
+(4, 4, 60, 55),
+(4, 20, 50, 45);
 
 -- Seed data for vendors
 INSERT INTO vendors (name, email, phone, address)

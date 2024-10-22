@@ -28,7 +28,7 @@ class Inventory
                 ip.name,
                 COUNT(ipp.product_id) AS product_count,
                 w.name AS warehouse_name,
-                ip.inventory_date,
+                ip.plan_date,
                 p.status,
                 ip.progress
             FROM inventory_plans ip
@@ -78,7 +78,7 @@ class Inventory
     public function countInventoryPlans($filter = null)
     {
         $countSql = "
-            SELECT COUNT(*) AS total_count
+            SELECT COUNT(DISTINCT ip.id) AS total_count
             FROM inventory_plans ip
             JOIN warehouses w ON ip.warehouse_id = w.id
             LEFT JOIN inventory_plan_products ipp ON ip.id = ipp.inventory_plan_id
@@ -111,11 +111,12 @@ class Inventory
             $warehouseId = $data['warehouse_id'];
             $planDate = $data['plan_date'];
             $products = $data['products'];
+            $planStatus = $data['status'];
 
             if ($action === 'create') {
-                $inventoryPlanId = $this->insertInventoryPlan($name, $warehouseId, $planDate);
+                $inventoryPlanId = $this->insertInventoryPlan($name, $warehouseId, $planDate, $planStatus);
             } elseif ($action === 'update' && $id !== null) {
-                $this->updateInventoryPlan($id, $name, $warehouseId, $planDate);
+                $this->updateInventoryPlan($id, $name, $warehouseId, $planDate, $planStatus);
                 $inventoryPlanId = $id;
             }
 
@@ -123,7 +124,7 @@ class Inventory
             $this->insertOrUpdateInventoryPlanProducts($inventoryPlanId, $products);
 
             $this->db->commit();
-            return $action === 'create' ? $inventoryPlanId : true;
+            return $inventoryPlanId;
 
         } catch (\Exception $e) {
             $this->db->rollBack();
@@ -131,19 +132,20 @@ class Inventory
         }
     }
 
-    private function insertInventoryPlan($name, $warehouseId, $planDate)
+    private function insertInventoryPlan($name, $warehouseId, $planDate, $planStatus)
     {
         $sql = "
             INSERT INTO inventory_plans 
-            (name, warehouse_id, plan_date) 
-            VALUES (:name, :warehouse_id, :plan_date)
+            (name, warehouse_id, plan_date, status) 
+            VALUES (:name, :warehouse_id, :plan_date, :status)
         ";
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
             'name' => $name,
             'warehouse_id' => $warehouseId,
-            'plan_date' => $planDate
+            'plan_date' => $planDate,
+            'status' => $planStatus ?? 'todo'
         ]);
 
         return $this->db->lastInsertId();
@@ -169,11 +171,11 @@ class Inventory
         }
     }
 
-    private function updateInventoryPlan($id, $name, $warehouseId, $planDate)
+    private function updateInventoryPlan($id, $name, $warehouseId, $planDate, $planStatus)
     {
         $sql = "
             UPDATE inventory_plans 
-            SET name = :name, warehouse_id = :warehouse_id, plan_date = :plan_date
+            SET name = :name, warehouse_id = :warehouse_id, plan_date = :plan_date, status = :status
             WHERE id = :id
         ";
 
@@ -181,6 +183,7 @@ class Inventory
         $stmt->execute([
             'name' => $name,
             'warehouse_id' => $warehouseId,
+            'status' => $planStatus ?? 'todo',
             'plan_date' => $planDate,
             'id' => $id
         ]);
@@ -200,8 +203,8 @@ class Inventory
 
         $sql = "
             INSERT INTO inventory_plan_products 
-            (inventory_plan_id, product_id) 
-            VALUES (:inventory_plan_id, :product_id)
+            (inventory_plan_id, product_id, quantity, on_hand) 
+            VALUES (:inventory_plan_id, :product_id, :quantity, :on_hand)
         ";
 
         $stmt = $this->db->prepare($sql);
@@ -211,6 +214,7 @@ class Inventory
                 'inventory_plan_id' => $inventoryPlanId,
                 'product_id' => $product['id'],
                 'quantity' => $product['quantity'],
+                'on_hand' => $product['quantity'],
             ]);
         }
     }

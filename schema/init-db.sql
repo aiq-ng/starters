@@ -75,8 +75,9 @@ CREATE TABLE inventory_plans (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     warehouse_id INT REFERENCES warehouses(id) ON DELETE CASCADE,
+    status VARCHAR(50) DEFAULT 'todo' CHECK (status IN ('todo', 'processing', 'completed')),
     progress DECIMAL(5, 2) DEFAULT 0,
-    inventory_date DATE NOT NULL
+    plan_date DATE NOT NULL
 );
 
 -- Linking inventory plans with specific products
@@ -85,9 +86,7 @@ CREATE TABLE inventory_plan_products (
     inventory_plan_id INT REFERENCES inventory_plans(id) ON DELETE CASCADE,
     product_id INT REFERENCES products(id) ON DELETE CASCADE,
     quantity INT NOT NULL,
-    on_hand INT NOT NULL,
-    counted INT NOT NULL,
-    difference INT GENERATED ALWAYS AS (counted - on_hand) STORED
+    on_hand INT NOT NULL
 );
 
 -- Table for vendors information

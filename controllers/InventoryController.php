@@ -37,8 +37,13 @@ class InventoryController extends BaseController
     public function create($data)
     {
         $this->authorizeRequest();
-        $this->getRequestData();
-        if (!$this->validateFields($data, ['name', 'warehouse_id', 'plan_date', 'products'])) {
+        $data = $this->getRequestData();
+        if (!$this->validateFields(
+            $data['name'],
+            $data['warehouse_id'],
+            $data['products'],
+            $data['plan_date']
+        )) {
             $this->sendResponse('Missing required fields', 400);
         }
 
@@ -51,7 +56,7 @@ class InventoryController extends BaseController
         if (!$planId) {
             $this->sendResponse('Failed to create Inventory Plan', 400);
         }
-        $this->sendResponse('Inventory Plan created', 200, $planId);
+        $this->sendResponse('Inventory Plan created', 200, ['plan_id' => $planId]);
     }
 
 
