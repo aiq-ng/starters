@@ -101,6 +101,24 @@ class Inventory
         return $countStmt->fetchColumn();
     }
 
+    public function getInventoryTracker()
+    {
+        $sql = "
+            SELECT 
+                ip.name,
+                COUNT(ipp.product_id) AS product_count,
+                ip.plan_date,
+                ip.status,
+                ip.progress
+            FROM inventory_plans ip
+            LEFT JOIN inventory_plan_products ipp ON ip.id = ipp.inventory_plan_id
+            LEFT JOIN products p ON ipp.product_id = p.id
+            GROUP BY ip.id, p.status, ip.progress
+        ";
+
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 
     public function saveInventoryPlan($data, $id = null, $action = 'create')
     {

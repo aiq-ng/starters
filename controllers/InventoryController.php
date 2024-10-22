@@ -33,7 +33,18 @@ class InventoryController extends BaseController
         $this->sendResponse('success', 200, $inventory['plans'], $inventory['meta']);
     }
 
-    // Create a New Inventory Plan
+    public function getinventoryTracker()
+    {
+        $this->authorizeRequest();
+
+        $inventory = $this->inventory->getInventoryTracker();
+
+        if (empty($inventory)) {
+            $this->sendResponse('Inventory not found', 404, []);
+        }
+        $this->sendResponse('success', 200, $inventory);
+    }
+
     public function create($data)
     {
         $this->authorizeRequest();
@@ -58,6 +69,8 @@ class InventoryController extends BaseController
         }
         $this->sendResponse('Inventory Plan created', 200, ['plan_id' => $planId]);
     }
+
+
 
 
     // Get All Inventory Plans with Warehouse Name
