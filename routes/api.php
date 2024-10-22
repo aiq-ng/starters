@@ -37,6 +37,7 @@ $routes = [
         '/products/(\d+)' => [$productController, 'show'],
         '/inventory' => [$inventoryController, 'getInventory'],
         '/inventory/plans' => [$inventoryController, 'index'],
+        '/inventory/plans/(\d+)' => [$inventoryController, 'show'],
         '/inventory/tracker' => [$inventoryController, 'inventoryTracker'],
         '/inventory/:id' => [$inventoryController, 'getInventoryPlan'],
         '/inventory/stock' => [$inventoryController, 'getStockProgress'],

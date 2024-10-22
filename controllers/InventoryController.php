@@ -33,6 +33,17 @@ class InventoryController extends BaseController
         $this->sendResponse('success', 200, $inventory['plans'], $inventory['meta']);
     }
 
+    public function show($id)
+    {
+        $this->authorizeRequest();
+        $inventory = $this->inventory->getInventoryPlan($id);
+
+        if (empty($inventory)) {
+            $this->sendResponse('Inventory not found', 404, []);
+        }
+        $this->sendResponse('success', 200, $inventory);
+    }
+
     public function getinventoryTracker()
     {
         $this->authorizeRequest();

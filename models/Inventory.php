@@ -24,8 +24,9 @@ class Inventory
         $pageSize = $filter['page_size'] ?? 10;
 
         $sql = "
-            SELECT 
-                ip.name AS inventory_plan_name,
+            SELECT
+                ip.id, 
+                ip.name AS plan_name,
                 COUNT(ipp.product_id) AS product_count,
                 w.name AS warehouse_name,
                 ip.plan_date,
@@ -72,6 +73,32 @@ class Inventory
             'plans' => $results,
             'meta' => $meta
         ];
+    }
+
+    public function getInventoryPlan($id)
+    {
+        $sql = "
+            SELECT 
+                ip.name AS inventory_plan_name,
+                COUNT(ipp.product_id) AS product_count,
+                w.name AS warehouse_name,
+                ip.plan_date,
+                p.status,
+                i.progress
+            FROM inventory i
+            JOIN warehouses w ON i.warehouse_id = w.id
+            LEFT JOIN inventory_plan_products ipp ON i.product_id = ipp.product_id
+            LEFT JOIN products p ON ipp.product_id = p.id
+            JOIN inventory_plans ip ON ipp.inventory_plan_id = ip.id
+            WHERE ip.id = :id
+            GROUP BY ip.id, w.name, p.status, i.progress
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 
     public function countInventoryPlans($filter = null)
