@@ -13,8 +13,17 @@ INSERT INTO units (name, abbreviation) VALUES
 ('meter', 'm'),
 ('dozen', 'doz');
 
+-- Seed data for reasons
+INSERT INTO reasons (reason) VALUES
+('adjustment'),
+('damaged'),
+('stolen'),
+('returned'),
+('other');
+
 -- Seed data for users
 INSERT INTO users (name, email, password, role_id, avatar_url) VALUES
+('Starters', 'starters@admin.com', 'password123', 1, 'https://example.com/avatars/admin.jpg'),
 ('Alice Johnson', 'alice@example.com', 'password123', 1, 'https://example.com/avatars/alice.jpg'),
 ('Bob Smith', 'bob@example.com', 'password123', 2, 'https://example.com/avatars/bob.jpg'),
 ('Charlie Brown', 'charlie@example.com', 'password123', 3, 'https://example.com/avatars/charlie.jpg');
@@ -78,43 +87,43 @@ VALUES
 (20, 2, 2, 50, 45, 8, 6);   -- Soy Sauce
 
 -- Seed data for inventory plans
-INSERT INTO inventory_plans (name, warehouse_id, progress, status, plan_date)
+INSERT INTO inventory_plans (name, status, plan_date)
 VALUES
-('Fresh Food Stock Level', 1, 15.00, 'todo', '2024-10-01'),
-('Perishable Goods Stock Level', 2, 50.00, 'processing', '2024-10-02'),
-('Presidential Dinner Stock Items', 1, 75.00, 'todo', '2024-10-03'),
-('Event XYZ Stock Items', 2, 65.00, 'completed', '2024-10-04');
+('Fresh Food Stock Level', 'todo', '2024-10-01'),
+('Perishable Goods Stock Level', 'processing', '2024-10-02'),
+('Presidential Dinner Stock Items', 'todo', '2024-10-03'),
+('Event XYZ Stock Items', 'completed', '2024-10-04');
 
--- Seed data for inventory_plan_items
-INSERT INTO inventory_plan_products (inventory_plan_id, product_id, quantity, on_hand)
+-- Seed data for inventory_plan_products
+INSERT INTO inventory_plan_products (inventory_plan_id, product_id)
 VALUES
-(1, 1, 50, 45),
-(2, 2, 75, 70),
-(3, 1, 50, 45),
-(3, 2, 75, 70),
-(3, 3, 30, 25),
-(3, 4, 60, 55),
-(3, 5, 40, 35),
-(3, 6, 20, 15),
-(3, 7, 100, 90),
-(3, 8, 80, 75),
-(3, 9, 120, 110),
-(3, 10, 50, 45),
-(3, 11, 90, 85),
-(3, 12, 40, 35),
-(3, 13, 55, 50),
-(3, 14, 25, 20),
-(3, 15, 35, 30),
-(3, 16, 60, 55),
-(3, 17, 20, 18),
-(3, 18, 80, 75),
-(3, 19, 30, 25),
-(3, 20, 50, 45),
-(4, 1, 50, 45),
-(4, 2, 75, 70),
-(4, 3, 30, 25),
-(4, 4, 60, 55),
-(4, 20, 50, 45);
+(1, 1),
+(2, 2),
+(3, 1),
+(3, 2),
+(3, 3),
+(3, 4),
+(3, 5),
+(3, 6),
+(3, 7),
+(3, 8),
+(3, 9),
+(3, 10),
+(3, 11),
+(3, 12),
+(3, 13),
+(3, 14),
+(3, 15),
+(3, 16),
+(3, 17),
+(3, 18),
+(3, 19),
+(3, 20),
+(4, 1),
+(4, 2),
+(4, 3),
+(4, 4),
+(4, 20);
 
 -- Seed data for vendors
 INSERT INTO vendors (name, email, phone, address)
@@ -147,6 +156,10 @@ INSERT INTO sales (user_id, product_id, quantity, sale_price, sale_date) VALUES
 (1, 7, 20, 5.00, '2024-02-15'),   -- Alice sold 20 Eggs
 (2, 8, 10, 3.50, '2024-02-20');     -- Bob sold 10 Cheese
 
+-- Seed data for inventory audits
+INSERT INTO inventory_audits (product_id, user_id, old_quantity, new_quantity, discrepancy, reason_id, notes) VALUES
+(1, 1, 100, 80, 20, 1, 'Damaged items found'), 
+(2, 2, 50, 45, 5, 2, 'Items missing after delivery');
 -- Seed data for suppliers
 INSERT INTO suppliers (name, email, phone, address) VALUES
 ('Supplier A', 'supplierone@example.com', '123-456-7890', '123 Supplier St, City, Country'),

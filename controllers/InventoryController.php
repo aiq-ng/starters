@@ -25,7 +25,7 @@ class InventoryController extends BaseController
             'page_size' => isset($_GET['page_size']) ? (int)$_GET['page_size'] : 10,
         ];
 
-        $inventory = $this->inventory->getInventoryPlan($params);
+        $inventory = $this->inventory->getInventoryPlans($params);
 
         if (empty($inventory)) {
             $this->sendResponse('Inventory not found', 404, []);
@@ -51,7 +51,6 @@ class InventoryController extends BaseController
         $data = $this->getRequestData();
         if (!$this->validateFields(
             $data['name'],
-            $data['warehouse_id'],
             $data['products'],
             $data['plan_date']
         )) {
@@ -67,7 +66,7 @@ class InventoryController extends BaseController
         if (!$planId) {
             $this->sendResponse('Failed to create Inventory Plan', 400);
         }
-        $this->sendResponse('Inventory Plan created', 200, ['plan_id' => $planId]);
+        $this->sendResponse('success', 200, ['plan_id' => $planId]);
     }
 
 

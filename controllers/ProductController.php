@@ -141,6 +141,14 @@ class ProductController extends BaseController
         $this->sendResponse('Success', 200, $result);
     }
 
+    public function getReasons()
+    {
+        $this->authorizeRequest();
+
+        $result = $this->fetchReasons();
+        $this->sendResponse('Success', 200, $result);
+    }
+
     public function getSuppliers()
     {
         $this->authorizeRequest();

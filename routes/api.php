@@ -27,6 +27,7 @@ $routes = [
         '/vendors' => [$productController, 'getVendors'],
         '/suppliers' => [$productController, 'getSuppliers'],
         '/units' => [$productController, 'getUnits'],
+        '/reasons' => [$productController, 'getReasons'],
         '/dashboard/metrics' => [$productController, 'getDashboardMetrics'],
         '/dashboard/warehouses/details' => [$productController, 'getWarehouseDetailsMetrics'],
         '/dashboard/products/topselling' => [$productController, 'getTopSellingProducts'],

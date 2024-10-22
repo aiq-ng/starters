@@ -67,6 +67,8 @@ CREATE TABLE inventory (
     on_hand INT NOT NULL,
     to_be_delivered INT DEFAULT 0,
     to_be_ordered INT DEFAULT 0,
+    difference INT GENERATED ALWAYS AS (quantity - on_hand) STORED,
+    progress DECIMAL(5, 2) GENERATED ALWAYS AS (CASE WHEN quantity = 0 THEN 0 ELSE (on_hand::DECIMAL / quantity) * 100 END) STORED,
     UNIQUE (product_id, warehouse_id, storage_id)
 );
 
@@ -74,9 +76,7 @@ CREATE TABLE inventory (
 CREATE TABLE inventory_plans (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    warehouse_id INT REFERENCES warehouses(id) ON DELETE CASCADE,
     status VARCHAR(50) DEFAULT 'todo' CHECK (status IN ('todo', 'processing', 'completed')),
-    progress DECIMAL(5, 2) DEFAULT 0,
     plan_date DATE NOT NULL
 );
 
@@ -84,9 +84,7 @@ CREATE TABLE inventory_plans (
 CREATE TABLE inventory_plan_products (
     id SERIAL PRIMARY KEY,
     inventory_plan_id INT REFERENCES inventory_plans(id) ON DELETE CASCADE,
-    product_id INT REFERENCES products(id) ON DELETE CASCADE,
-    quantity INT NOT NULL,
-    on_hand INT NOT NULL
+    product_id INT REFERENCES products(id) ON DELETE CASCADE
 );
 
 -- Table for vendors information
@@ -127,6 +125,12 @@ CREATE TABLE sales (
     sale_date DATE NOT NULL
 );
 
+-- Table to store reasons for inventory audits
+CREATE TABLE reasons (
+    id SERIAL PRIMARY KEY,
+    reason CHAR(50) UNIQUE NOT NULL
+);
+
 -- Table to store inventory audit trail
 CREATE TABLE inventory_audits (
     id SERIAL PRIMARY KEY,
@@ -135,7 +139,7 @@ CREATE TABLE inventory_audits (
     old_quantity INT NOT NULL,
     new_quantity INT NOT NULL,
     discrepancy INT NOT NULL,
-    reason TEXT CHECK (reason IN ('damaged', 'stolen', 'returned', 'adjustment')),
+    reason_id INT REFERENCES reasons(id) ON DELETE RESTRICT,
     notes TEXT,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
