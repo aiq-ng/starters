@@ -289,7 +289,7 @@ class Product
 
         // Default selection if no specific filter is provided
         if (empty($selects)) {
-            $selects[] = "SUM(i.on_hand)";
+            $selects[] = "SUM(i.quantity)";
         }
 
         $query .= " " . implode(", ", $selects) . "
