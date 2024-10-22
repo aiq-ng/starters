@@ -13,34 +13,43 @@ INSERT INTO units (name, abbreviation) VALUES
 ('meter', 'm'),
 ('dozen', 'doz');
 
+-- Seed data for reasons
+INSERT INTO reasons (reason) VALUES
+('adjustment'),
+('damaged'),
+('stolen'),
+('returned'),
+('other');
+
 -- Seed data for users
 INSERT INTO users (name, email, password, role_id, avatar_url) VALUES
+('Starters', 'starters@admin.com', 'password123', 1, 'https://example.com/avatars/admin.jpg'),
 ('Alice Johnson', 'alice@example.com', 'password123', 1, 'https://example.com/avatars/alice.jpg'),
 ('Bob Smith', 'bob@example.com', 'password123', 2, 'https://example.com/avatars/bob.jpg'),
 ('Charlie Brown', 'charlie@example.com', 'password123', 3, 'https://example.com/avatars/charlie.jpg');
 
 INSERT INTO products (code, name, sku, price, profit, margin, barcode, unit_id, low_stock_alert, media, status)
 VALUES
-('PROD001', 'Beef', 'SKU001', 10.00, 2.00, 20.00, '1234567890123', 1, FALSE, '["https://i.imgur.com/VWBa2bd.jpg"]', 'available'),
-('PROD002', 'Chicken', 'SKU002', 20.00, 5.00, 25.00, '1234567890124', 1, TRUE, '["https://i.imgur.com/um74W0V.jpg"]', 'depleting'),
-('PROD003', 'Catfish', 'SKU003', 15.00, 3.00, 15.00, '1234567890125', 1, FALSE, '["https://i.imgur.com/Y79flwf.jpg"]', 'available'),
-('PROD004', 'Pork', 'SKU004', 12.00, 3.00, 25.00, '1234567890126', 1, FALSE, '["https://i.imgur.com/27GAjK0.jpg"]', 'unavailable'),
-('PROD005', 'Lamb', 'SKU005', 25.00, 7.00, 28.00, '1234567890127', 1, TRUE, '["https://i.imgur.com/JoxlcBj.jpg"]', 'available'),
-('PROD006', 'Salmon', 'SKU006', 30.00, 10.00, 33.33, '1234567890128', 1, FALSE, '["https://i.imgur.com/c4g5zbh.jpg"]', 'depleting'),
-('PROD007', 'Eggs', 'SKU011', 5.00, 1.00, 20.00, '1234567890133', 1, TRUE, '["https://i.imgur.com/B0aX5T9.jpg"]', 'available'),
-('PROD008', 'Cheese', 'SKU012', 3.50, 0.50, 14.29, '1234567890134', 1, FALSE, '["https://i.imgur.com/dZKuOVe.jpg"]', 'available'),
-('PROD009', 'Milk', 'SKU013', 2.00, 0.20, 10.00, '1234567890135', 1, TRUE, '["https://i.imgur.com/9cG2ytM.jpg"]', 'kiv'),
-('PROD010', 'Yogurt', 'SKU014', 1.80, 0.30, 16.67, '1234567890136', 1, FALSE, '["https://i.imgur.com/5Fo2yGh.jpg"]', 'available'),
-('PROD011', 'Bread', 'SKU016', 1.50, 0.10, 6.67, '1234567890138', 1, FALSE, '["https://i.imgur.com/FW8FhaG.jpg"]', 'depleting'),
-('PROD012', 'Rice', 'SKU017', 2.50, 0.20, 8.00, '1234567890139', 1, TRUE, '["https://i.imgur.com/Od3ZGlR.jpg"]', 'available'),
-('PROD013', 'Pasta', 'SKU018', 1.00, 0.15, 15.00, '1234567890140', 1, FALSE, '["https://i.imgur.com/yMGoY4S.jpg"]', 'unavailable'),
-('PROD014', 'Honey', 'SKU023', 5.00, 1.00, 20.00, '1234567890145', 1, TRUE, '["https://i.imgur.com/mV5e3RG.jpg"]', 'available'),
-('PROD015', 'Olive Oil', 'SKU024', 6.00, 1.50, 25.00, '1234567890146', 1, FALSE, '["https://i.imgur.com/E0LgHx0.jpg"]', 'available'),
-('PROD016', 'Vegetable Oil', 'SKU025', 3.50, 0.50, 14.29, '1234567890147', 1, TRUE, '["https://i.imgur.com/BlUMbuG.jpg"]', 'unavailable'),
-('PROD017', 'Mustard', 'SKU029', 1.50, 0.10, 6.67, '1234567890151', 1, TRUE, '["https://i.imgur.com/ZxYcHRo.jpg"]', 'available'),
-('PROD018', 'Ketchup', 'SKU030', 1.50, 0.20, 13.33, '1234567890152', 1, FALSE, '["https://i.imgur.com/4FmJgfE.jpg"]', 'kiv'),
-('PROD019', 'Mayonnaise', 'SKU031', 2.00, 0.30, 15.00, '1234567890153', 1, TRUE, '["https://i.imgur.com/D2z2gwN.jpg"]', 'unavailable'),
-('PROD020', 'Soy Sauce', 'SKU032', 1.00, 0.15, 15.00, '1234567890154', 1, FALSE, '["https://i.imgur.com/xMxtjOl.jpg"]', 'available');
+('PROD001', 'Beef', 'SKU001', 10.00, 2.00, 20.00, '1234567890123', 1, FALSE, '["https://i.imgur.com/IwdmYjG.jpeg"]', 'available'),
+('PROD002', 'Chicken', 'SKU002', 20.00, 5.00, 25.00, '1234567890124', 1, TRUE, '["https://i.imgur.com/gnRz12P.png"]', 'depleting'),
+('PROD003', 'Catfish', 'SKU003', 15.00, 3.00, 15.00, '1234567890125', 1, FALSE, '["https://i.imgur.com/MxiMX9v.png"]', 'available'),
+('PROD004', 'Pork', 'SKU004', 12.00, 3.00, 25.00, '1234567890126', 1, FALSE, '["https://i.imgur.com/dGGizfQ.png"]', 'unavailable'),
+('PROD005', 'Lamb', 'SKU005', 25.00, 7.00, 28.00, '1234567890127', 1, TRUE, '["https://i.imgur.com/8TIGZM2.png"]', 'available'),
+('PROD006', 'Salmon', 'SKU006', 30.00, 10.00, 33.33, '1234567890128', 1, FALSE, '["https://i.imgur.com/ISOOCLs.png"]', 'depleting'),
+('PROD007', 'Eggs', 'SKU011', 5.00, 1.00, 20.00, '1234567890133', 1, TRUE, '["https://i.imgur.com/G0mVY78.png"]', 'available'),
+('PROD008', 'Cheese', 'SKU012', 3.50, 0.50, 14.29, '1234567890134', 1, FALSE, '["https://i.imgur.com/IVCT63j.png"]', 'available'),
+('PROD009', 'Milk', 'SKU013', 2.00, 0.20, 10.00, '1234567890135', 1, TRUE, '["https://i.imgur.com/5JXHh4d.png"]', 'kiv'),
+('PROD010', 'Yogurt', 'SKU014', 1.80, 0.30, 16.67, '1234567890136', 1, FALSE, '["https://i.imgur.com/NQTBB4c.jpeg"]', 'available'),
+('PROD011', 'Bread', 'SKU016', 1.50, 0.10, 6.67, '1234567890138', 1, FALSE, '["https://i.imgur.com/jA1O0Qb.png"]', 'depleting'),
+('PROD012', 'Rice', 'SKU017', 2.50, 0.20, 8.00, '1234567890139', 1, TRUE, '["https://i.imgur.com/pwXSxkn.png"]', 'available'),
+('PROD013', 'Pasta', 'SKU018', 1.00, 0.15, 15.00, '1234567890140', 1, FALSE, '["https://i.imgur.com/ZLncFYM.png"]', 'unavailable'),
+('PROD014', 'Honey', 'SKU023', 5.00, 1.00, 20.00, '1234567890145', 1, TRUE, '["https://i.imgur.com/PheCs9s.png"]', 'available'),
+('PROD015', 'Olive Oil', 'SKU024', 6.00, 1.50, 25.00, '1234567890146', 1, FALSE, '["https://i.imgur.com/GEkayag.png"]', 'available'),
+('PROD016', 'Vegetable Oil', 'SKU025', 3.50, 0.50, 14.29, '1234567890147', 1, TRUE, '["https://i.imgur.com/W5F6Gzv.png"]', 'unavailable'),
+('PROD017', 'Mustard', 'SKU029', 1.50, 0.10, 6.67, '1234567890151', 1, TRUE, '["https://i.imgur.com/GwxyZSF.png"]', 'available'),
+('PROD018', 'Ketchup', 'SKU030', 1.50, 0.20, 13.33, '1234567890152', 1, FALSE, '["https://i.imgur.com/JfO21Bm.png"]', 'kiv'),
+('PROD019', 'Mayonnaise', 'SKU031', 2.00, 0.30, 15.00, '1234567890153', 1, TRUE, '["https://i.imgur.com/PSuuQmI.png"]', 'unavailable'),
+('PROD020', 'Soy Sauce', 'SKU032', 1.00, 0.15, 15.00, '1234567890154', 1, FALSE, '["https://i.imgur.com/zMLrQYD.png"]', 'available');
 
 -- Seed data for warehouses
 INSERT INTO warehouses (name, address)
@@ -78,43 +87,43 @@ VALUES
 (20, 2, 2, 50, 45, 8, 6);   -- Soy Sauce
 
 -- Seed data for inventory plans
-INSERT INTO inventory_plans (name, warehouse_id, progress, status, plan_date)
+INSERT INTO inventory_plans (name, status, plan_date)
 VALUES
-('Fresh Food Stock Level', 1, 15.00, 'todo', '2024-10-01'),
-('Perishable Goods Stock Level', 2, 50.00, 'processing', '2024-10-02'),
-('Presidential Dinner Stock Items', 1, 75.00, 'todo', '2024-10-03'),
-('Event XYZ Stock Items', 2, 65.00, 'completed', '2024-10-04');
+('Fresh Food Stock Level', 'todo', '2024-10-01'),
+('Perishable Goods Stock Level', 'processing', '2024-10-02'),
+('Presidential Dinner Stock Items', 'todo', '2024-10-03'),
+('Event XYZ Stock Items', 'completed', '2024-10-04');
 
--- Seed data for inventory_plan_items
-INSERT INTO inventory_plan_products (inventory_plan_id, product_id, quantity, on_hand)
+-- Seed data for inventory_plan_products
+INSERT INTO inventory_plan_products (inventory_plan_id, product_id)
 VALUES
-(1, 1, 50, 45),
-(2, 2, 75, 70),
-(3, 1, 50, 45),
-(3, 2, 75, 70),
-(3, 3, 30, 25),
-(3, 4, 60, 55),
-(3, 5, 40, 35),
-(3, 6, 20, 15),
-(3, 7, 100, 90),
-(3, 8, 80, 75),
-(3, 9, 120, 110),
-(3, 10, 50, 45),
-(3, 11, 90, 85),
-(3, 12, 40, 35),
-(3, 13, 55, 50),
-(3, 14, 25, 20),
-(3, 15, 35, 30),
-(3, 16, 60, 55),
-(3, 17, 20, 18),
-(3, 18, 80, 75),
-(3, 19, 30, 25),
-(3, 20, 50, 45),
-(4, 1, 50, 45),
-(4, 2, 75, 70),
-(4, 3, 30, 25),
-(4, 4, 60, 55),
-(4, 20, 50, 45);
+(1, 1),
+(2, 2),
+(3, 1),
+(3, 2),
+(3, 3),
+(3, 4),
+(3, 5),
+(3, 6),
+(3, 7),
+(3, 8),
+(3, 9),
+(3, 10),
+(3, 11),
+(3, 12),
+(3, 13),
+(3, 14),
+(3, 15),
+(3, 16),
+(3, 17),
+(3, 18),
+(3, 19),
+(3, 20),
+(4, 1),
+(4, 2),
+(4, 3),
+(4, 4),
+(4, 20);
 
 -- Seed data for vendors
 INSERT INTO vendors (name, email, phone, address)
@@ -147,6 +156,10 @@ INSERT INTO sales (user_id, product_id, quantity, sale_price, sale_date) VALUES
 (1, 7, 20, 5.00, '2024-02-15'),   -- Alice sold 20 Eggs
 (2, 8, 10, 3.50, '2024-02-20');     -- Bob sold 10 Cheese
 
+-- Seed data for inventory audits
+INSERT INTO inventory_audits (product_id, user_id, old_quantity, new_quantity, discrepancy, reason_id, notes) VALUES
+(1, 1, 100, 80, 20, 1, 'Damaged items found'), 
+(2, 2, 50, 45, 5, 2, 'Items missing after delivery');
 -- Seed data for suppliers
 INSERT INTO suppliers (name, email, phone, address) VALUES
 ('Supplier A', 'supplierone@example.com', '123-456-7890', '123 Supplier St, City, Country'),

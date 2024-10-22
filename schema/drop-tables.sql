@@ -37,6 +37,9 @@ DROP TABLE IF EXISTS purchases CASCADE;
 -- Drop products table
 DROP TABLE IF EXISTS products CASCADE;
 
+-- Drop reasons table
+DROP TABLE IF EXISTS reasons CASCADE;
+
 -- Drop units table
 DROP TABLE IF EXISTS units CASCADE;
 

@@ -151,4 +151,11 @@ class BaseController
         $stmt = $this->db->query($query);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
+
+    public function fetchReasons()
+    {
+        $query = "SELECT * FROM reasons";
+        $stmt = $this->db->query($query);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 }
