@@ -361,8 +361,8 @@ class Product
 
             $auditQuery = "
             INSERT INTO inventory_audits 
-            (product_id, user_id, old_quantity, new_quantity, discrepancy, reason, notes, updated_at)
-            VALUES (:product_id, :user_id, :old_quantity, :new_quantity, :discrepancy, :reason, :notes, NOW())
+            (product_id, user_id, old_quantity, new_quantity, discrepancy, reason_id, notes, updated_at)
+            VALUES (:product_id, :user_id, :old_quantity, :new_quantity, :discrepancy, :reason_id, :notes, NOW())
         ";
             $auditStmt = $this->db->prepare($auditQuery);
             $auditStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
@@ -370,7 +370,7 @@ class Product
             $auditStmt->bindParam(':old_quantity', $currentQuantity, \PDO::PARAM_INT);
             $auditStmt->bindParam(':new_quantity', $data['new_quantity'], \PDO::PARAM_INT);
             $auditStmt->bindParam(':discrepancy', $discrepancy, \PDO::PARAM_INT);
-            $auditStmt->bindParam(':reason', $data['reason'], \PDO::PARAM_STR);
+            $auditStmt->bindParam(':reason_id', $data['reason'], \PDO::PARAM_INT);
             $auditStmt->bindParam(':notes', $data['notes'], \PDO::PARAM_STR);
             $auditStmt->execute();
 
