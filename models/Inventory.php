@@ -209,11 +209,11 @@ class Inventory
                 COUNT(ipp.product_id) AS product_count,
                 ip.plan_date,
                 ip.status,
-                ip.progress
+                i.progress
             FROM inventory_plans ip
             LEFT JOIN inventory_plan_products ipp ON ip.id = ipp.inventory_plan_id
-            LEFT JOIN products p ON ipp.product_id = p.id
-            GROUP BY ip.id, p.status, ip.progress
+            LEFT JOIN inventory i ON ipp.product_id = i.product_id
+            GROUP BY ip.id, ip.name, ip.plan_date, ip.status, i.progress
         ";
 
         $stmt = $this->db->query($sql);
