@@ -38,6 +38,7 @@ CREATE TABLE products (
     unit_id INT REFERENCES units(id) ON DELETE SET NULL,
     low_stock_alert BOOLEAN DEFAULT FALSE,
     media JSONB,
+    status VARCHAR(50) DEFAULT 'available' CHECK (status IN ('available', 'depleting', 'unavailable', 'kiv')),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -73,14 +74,13 @@ CREATE TABLE inventory (
 CREATE TABLE inventory_plans (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    inventory_date DATE NOT NULL,
     warehouse_id INT REFERENCES warehouses(id) ON DELETE CASCADE,
-    status VARCHAR(50) CHECK (status IN ('pending', 'processing', 'complete')) DEFAULT 'pending',
-    progress DECIMAL(5, 2) DEFAULT 0
+    progress DECIMAL(5, 2) DEFAULT 0,
+    inventory_date DATE NOT NULL
 );
 
 -- Linking inventory plans with specific products
-CREATE TABLE inventory_plan_items (
+CREATE TABLE inventory_plan_products (
     id SERIAL PRIMARY KEY,
     inventory_plan_id INT REFERENCES inventory_plans(id) ON DELETE CASCADE,
     product_id INT REFERENCES products(id) ON DELETE CASCADE,

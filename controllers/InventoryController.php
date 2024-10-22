@@ -3,23 +3,57 @@
 namespace Controllers;
 
 use Models\Inventory;
-use Models\Warehouse;
-use Models\Product;
 
 class InventoryController extends BaseController
 {
     private $inventory;
-    private $warehouse;
-    private $product;
 
 
     public function __construct()
     {
         parent::__construct();
         $this->inventory = new Inventory();
-        $this->warehouse = new Warehouse();
-        $this->product = new Product();
     }
+
+
+    public function index()
+    {
+        $this->authorizeRequest();
+        $params = [
+            'status' => isset($_GET['status']) ? $_GET['status'] : null,
+            'page' => isset($_GET['page']) ? (int)$_GET['page'] : 1,
+            'page_size' => isset($_GET['page_size']) ? (int)$_GET['page_size'] : 10,
+        ];
+
+        $inventory = $this->inventory->getInventoryPlan($params);
+
+        if (empty($inventory)) {
+            $this->sendResponse('Inventory not found', 404, []);
+        }
+        $this->sendResponse('success', 200, $inventory['plans'], $inventory['meta']);
+    }
+
+    // Create a New Inventory Plan
+    public function create($data)
+    {
+        $this->authorizeRequest();
+        $this->getRequestData();
+        if (!$this->validateFields($data, ['name', 'warehouse_id', 'plan_date', 'products'])) {
+            $this->sendResponse('Missing required fields', 400);
+        }
+
+        if (!is_array($data['products'])) {
+            $this->sendResponse('Products must be an array', 400);
+        }
+
+        $planId = $this->inventory->saveInventoryPlan($data);
+
+        if (!$planId) {
+            $this->sendResponse('Failed to create Inventory Plan', 400);
+        }
+        $this->sendResponse('Inventory Plan created', 200, $planId);
+    }
+
 
     // Get All Inventory Plans with Warehouse Name
     public function getInventory()
@@ -50,17 +84,6 @@ class InventoryController extends BaseController
     }
 
 
-    // Create a New Inventory Plan
-    public function createInventoryPlan($data)
-    {
-        $planId = $this->inventory->createInventoryPlan($data);
-        if ($planId) {
-            $this->sendResponse('Inventory Plan created', 200, $planId);
-        } else {
-            $this->sendResponse('Failed to create Inventory Plan', 400);
-
-        }
-    }
 
 
 

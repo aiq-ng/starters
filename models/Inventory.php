@@ -10,13 +10,213 @@ class Inventory
 
     private $table = 'inventory';
 
-    private $table_plans ='inventory_plans';
+    private $table_plans = 'inventory_plans';
 
     public function __construct()
     {
         $this->db = Database::getInstance()->getConnection();
 
     }
+
+    public function getInventoryPlan($filter = null)
+    {
+        $page = $filter['page'] ?? 1;
+        $pageSize = $filter['page_size'] ?? 10;
+
+        $sql = "
+            SELECT 
+                ip.name,
+                COUNT(ipp.product_id) AS product_count,
+                w.name AS warehouse_name,
+                ip.inventory_date,
+                p.status,
+                ip.progress
+            FROM inventory_plans ip
+            JOIN warehouses w ON ip.warehouse_id = w.id
+            LEFT JOIN inventory_plan_products ipp ON ip.id = ipp.inventory_plan_id
+            LEFT JOIN products p ON ipp.product_id = p.id
+        ";
+
+        $params = [];
+
+        if (!empty($filter['status'])) {
+            $sql .= " WHERE p.status = :filterStatus";
+            $params['filterStatus'] = $filter['status'];
+        }
+
+        $sql .= "
+            GROUP BY ip.id, w.name, p.status, ip.progress
+            LIMIT :pageSize OFFSET :offset
+        ";
+
+        $params['pageSize'] = $pageSize;
+        $params['offset'] = ($page - 1) * $pageSize;
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':pageSize', $params['pageSize'], \PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $params['offset'], \PDO::PARAM_INT);
+        $stmt->execute($params);
+
+        $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $total = $this->countInventoryPlans($filter);
+
+        $meta = [
+            'current_page' => $page,
+            'last_page' => ceil($total / $pageSize),
+            'total' => $total
+        ];
+
+        error_log(print_r($results, true));
+
+        return [
+            'plans' => $results,
+            'meta' => $meta
+        ];
+    }
+
+    public function countInventoryPlans($filter = null)
+    {
+        $countSql = "
+            SELECT COUNT(*) AS total_count
+            FROM inventory_plans ip
+            JOIN warehouses w ON ip.warehouse_id = w.id
+            LEFT JOIN inventory_plan_products ipp ON ip.id = ipp.inventory_plan_id
+            LEFT JOIN products p ON ipp.product_id = p.id
+        ";
+
+        $params = [];
+
+        if (!empty($filter['status'])) {
+            $countSql .= " WHERE p.status = :filterStatus";
+            $params['filterStatus'] = $filter['status'];
+        }
+
+        $countStmt = $this->db->prepare($countSql);
+        if (!empty($filter['status'])) {
+            $countStmt->bindParam(':filterStatus', $params['filterStatus']);
+        }
+        $countStmt->execute();
+
+        return $countStmt->fetchColumn();
+    }
+
+
+    public function saveInventoryPlan($data, $id = null, $action = 'create')
+    {
+        try {
+            $this->db->beginTransaction();
+
+            $name = $data['name'];
+            $warehouseId = $data['warehouse_id'];
+            $planDate = $data['plan_date'];
+            $products = $data['products'];
+
+            if ($action === 'create') {
+                $inventoryPlanId = $this->insertInventoryPlan($name, $warehouseId, $planDate);
+            } elseif ($action === 'update' && $id !== null) {
+                $this->updateInventoryPlan($id, $name, $warehouseId, $planDate);
+                $inventoryPlanId = $id;
+            }
+
+            $this->updateProductStatus($products);
+            $this->insertOrUpdateInventoryPlanProducts($inventoryPlanId, $products);
+
+            $this->db->commit();
+            return $action === 'create' ? $inventoryPlanId : true;
+
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
+
+    private function insertInventoryPlan($name, $warehouseId, $planDate)
+    {
+        $sql = "
+            INSERT INTO inventory_plans 
+            (name, warehouse_id, plan_date) 
+            VALUES (:name, :warehouse_id, :plan_date)
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'name' => $name,
+            'warehouse_id' => $warehouseId,
+            'plan_date' => $planDate
+        ]);
+
+        return $this->db->lastInsertId();
+    }
+
+    private function updateProductStatus($products)
+    {
+
+        $sql = "
+            UPDATE products 
+            SET status = :status 
+            WHERE id = :product_id
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        foreach ($products as $product) {
+            $status = isset($product['status']) ? $product['status'] : 'available';
+            $stmt->execute([
+                'product_id' => $product['id'],
+                'status' => $status
+            ]);
+        }
+    }
+
+    private function updateInventoryPlan($id, $name, $warehouseId, $planDate)
+    {
+        $sql = "
+            UPDATE inventory_plans 
+            SET name = :name, warehouse_id = :warehouse_id, plan_date = :plan_date
+            WHERE id = :id
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'name' => $name,
+            'warehouse_id' => $warehouseId,
+            'plan_date' => $planDate,
+            'id' => $id
+        ]);
+    }
+
+    private function insertOrUpdateInventoryPlanProducts($inventoryPlanId, $products)
+    {
+        $sql = "
+            DELETE FROM inventory_plan_products 
+            WHERE inventory_plan_id = :inventory_plan_id
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'inventory_plan_id' => $inventoryPlanId
+        ]);
+
+        $sql = "
+            INSERT INTO inventory_plan_products 
+            (inventory_plan_id, product_id) 
+            VALUES (:inventory_plan_id, :product_id)
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        foreach ($products as $product) {
+            $stmt->execute([
+                'inventory_plan_id' => $inventoryPlanId,
+                'product_id' => $product['id'],
+                'quantity' => $product['quantity'],
+            ]);
+        }
+    }
+
+
+
 
 
     // Add a product to a inventory
@@ -74,44 +274,17 @@ class Inventory
         return $stmt->execute();
     }
 
-    //Create a new inventory plan
-    public function createInventoryPlan ($data) {
 
-        $query = "INSERT INTO" . $this->table_plans . "(name, inventory_date, warehouse_id, status, progress) VALUES (:name, :inventory_date, :warehouse_id, :status, :progress)";
-        $stmt = $this->db->prepare($query);
 
-        $stmt->bindParam(':name', $data['name']);
-        $stmt->bindParam(':inventory_date', $data['inventory_date']);
-        $stmt->bindParam(':warehouse_id', $data['warehouse_id']);
-        $stmt->bindParam(':status', $data['status']);
-        $stmt->bindParam(':progress', $data['progress']);
-
-        if ($stmt->execute()) {
-            return $this->db->lastInsertId();
-        }
-
-        return false;
-    }
-
-    
     //Get all inventory plans
 
-    public function getAllInventoryPlans() {
+    public function getAllInventoryPlans()
+    {
         $query = "SELECT ip.*, w.name as warehouse_name FROM " . $this->table_plans . " ip JOIN warehouses w ON ip.warehouse_id = w.id";
         $stmt = $this->db->query($query);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    // Get a single inventory plan by id
-    public function getInventoryPlan($id)
-    {
-        $query = "SELECT * FROM " . $this->table_plans . " WHERE id = :id";
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
-
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
-    }
 
     // Update an inventory plan
     public function update($id, $data)
@@ -132,11 +305,3 @@ class Inventory
     }
 
 }
-
-
-
-
-
-
-    
-

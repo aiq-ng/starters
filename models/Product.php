@@ -14,8 +14,6 @@ class Product
         $this->db = Database::getInstance()->getConnection();
     }
 
-
-    // Create a new Product
     public function create($data, $files = [])
     {
         $this->db->beginTransaction();
@@ -394,26 +392,6 @@ class Product
     }
 
 
-    // Get All Products
-    public function getAll()
-    {
-        $query = "SELECT * FROM " . $this->table;
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-
-
-    // Get Single Product
-    public function get($id)
-    {
-        $query = "SELECT * FROM $this->table WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
-    }
-
     // Update a Product
     public function update($id, $name, $location, $vendor, $code, $price, $profit, $margin, $quantity, $unit, $image_path)
     {
@@ -461,71 +439,5 @@ class Product
         $stmt->execute();
         return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
-
-    //Classify based on warehouses, warehouse A = Cold room, warehouse B = Kitchen
-
-    //Display the number of products in both warehouse
-    public function getWhNo()
-    {
-        $query = "SELECT location, COUNT(*) AS product_count FROM $this->table WHERE location IN ('Warehouse A', 'Warehouse B') GROUP BY location ORDER BY location";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-    //Display the number of items in both warehouses
-    public function getWhItems()
-    {
-        $query = "SELECT location, SUM(quantity) AS quantity_count FROM $this->table WHERE location IN ('Warehouse A', 'Warehouse B') GROUP BY location ORDER BY location";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-
-
-    //Display the  the products in warehouse A
-    public function getWhA()
-    {
-        $query = "SELECT * FROM $this->table WHERE location = 'Warehouse A'";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-
-    //Display the  the products in warehouse B
-
-    public function getWhB()
-    {
-        $query = "SELECT * FROM $this->table WHERE location = 'Warehouse B'";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-
-    //Display low stock alerts in Warehouse A
-    public function getLowStockAlertsA()
-    {
-        $query = "SELECT * FROM $this->table WHERE quantity <= 50 location = 'Warehouse A'";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }

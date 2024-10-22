@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS inventory_audits CASCADE;
 DROP TABLE IF EXISTS inventory_activities CASCADE;
 
 -- Drop inventory_plan_items table
-DROP TABLE IF EXISTS inventory_plan_items CASCADE;
+DROP TABLE IF EXISTS inventory_plan_products CASCADE;
 
 -- Drop inventory_plans table
 DROP TABLE IF EXISTS inventory_plans CASCADE;
