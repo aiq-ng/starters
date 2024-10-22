@@ -24,6 +24,7 @@ $routes = [
         '/roles' => [$authController, 'getRoles'],
         '/products' => [$productController, 'index'],
         '/warehouses' => [$warehouseController, 'index'],
+        '/warehouses/inventory/(\d+)' => [$inventoryController, 'getWarehouseInventory'],
         '/vendors' => [$productController, 'getVendors'],
         '/suppliers' => [$productController, 'getSuppliers'],
         '/units' => [$productController, 'getUnits'],

@@ -101,6 +101,79 @@ class Inventory
         return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 
+    public function getWarehouseInventory($warehouseId, $filter = [])
+    {
+        $page = $filter['page'] ?? 1;
+        $pageSize = $filter['page_size'] ?? 10;
+
+        $sql = "
+		SELECT 
+			w.name AS location,
+			COUNT(i.id) AS total_products,
+			MAX(i.progress) AS progress,
+			JSON_AGG(
+				JSON_BUILD_OBJECT(
+					'no', i.id,
+					'image', p.media,
+					'product_name', p.name,
+					'on_hand', i.on_hand,
+					'counted', i.counted,
+					'difference', i.difference
+				)
+			) AS product_list
+		FROM inventory i
+		JOIN products p ON i.product_id = p.id
+		JOIN warehouses w ON i.warehouse_id = w.id
+		WHERE i.warehouse_id = :warehouseId
+		GROUP BY w.name
+		LIMIT :pageSize OFFSET :offset
+	";
+
+        $params = [
+            'pageSize' => $pageSize,
+            'offset' => ($page - 1) * $pageSize,
+            'warehouseId' => $warehouseId
+        ];
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':warehouseId', $params['warehouseId'], \PDO::PARAM_INT);
+        $stmt->bindParam(':pageSize', $params['pageSize'], \PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $params['offset'], \PDO::PARAM_INT);
+        $stmt->execute();
+
+        $results = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        $total = $this->countTotalWarehouseProducts($warehouseId);
+
+        $meta = [
+            'current_page' => $page,
+            'last_page' => ceil($total / $pageSize),
+            'total' => $total
+        ];
+
+        $results['product_list'] = json_decode($results['product_list'], true);
+
+        return [
+            'data' => $results,
+            'meta' => $meta
+        ];
+    }
+
+    private function countTotalWarehouseProducts($warehouseId)
+    {
+        $sql = "
+		SELECT COUNT(id) AS total_count
+		FROM inventory
+		WHERE warehouse_id = :warehouseId
+	";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':warehouseId', $warehouseId, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchColumn();
+    }
+
     public function countInventoryPlans($filter = null)
     {
         $countSql = "
