@@ -354,7 +354,7 @@ class Inventory
                 json_agg(
                     json_build_object(
                         'product_name', p.name,
-                        'discrepancy', i.counted - i.quantity
+                        'discrepancy', i.counted - i.on_hand
                     )
                 ) AS total_discrepancies
             FROM inventory i
