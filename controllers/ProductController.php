@@ -27,6 +27,8 @@ class ProductController extends BaseController
         $filter['search'] = $search;
         $filter['warehouse_id'] = isset($_GET['warehouse_id']) ? (int)$_GET['warehouse_id'] : null;
 
+        error_log(json_encode($filter));
+
         $result = $this->product->fetchProducts($page, $pageSize, false, $filter);
 
         $this->sendResponse('Success', 200, $result['products'], $result['meta']);
@@ -58,6 +60,8 @@ class ProductController extends BaseController
             'name', 'location', 'vendor', 'code',
             'sku', 'barcode', 'price', 'quantity', 'unit'
         ];
+
+        error_log(json_encode($formData));
 
         $dataToValidate = array_intersect_key($formData, array_flip($requiredFields));
 
@@ -167,6 +171,8 @@ class ProductController extends BaseController
         if (!$this->validateFields($data['new_quantity'], $data['reason'])) {
             $this->sendResponse('Invalid input data', 400);
         }
+
+        error_log(json_encode($data));
 
         $result = $this->product->updateProductQuantity($id, $data);
 

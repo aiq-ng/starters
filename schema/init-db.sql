@@ -68,7 +68,7 @@ CREATE TABLE inventory (
     to_be_delivered INT DEFAULT 0,
     to_be_ordered INT DEFAULT 0,
     counted INT DEFAULT 0,
-    difference INT GENERATED ALWAYS AS (quantity - on_hand) STORED,
+    difference INT GENERATED ALWAYS AS (on_hand - counted) STORED,
     progress DECIMAL(5, 2) GENERATED ALWAYS AS (CASE WHEN quantity = 0 THEN 0 ELSE (on_hand::DECIMAL / quantity) * 100 END) STORED,
     UNIQUE (product_id, warehouse_id, storage_id)
 );
