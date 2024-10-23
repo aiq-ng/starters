@@ -27,11 +27,11 @@ class Inventory
             SELECT
                 ip.id, 
                 ip.name AS plan_name,
-                COUNT(ipp.product_id) AS product_count,
+                COUNT(DISTINCT ipp.product_id) AS product_count,
                 w.name AS warehouse_name,
                 ip.plan_date,
                 p.status,
-                i.progress
+                AVG(i.progress) AS average_progress -- Using AVG to summarize progress
             FROM inventory i
             JOIN warehouses w ON i.warehouse_id = w.id
             LEFT JOIN inventory_plan_products ipp ON i.product_id = ipp.product_id
@@ -47,7 +47,7 @@ class Inventory
         }
 
         $sql .= "
-            GROUP BY ip.id, w.name, p.status, i.progress
+            GROUP BY ip.id, ip.name, w.name, ip.plan_date, p.status
             LIMIT :pageSize OFFSET :offset
         ";
 
@@ -57,6 +57,11 @@ class Inventory
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':pageSize', $params['pageSize'], \PDO::PARAM_INT);
         $stmt->bindParam(':offset', $params['offset'], \PDO::PARAM_INT);
+
+        if (!empty($filter['status'])) {
+            $stmt->bindParam(':filterStatus', $params['filterStatus'], \PDO::PARAM_STR);
+        }
+
         $stmt->execute($params);
 
         $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
