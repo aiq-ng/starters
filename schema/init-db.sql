@@ -1,10 +1,10 @@
--- Table to store user roles
+-- Roles
 CREATE TABLE roles (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
--- Table to store user details
+-- Users
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -16,7 +16,70 @@ CREATE TABLE users (
     CONSTRAINT fk_user_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET DEFAULT
 );
 
--- Table to store information about units of measurement
+-- Currencies
+CREATE TABLE currencies (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    symbol VARCHAR(10) UNIQUE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Departments
+CREATE TABLE departments (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Branches
+CREATE TABLE branches (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Item Categories
+CREATE TABLE item_categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Vendor Categories
+CREATE TABLE vendor_categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Payment Methods
+CREATE TABLE payment_methods (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Payment Terms
+CREATE TABLE payment_terms (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Units of Measurement
 CREATE TABLE units (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL,
@@ -25,153 +88,158 @@ CREATE TABLE units (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table to store information about products
-CREATE TABLE products (
+-- Taxes
+CREATE TABLE taxes (
     id SERIAL PRIMARY KEY,
-    code VARCHAR(50) UNIQUE NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    sku VARCHAR(100) UNIQUE,
-    price DECIMAL(10, 2) NOT NULL,
-    profit DECIMAL(10, 2),
-    margin DECIMAL(5, 2),
-    barcode VARCHAR(100),
-    unit_id INT REFERENCES units(id) ON DELETE SET NULL,
-    low_stock_alert BOOLEAN DEFAULT FALSE,
-    media JSONB,
-    status VARCHAR(50) DEFAULT 'available' CHECK (status IN ('available', 'depleting', 'unavailable', 'kiv')),
+    name VARCHAR(50) UNIQUE NOT NULL,
+    rate DECIMAL(5, 2) NOT NULL,
+    description TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table to store information about warehouses
-CREATE TABLE warehouses (
+-- Item Manufacturers
+CREATE TABLE item_manufacturers (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    address TEXT NOT NULL
-);
-
--- Table to store storage locations within warehouses
-CREATE TABLE warehouse_storages (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) UNIQUE NOT NULL,
-    warehouse_id INT REFERENCES warehouses(id) ON DELETE CASCADE
-);
-
--- Table to manage stock levels of products within warehouses
-CREATE TABLE inventory (
-    id SERIAL PRIMARY KEY,
-    product_id INT REFERENCES products(id) ON DELETE CASCADE,
-    warehouse_id INT REFERENCES warehouses(id) ON DELETE CASCADE,
-    storage_id INT REFERENCES warehouse_storages(id) ON DELETE CASCADE,
-    quantity INT NOT NULL,
-    on_hand INT NOT NULL,
-    to_be_delivered INT DEFAULT 0,
-    to_be_ordered INT DEFAULT 0,
-    counted INT DEFAULT 0,
-    difference INT GENERATED ALWAYS AS (counted - on_hand) STORED,
-    progress DECIMAL(5, 2) GENERATED ALWAYS AS (CASE WHEN quantity = 0 THEN 0 ELSE (on_hand::DECIMAL / quantity) * 100 END) STORED,
-    UNIQUE (product_id, warehouse_id, storage_id)
-);
-
--- Table to manage inventory plans
-CREATE TABLE inventory_plans (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    status VARCHAR(50) DEFAULT 'todo' CHECK (status IN ('todo', 'processing', 'completed')),
-    plan_date DATE NOT NULL
-);
-
--- Linking inventory plans with specific products
-CREATE TABLE inventory_plan_products (
-    id SERIAL PRIMARY KEY,
-    inventory_plan_id INT REFERENCES inventory_plans(id) ON DELETE CASCADE,
-    product_id INT REFERENCES products(id) ON DELETE CASCADE
-);
-
--- Table for vendors information
-CREATE TABLE vendors (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255),
-    phone VARCHAR(20),
-    address TEXT
-);
-
--- Linking products with vendors
-CREATE TABLE product_vendors (
-    id SERIAL PRIMARY KEY,
-    product_id INT REFERENCES products(id) ON DELETE CASCADE,
-    vendor_id INT REFERENCES vendors(id) ON DELETE CASCADE,
-    UNIQUE (product_id, vendor_id)
-);
-
--- Table to track inventory activities by users
-CREATE TABLE inventory_activities (
-    id SERIAL PRIMARY KEY,
-    inventory_plan_id INT REFERENCES inventory_plans(id) ON DELETE CASCADE,
-    user_id INT REFERENCES users(id) ON DELETE CASCADE,
-    action VARCHAR(50) CHECK (action IN ('create', 'update', 'complete', 'sale', 'purchase', 'audit')) NOT NULL,
-    timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
--- Table to store sales information
-CREATE TABLE sales (
-    id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(id),
-    product_id INT REFERENCES products(id),
-    vendor_id INT REFERENCES vendors(id),
-    quantity INT NOT NULL,
-    sale_price NUMERIC(10, 2) NOT NULL,
-    total_price NUMERIC(10, 2) GENERATED ALWAYS AS (quantity * sale_price) STORED,
-    sale_date DATE NOT NULL
-);
-
--- Table to store reasons for inventory audits
-CREATE TABLE reasons (
-    id SERIAL PRIMARY KEY,
-    reason CHAR(50) UNIQUE NOT NULL
-);
-
--- Table to store inventory audit trail
-CREATE TABLE inventory_audits (
-    id SERIAL PRIMARY KEY,
-    product_id INT REFERENCES products(id) ON DELETE CASCADE,
-    user_id INT REFERENCES users(id) ON DELETE CASCADE,
-    old_quantity INT NOT NULL,
-    new_quantity INT NOT NULL,
-    discrepancy INT NOT NULL,
-    reason_id INT REFERENCES reasons(id) ON DELETE RESTRICT,
-    notes TEXT,
+    website VARCHAR(255),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table to store supplier information
-CREATE TABLE suppliers (
+-- Items
+CREATE TABLE items (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
+    description TEXT,
+    sku VARCHAR(100) UNIQUE,
+    price DECIMAL(10, 2) NOT NULL,
+    department_id INT REFERENCES departments(id) ON DELETE SET NULL,
+    manufacturer_id INT REFERENCES item_manufacturers(id) ON DELETE SET NULL,
+    category_id INT REFERENCES item_categories(id) ON DELETE SET NULL,
+    unit_id INT REFERENCES units(id) ON DELETE SET NULL,
+    stock_quantity INT DEFAULT 0,
+    threshold INT DEFAULT 0,
+    expiry_date DATE,
+    media JSONB,
+    status VARCHAR(50) DEFAULT 'in stock' 
+        CHECK (status IN ('in stock', 'out of stock', 'low stock')),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Vendors
+CREATE TABLE vendors (
+    id SERIAL PRIMARY KEY,
+    salutation VARCHAR(10) 
+        CHECK (salutation IN ('Mr', 'Mrs', 'Miss', 'Dr', 'Prof')),
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    company_name VARCHAR(255) NOT NULL,
+    display_name VARCHAR(255) NOT NULL,
     email VARCHAR(255),
-    phone VARCHAR(20),
+    work_phone VARCHAR(20),
+    mobile_phone VARCHAR(20),
     address TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    social_media JSONB,
+    payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
+    currency_id INT REFERENCES currencies(id) ON DELETE SET NULL,
+    category_id INT REFERENCES vendor_categories(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table to store purchase orders
-CREATE TABLE purchases (
+-- Customers
+CREATE TABLE customers (
     id SERIAL PRIMARY KEY,
-    purchase_date DATE NOT NULL,
-    supplier_id INT REFERENCES suppliers(id) ON DELETE CASCADE,
-    total_cost DECIMAL(10, 2) DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    customer_type VARCHAR(50) 
+        CHECK (customer_type IN ('individual', 'business')),
+    salutation VARCHAR(10) 
+        CHECK (salutation IN ('Mr', 'Mrs', 'Miss', 'Dr', 'Prof')),
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    display_name VARCHAR(255),
+    company_name VARCHAR(255),
+    email VARCHAR(255),
+    work_phone VARCHAR(20),
+    mobile_phone VARCHAR(20),
+    address TEXT,
+    social_media JSONB,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table to store items within a purchase
-CREATE TABLE purchase_items (
+-- Purchase Orders
+CREATE TABLE purchase_orders (
     id SERIAL PRIMARY KEY,
-    purchase_id INT REFERENCES purchases(id) ON DELETE CASCADE,
-    product_name VARCHAR(255) NOT NULL,
+    customer_id INT REFERENCES customers(id) ON DELETE SET NULL,
+    branch_id INT REFERENCES branches(id) ON DELETE SET NULL,
+    purchase_order_number VARCHAR(50) UNIQUE NOT NULL,
+    reference_number VARCHAR(50) UNIQUE,
+    user_id INT REFERENCES users(id) ON DELETE SET NULL,
+    order_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    delivery_date DATE NOT NULL,
+    payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
+    subject TEXT,
+    notes TEXT,
+    terms_and_conditions TEXT,
+    items JSONB,
+    discount DECIMAL(5, 2) DEFAULT 0,
+    shipping_charge DECIMAL(10, 2) DEFAULT 0,
+    total DECIMAL(10, 2) DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'pending' 
+        CHECK (status IN ('pending', 'processing', 'completed', 'cancelled')),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Purchase Order Items
+CREATE TABLE purchase_order_items (
+    id SERIAL PRIMARY KEY,
+    purchase_order_id INT REFERENCES purchase_orders(id) ON DELETE CASCADE,
+    item_id INT REFERENCES items(id) ON DELETE SET NULL,
     quantity INT NOT NULL,
-    price_per_unit DECIMAL(10, 2) NOT NULL,
-    total_price DECIMAL(10, 2) GENERATED ALWAYS AS (quantity * price_per_unit) STORED,
-    purchased_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    price DECIMAL(10, 2) NOT NULL,
+    tax_id INT REFERENCES taxes(id) ON DELETE SET NULL,
+    total DECIMAL(10, 2) GENERATED ALWAYS AS (quantity * price) STORED,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Sales Orders
+CREATE TABLE sales_orders (
+    id SERIAL PRIMARY KEY,
+    order_type VARCHAR(50) 
+        CHECK (order_type IN ('order', 'service')),
+    order_id VARCHAR(255) NOT NULL,
+    order_number VARCHAR(50) UNIQUE NOT NULL,
+    vendor_id INT REFERENCES vendors(id) ON DELETE SET NULL,
+    payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
+    payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,
+    delivery_option VARCHAR(50) 
+        CHECK (delivery_option IN ('pickup', 'delivery')),
+    assigned_driver_id INT REFERENCES users(id) ON DELETE SET NULL,
+    delivery_date DATE NOT NULL,
+    additional_note TEXT,
+    customer_note TEXT,
+    discount DECIMAL(5, 2) DEFAULT 0,
+    delivery_charge DECIMAL(10, 2) DEFAULT 0,
+    total DECIMAL(10, 2) DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'pending' 
+        CHECK (status IN ('upcoming', 'pending', 'sent', 'completed', 'cancelled')),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Sales Order Items
+CREATE TABLE sales_order_items (
+    id SERIAL PRIMARY KEY,
+    sales_order_id INT REFERENCES sales_orders(id) ON DELETE CASCADE,
+    item_id INT REFERENCES items(id) ON DELETE SET NULL,
+    quantity INT NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    total DECIMAL(10, 2) GENERATED ALWAYS AS (quantity * price) STORED,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 

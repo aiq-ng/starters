@@ -1,8 +1,70 @@
 -- Insert default roles
+-- Seed data for roles
 INSERT INTO roles (name) VALUES
 ('Admin'),
 ('Manager'),
-('Staff');
+('Staff'),
+('Rider');
+
+-- Seed data for users
+INSERT INTO users (name, email, password, role_id, avatar_url) VALUES
+('Starters', 'starters@admin.com', 'password123', 1, 'https://example.com/avatars/admin.jpg'),
+('Alice Johnson', 'alice@example.com', 'password123', 1, 'https://example.com/avatars/alice.jpg'),
+('Bob Smith', 'bob@example.com', 'password123', 2, 'https://example.com/avatars/bob.jpg'),
+('Charlie Brown', 'charlie@example.com', 'password123', 3, 'https://example.com/avatars/charlie.jpg');
+
+-- Seed currencies
+INSERT INTO currencies (name, symbol) VALUES
+('Naira', '₦'),
+('Cedis', 'GH₵'),
+('Dollar', '$'),
+('Rand', 'R');
+
+-- Seed payment methods
+INSERT INTO payment_methods (name, description) VALUES
+('Bank Transfer', 'Payment via bank transfer'),
+('USSD Payment', 'Payment via USSD banking codes'),
+('Cash', 'Payment in cash');
+
+-- Seed payment terms
+INSERT INTO payment_terms (name, description) VALUES
+('Net 7', 'Payment due in 7 days'),
+('Net 14', 'Payment due in 14 days'),
+('Net 30', 'Payment due in 30 days'),
+('COD', 'Cash on delivery');
+
+-- Seed departments
+INSERT INTO departments (name, description) VALUES
+('Electronics', 'Department for electronic gadgets and devices'),
+('Groceries', 'Department for food and beverages'),
+('Furniture', 'Department for household furniture');
+
+-- Seed branches
+INSERT INTO branches (name, description) VALUES
+('Lagos', 'Branch located in Lagos, Nigeria'),
+('Abuja', 'Branch located in Abuja, Nigeria');
+
+-- Seed item categories
+INSERT INTO item_categories (name, description) VALUES
+('perishaables', 'Food items with a short shelf life'),
+('non-perishables', 'Food items with a long shelf life');
+
+-- Seed vendor categories
+INSERT INTO vendor_categories (name, description) VALUES
+('Electronics Vendors', 'Vendors supplying electronic items'),
+('Food Vendors', 'Vendors supplying food and beverages'),
+('Furniture Vendors', 'Vendors supplying household furniture');
+
+-- Seed item manufacturers
+INSERT INTO item_manufacturers (name, website) VALUES
+('Yaale Electronics', 'https://www.yaaleelectronics.com'),
+('FarmFresh Nigeria', 'https://www.farmfresh.com.ng'),
+('Vono Furniture', 'https://www.vonofurniture.com.ng');
+
+-- Seed taxes
+INSERT INTO taxes (name, rate, description) VALUES
+('VAT', 7.50, 'Value Added Tax in Nigeria'),
+('Sales Tax', 5.00, 'General Sales Tax in West Africa');
 
 -- Seed data for units
 INSERT INTO units (name, abbreviation) VALUES
@@ -13,43 +75,29 @@ INSERT INTO units (name, abbreviation) VALUES
 ('meter', 'm'),
 ('dozen', 'doz');
 
--- Seed data for reasons
-INSERT INTO reasons (reason) VALUES
-('adjustment'),
-('damaged'),
-('stolen'),
-('returned'),
-('other');
 
--- Seed data for users
-INSERT INTO users (name, email, password, role_id, avatar_url) VALUES
-('Starters', 'starters@admin.com', 'password123', 1, 'https://example.com/avatars/admin.jpg'),
-('Alice Johnson', 'alice@example.com', 'password123', 1, 'https://example.com/avatars/alice.jpg'),
-('Bob Smith', 'bob@example.com', 'password123', 2, 'https://example.com/avatars/bob.jpg'),
-('Charlie Brown', 'charlie@example.com', 'password123', 3, 'https://example.com/avatars/charlie.jpg');
-
-INSERT INTO products (code, name, sku, price, profit, margin, barcode, unit_id, low_stock_alert, media, status)
+INSERT INTO items (name, description, sku, price, manufacturer_id, category_id, unit_id, stock_quantity, threshold, expiry_date, media, status)
 VALUES
-('PROD001', 'Beef', 'SKU001', 10.00, 2.00, 20.00, '1234567890123', 1, FALSE, '["https://i.imgur.com/IwdmYjG.jpeg"]', 'available'),
-('PROD002', 'Chicken', 'SKU002', 20.00, 5.00, 25.00, '1234567890124', 1, TRUE, '["https://i.imgur.com/gnRz12P.png"]', 'depleting'),
-('PROD003', 'Catfish', 'SKU003', 15.00, 3.00, 15.00, '1234567890125', 1, FALSE, '["https://i.imgur.com/MxiMX9v.png"]', 'available'),
-('PROD004', 'Pork', 'SKU004', 12.00, 3.00, 25.00, '1234567890126', 1, FALSE, '["https://i.imgur.com/dGGizfQ.png"]', 'unavailable'),
-('PROD005', 'Lamb', 'SKU005', 25.00, 7.00, 28.00, '1234567890127', 1, TRUE, '["https://i.imgur.com/8TIGZM2.png"]', 'available'),
-('PROD006', 'Salmon', 'SKU006', 30.00, 10.00, 33.33, '1234567890128', 1, FALSE, '["https://i.imgur.com/ISOOCLs.png"]', 'depleting'),
-('PROD007', 'Eggs', 'SKU011', 5.00, 1.00, 20.00, '1234567890133', 1, TRUE, '["https://i.imgur.com/G0mVY78.png"]', 'available'),
-('PROD008', 'Cheese', 'SKU012', 3.50, 0.50, 14.29, '1234567890134', 1, FALSE, '["https://i.imgur.com/IVCT63j.png"]', 'available'),
-('PROD009', 'Milk', 'SKU013', 2.00, 0.20, 10.00, '1234567890135', 1, TRUE, '["https://i.imgur.com/5JXHh4d.png"]', 'kiv'),
-('PROD010', 'Yogurt', 'SKU014', 1.80, 0.30, 16.67, '1234567890136', 1, FALSE, '["https://i.imgur.com/NQTBB4c.jpeg"]', 'available'),
-('PROD011', 'Bread', 'SKU016', 1.50, 0.10, 6.67, '1234567890138', 1, FALSE, '["https://i.imgur.com/jA1O0Qb.png"]', 'depleting'),
-('PROD012', 'Rice', 'SKU017', 2.50, 0.20, 8.00, '1234567890139', 1, TRUE, '["https://i.imgur.com/pwXSxkn.png"]', 'available'),
-('PROD013', 'Pasta', 'SKU018', 1.00, 0.15, 15.00, '1234567890140', 1, FALSE, '["https://i.imgur.com/ZLncFYM.png"]', 'unavailable'),
-('PROD014', 'Honey', 'SKU023', 5.00, 1.00, 20.00, '1234567890145', 1, TRUE, '["https://i.imgur.com/PheCs9s.png"]', 'available'),
-('PROD015', 'Olive Oil', 'SKU024', 6.00, 1.50, 25.00, '1234567890146', 1, FALSE, '["https://i.imgur.com/GEkayag.png"]', 'available'),
-('PROD016', 'Vegetable Oil', 'SKU025', 3.50, 0.50, 14.29, '1234567890147', 1, TRUE, '["https://i.imgur.com/W5F6Gzv.png"]', 'unavailable'),
-('PROD017', 'Mustard', 'SKU029', 1.50, 0.10, 6.67, '1234567890151', 1, TRUE, '["https://i.imgur.com/GwxyZSF.png"]', 'available'),
-('PROD018', 'Ketchup', 'SKU030', 1.50, 0.20, 13.33, '1234567890152', 1, FALSE, '["https://i.imgur.com/JfO21Bm.png"]', 'kiv'),
-('PROD019', 'Mayonnaise', 'SKU031', 2.00, 0.30, 15.00, '1234567890153', 1, TRUE, '["https://i.imgur.com/PSuuQmI.png"]', 'unavailable'),
-('PROD020', 'Soy Sauce', 'SKU032', 1.00, 0.15, 15.00, '1234567890154', 1, FALSE, '["https://i.imgur.com/zMLrQYD.png"]', 'available');
+('Beef', 'Fresh beef cuts', 'SKU001', 10.00, 1, 1, 1, 100, 10, '2025-12-31', '["https://i.imgur.com/IwdmYjG.jpeg"]', 'in stock'),
+('Chicken', 'Fresh chicken cuts', 'SKU002', 20.00, 2, 2, 1, 50, 5, '2025-12-31', '["https://i.imgur.com/gnRz12P.png"]', 'in stock'),
+('Catfish', 'Fresh catfish fillets', 'SKU003', 15.00, 3, 3, 1, 200, 20, '2025-12-31', '["https://i.imgur.com/MxiMX9v.png"]', 'in stock'),
+('Pork', 'Fresh pork cuts', 'SKU004', 12.00, 4, 4, 1, 30, 3, '2025-12-31', '["https://i.imgur.com/dGGizfQ.png"]', 'out of stock'),
+('Lamb', 'Fresh lamb cuts', 'SKU005', 25.00, 5, 5, 1, 10, 2, '2025-12-31', '["https://i.imgur.com/8TIGZM2.png"]', 'low stock'),
+('Salmon', 'Fresh salmon fillets', 'SKU006', 30.00, 6, 6, 1, 150, 10, '2025-12-31', '["https://i.imgur.com/ISOOCLs.png"]', 'in stock'),
+('Eggs', 'Farm fresh eggs', 'SKU011', 5.00, 7, 7, 1, 500, 50, '2025-12-31', '["https://i.imgur.com/G0mVY78.png"]', 'in stock'),
+('Cheese', 'Fresh cheese', 'SKU012', 3.50, 8, 8, 1, 200, 20, '2025-12-31', '["https://i.imgur.com/IVCT63j.png"]', 'in stock'),
+('Milk', 'Fresh cow milk', 'SKU013', 2.00, 9, 9, 1, 400, 40, '2025-12-31', '["https://i.imgur.com/5JXHh4d.png"]', 'low stock'),
+('Yogurt', 'Fresh yogurt', 'SKU014', 1.80, 10, 10, 1, 300, 30, '2025-12-31', '["https://i.imgur.com/NQTBB4c.jpeg"]', 'in stock'),
+('Bread', 'Freshly baked bread', 'SKU016', 1.50, 11, 11, 1, 100, 10, '2025-12-31', '["https://i.imgur.com/jA1O0Qb.png"]', 'in stock'),
+('Rice', 'Premium rice', 'SKU017', 2.50, 12, 12, 1, 250, 25, '2025-12-31', '["https://i.imgur.com/pwXSxkn.png"]', 'in stock'),
+('Pasta', 'Premium pasta', 'SKU018', 1.00, 13, 13, 1, 500, 50, '2025-12-31', '["https://i.imgur.com/ZLncFYM.png"]', 'out of stock'),
+('Honey', 'Organic honey', 'SKU023', 5.00, 14, 14, 1, 100, 10, '2025-12-31', '["https://i.imgur.com/PheCs9s.png"]', 'in stock'),
+('Olive Oil', 'Extra virgin olive oil', 'SKU024', 6.00, 15, 15, 1, 80, 8, '2025-12-31', '["https://i.imgur.com/GEkayag.png"]', 'in stock'),
+('Vegetable Oil', 'Pure vegetable oil', 'SKU025', 3.50, 16, 16, 1, 200, 20, '2025-12-31', '["https://i.imgur.com/W5F6Gzv.png"]', 'low stock'),
+('Mustard', 'Organic mustard', 'SKU029', 1.50, 17, 17, 1, 150, 15, '2025-12-31', '["https://i.imgur.com/GwxyZSF.png"]', 'in stock'),
+('Ketchup', 'Organic ketchup', 'SKU030', 1.50, 18, 18, 1, 300, 30, '2025-12-31', '["https://i.imgur.com/JfO21Bm.png"]', 'in stock'),
+('Mayonnaise', 'Organic mayonnaise', 'SKU031', 2.00, 19, 19, 1, 100, 10, '2025-12-31', '["https://i.imgur.com/PSuuQmI.png"]', 'out of stock'),
+('Soy Sauce', 'Premium soy sauce', 'SKU032', 1.00, 20, 20, 1, 150, 15, '2025-12-31', '["https://i.imgur.com/zMLrQYD.png"]', 'in stock');
 
 -- Seed data for warehouses
 INSERT INTO warehouses (name, address)
@@ -179,3 +227,39 @@ INSERT INTO purchase_items (purchase_id, product_name, quantity, price_per_unit,
 (2, 'milk', 5, 15.00, '2024-01-25'),
 (2, 'flour', 3, 10.00, '2024-02-05'),
 (3, 'oil', 4, 12.00, '2024-02-10');
+
+-- Seed data for items_category table
+INSERT INTO items_category (name, description)
+VALUES
+    ('Electronics', 'Devices such as phones, laptops, and accessories'),
+    ('Furniture', 'Chairs, tables, and other household furniture'),
+    ('Groceries', 'Daily essential food items and beverages'),
+    ('Clothing', 'Apparel including shirts, trousers, and dresses'),
+    ('Sports', 'Equipment and accessories for sports and fitness'),
+    ('Books', 'Fiction, non-fiction, and academic books'),
+    ('Toys', 'Toys and games for children and adults'),
+    ('Beauty', 'Cosmetics and personal care products');
+
+-- Seed data for departments table
+INSERT INTO departments (name, description)
+VALUES
+    ('Sales', 'Responsible for managing customer relationships and driving revenue'),
+    ('Marketing', 'Handles advertising, brand management, and promotions'),
+    ('Finance', 'Oversees financial planning, reporting, and accounting'),
+    ('Operations', 'Responsible for day-to-day management and efficiency of business processes'),
+    ('Dispatch Riders', 'Responsible for delivering goods to customers within designated areas'),
+    ('Chefs', 'Oversees food preparation and cooking in the kitchen'),
+    ('Kitchen', 'Handles food storage, preparation, and overall kitchen management');
+
+-- Seed data for item_manufacturers table
+INSERT INTO item_manufacturers (name, website)
+VALUES
+    ('Jumia Electronics', 'https://www.jumia.com.ng'),
+    ('Vono Furniture', 'https://www.vonofurniture.com.ng'),
+    ('FarmFresh Nigeria', 'https://www.farmfresh.com.ng'),
+    ('House of Sisi', 'https://www.houseofsisi.com.ng'),
+    ('Sporting Goods Nigeria', 'https://www.sportinggoods.com.ng'),
+    ('Breeze Publishers', 'https://www.breezepublishers.com.ng'),
+    ('Naija Toys', 'https://www.naijatoys.com.ng'),
+    ('Beauty Haven', 'https://www.beautyhaven.com.ng');
+
