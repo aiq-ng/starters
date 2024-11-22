@@ -25,6 +25,8 @@ class InventoryController extends BaseController
             'page_size' => isset($_GET['page_size']) ? (int)$_GET['page_size'] : 10,
         ];
 
+        error_log(json_encode($params));
+
         $inventory = $this->inventory->getInventoryPlans($params);
 
         if (empty($inventory)) {
@@ -60,6 +62,8 @@ class InventoryController extends BaseController
             $this->sendResponse('Products must be an array', 400);
         }
 
+        error_log(json_encode($data));
+
         $planId = $this->inventory->saveInventoryPlan($data);
 
         if (!$planId) {
@@ -88,12 +92,37 @@ class InventoryController extends BaseController
             'page_size' => isset($_GET['page_size']) ? (int)$_GET['page_size'] : 10,
         ];
 
+        error_log(json_encode($params));
+
         $inventory = $this->inventory->getWarehouseInventory($warehouseId, $params);
 
         if (empty($inventory)) {
             $this->sendResponse('Inventory not found', 404, []);
         }
         $this->sendResponse('success', 200, $inventory['data'], $inventory['meta']);
+    }
+
+    public function completeInventory()
+    {
+        $this->authorizeRequest();
+        $data = $this->getRequestData();
+
+        if (!isset($data['products']) || !is_array($data['products'])) {
+            $this->sendResponse('Invalid data format', 400);
+            return;
+        }
+
+        error_log(json_encode($data['products']));
+
+
+        $updated = $this->inventory->updateInventoryCount($data['products']);
+
+        if (!$updated) {
+            $this->sendResponse('Failed to update Inventory for some products', 400);
+            return;
+        }
+
+        $this->sendResponse('Success', 200, $updated);
     }
 
 

@@ -54,6 +54,7 @@ $routes = [
         '/purchases' => [$tradeController, 'createPurchase'],
         '/sales' => [$tradeController, 'createSale'],
         '/inventory/plans' => [$inventoryController, 'create'],
+        '/inventory/completed' => [$inventoryController, 'completeInventory'],
     ],
     'PUT' => [
         '/products/(\d+)' => [$productController, 'update'],

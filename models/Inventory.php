@@ -27,11 +27,11 @@ class Inventory
             SELECT
                 ip.id, 
                 ip.name AS plan_name,
-                COUNT(ipp.product_id) AS product_count,
+                COUNT(DISTINCT ipp.product_id) AS product_count,
                 w.name AS warehouse_name,
                 ip.plan_date,
                 p.status,
-                i.progress
+                AVG(i.progress) AS average_progress -- Using AVG to summarize progress
             FROM inventory i
             JOIN warehouses w ON i.warehouse_id = w.id
             LEFT JOIN inventory_plan_products ipp ON i.product_id = ipp.product_id
@@ -47,7 +47,7 @@ class Inventory
         }
 
         $sql .= "
-            GROUP BY ip.id, w.name, p.status, i.progress
+            GROUP BY ip.id, ip.name, w.name, ip.plan_date, p.status
             LIMIT :pageSize OFFSET :offset
         ";
 
@@ -57,6 +57,11 @@ class Inventory
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':pageSize', $params['pageSize'], \PDO::PARAM_INT);
         $stmt->bindParam(':offset', $params['offset'], \PDO::PARAM_INT);
+
+        if (!empty($filter['status'])) {
+            $stmt->bindParam(':filterStatus', $params['filterStatus'], \PDO::PARAM_STR);
+        }
+
         $stmt->execute($params);
 
         $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -306,6 +311,77 @@ class Inventory
                 'product_id' => $product['id'],
             ]);
         }
+    }
+
+    public function updateInventoryCount($data)
+    {
+        $sql = "
+		UPDATE inventory
+		SET counted = CASE
+	";
+
+        $ids = [];
+        $params = [];
+
+        foreach ($data as $item) {
+            $sql .= " WHEN product_id = :product_id_{$item['id']} THEN :counted_{$item['id']}::INTEGER";
+            $ids[] = $item['id'];
+            $params[":product_id_{$item['id']}"] = $item['id'];
+            $params[":counted_{$item['id']}"] = $item['counted'];
+        }
+
+        $sql .= " END WHERE product_id IN (" . implode(',', array_map(fn ($id) => ":product_id_$id", $ids)) . ")
+		RETURNING product_id, counted;";
+
+        $stmt = $this->db->prepare($sql);
+
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, \PDO::PARAM_INT);
+        }
+
+        $stmt->execute();
+
+        return $this->getInventoryDetails($ids);
+    }
+
+    private function getInventoryDetails(array $ids)
+    {
+        $sql = "
+            SELECT 
+                w.name AS location,
+                COUNT(DISTINCT i.product_id) AS total_products,
+                SUM(i.counted) AS total_items_counted,
+                json_agg(
+                    json_build_object(
+                        'product_name', p.name,
+                        'discrepancy', i.counted - i.on_hand
+                    )
+                ) AS total_discrepancies
+            FROM inventory i
+            JOIN warehouses w ON i.warehouse_id = w.id
+            JOIN products p ON i.product_id = p.id
+            WHERE i.product_id IN (" . implode(',', array_map(fn ($id) => ":product_id_$id", $ids)) . ")
+            GROUP BY w.name;
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        // Bind the same product IDs to this query
+        foreach ($ids as $id) {
+            $stmt->bindValue(":product_id_$id", $id, \PDO::PARAM_INT);
+        }
+
+        $stmt->execute();
+
+        // Fetch and decode JSON results
+        $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        foreach ($results as &$result) {
+            if (isset($result['total_discrepancies'])) {
+                $result['total_discrepancies'] = json_decode($result['total_discrepancies'], true);
+            }
+        }
+
+        return $results;
     }
 
 
