@@ -113,17 +113,17 @@ CREATE TABLE items (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     sku VARCHAR(100) UNIQUE,
-    price DECIMAL(10, 2) NOT NULL,
+    price DECIMAL(10, 2),
     department_id INT REFERENCES departments(id) ON DELETE SET NULL,
     manufacturer_id INT REFERENCES item_manufacturers(id) ON DELETE SET NULL,
     category_id INT REFERENCES item_categories(id) ON DELETE SET NULL,
     unit_id INT REFERENCES units(id) ON DELETE SET NULL,
-    stock_quantity INT DEFAULT 0,
-    threshold INT DEFAULT 0,
+    quantity INT DEFAULT 0,
+    threshold_value INT DEFAULT 0,
     expiry_date DATE,
     media JSONB,
-    status VARCHAR(50) DEFAULT 'in stock' 
-        CHECK (status IN ('in stock', 'out of stock', 'low stock')),
+    availability VARCHAR(50) DEFAULT 'in stock' 
+        CHECK (availability IN ('in stock', 'out of stock', 'low stock')),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

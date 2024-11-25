@@ -3,16 +3,19 @@
 namespace Controllers;
 
 use Models\Inventory;
+use Services\MediaHandler;
 
 class InventoryController extends BaseController
 {
     private $inventory;
+    private $mediaHandler;
 
 
     public function __construct()
     {
         parent::__construct();
         $this->inventory = new Inventory();
+        $this->mediaHandler = new MediaHandler();
     }
 
 
@@ -20,20 +23,64 @@ class InventoryController extends BaseController
     {
         $this->authorizeRequest();
         $params = [
-            'status' => isset($_GET['status']) ? $_GET['status'] : null,
+            'availability' => isset($_GET['availability']) ? $_GET['availability'] : null,
             'page' => isset($_GET['page']) ? (int)$_GET['page'] : 1,
             'page_size' => isset($_GET['page_size']) ? (int)$_GET['page_size'] : 10,
+            'order' => isset($_GET['order']) ? $_GET['order'] : null,
+            'sort' => isset($_GET['sort']) ? $_GET['sort'] : null,
         ];
 
         error_log(json_encode($params));
 
-        $inventory = $this->inventory->getInventoryPlans($params);
+        $inventory = $this->inventory->getInventory($params);
 
         if (empty($inventory)) {
             $this->sendResponse('Inventory not found', 404, []);
         }
-        $this->sendResponse('success', 200, $inventory['plans'], $inventory['meta']);
+        $this->sendResponse('success', 200, $inventory['inventory'], $inventory['meta']);
     }
+
+    public function createItem()
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+
+        $formData = $data['form_data'];
+        $mediaFiles = $data['files']['media'] ?? [];
+
+        $requiredFields = [
+            'name', 'department_id', 'category_id', 'manufacturer_id',
+            'expiry_date', 'quantity', 'unit_id'
+        ];
+
+        error_log(json_encode($formData));
+
+        $dataToValidate = array_intersect_key($formData, array_flip($requiredFields));
+
+        if (!$this->validateFields(...array_values($dataToValidate))) {
+            $this->sendResponse('Invalid input data', 400);
+        }
+
+        // Handle media files using MediaHandler
+        if (!empty($mediaFiles)) {
+            $mediaLinks = $this->mediaHandler->handleMediaFiles($mediaFiles);
+
+            if ($mediaLinks === false) {
+                $this->sendResponse('Error uploading media files', 500);
+            }
+
+        }
+
+        $result = $this->inventory->createItem($formData, $mediaLinks);
+
+        if ($result) {
+            $this->sendResponse('Success', 201, ['item_id' => $result]);
+        } else {
+            $this->sendResponse('Failed to create item', 500);
+        }
+    }
+
 
     public function show($id)
     {
@@ -126,19 +173,6 @@ class InventoryController extends BaseController
     }
 
 
-
-
-    // Get All Inventory Plans with Warehouse Name
-    public function getInventory()
-    {
-        $inventory_plans = $this->inventory->getAllInventoryPlans();
-
-        if ($inventory_plans) {
-            $this->sendResponse('success', 200, $inventory_plans);
-        } else {
-            $this->sendResponse('Inventory plan not found', 400);
-        }
-    }
 
     // Get Inventory Items Grouped by Status (e.g., Available, Depleting, KIV)
     public function getInventoryByStatus($status)

@@ -18,55 +18,53 @@ class Inventory
 
     }
 
-    public function getInventoryPlans($filter = null)
+    public function getInventory($filter = null)
     {
         $page = $filter['page'] ?? 1;
         $pageSize = $filter['page_size'] ?? 10;
+        $order = $filter['order'] ?? 'created_at';
+        $sort = $filter['sort'] ?? 'DESC';
 
         $sql = "
             SELECT
-                ip.id, 
-                ip.name AS plan_name,
-                COUNT(DISTINCT ipp.product_id) AS product_count,
-                w.name AS warehouse_name,
-                ip.plan_date,
-                p.status,
-                AVG(i.progress) AS average_progress -- Using AVG to summarize progress
-            FROM inventory i
-            JOIN warehouses w ON i.warehouse_id = w.id
-            LEFT JOIN inventory_plan_products ipp ON i.product_id = ipp.product_id
-            LEFT JOIN products p ON ipp.product_id = p.id
-            JOIN inventory_plans ip ON ipp.inventory_plan_id = ip.id
+            id, name, media, price AS buying_price, quantity, threshold_value,
+            expiry_date, sku, availability
+            FROM items
         ";
 
         $params = [];
 
-        if (!empty($filter['status'])) {
-            $sql .= " WHERE p.status = :filterStatus";
-            $params['filterStatus'] = $filter['status'];
+        if (!empty($filter['availability'])) {
+            $sql .= " WHERE availability = :filterAvailability";
+            $params['filterAvailability'] = $filter['availability'];
         }
 
-        $sql .= "
-            GROUP BY ip.id, ip.name, w.name, ip.plan_date, p.status
-            LIMIT :pageSize OFFSET :offset
-        ";
+        $sql .= " ORDER BY $order $sort";
+
+        $sql .= " LIMIT :pageSize OFFSET :offset";
 
         $params['pageSize'] = $pageSize;
         $params['offset'] = ($page - 1) * $pageSize;
 
         $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':pageSize', $params['pageSize'], \PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $params['offset'], \PDO::PARAM_INT);
 
-        if (!empty($filter['status'])) {
-            $stmt->bindParam(':filterStatus', $params['filterStatus'], \PDO::PARAM_STR);
+        // Bind parameters
+        $stmt->bindValue(':pageSize', $params['pageSize'], \PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $params['offset'], \PDO::PARAM_INT);
+
+        if (!empty($filter['availability'])) {
+            $stmt->bindValue(':filterAvailability', $params['filterAvailability'], \PDO::PARAM_STR);
         }
 
-        $stmt->execute($params);
+        $stmt->execute();
 
         $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        $total = $this->countInventoryPlans($filter);
+        foreach ($results as &$item) {
+            $item['media'] = !empty($item['media']) ? json_decode($item['media'], true) : null;
+        }
+
+        $total = $this->countInventory($filter);
 
         $meta = [
             'current_page' => $page,
@@ -75,9 +73,82 @@ class Inventory
         ];
 
         return [
-            'plans' => $results,
+            'inventory' => $results,
             'meta' => $meta
         ];
+    }
+
+    public function createItem($data, $mediaLinks = [])
+    {
+        $sql = "
+        INSERT INTO items
+        (name, description, department_id, category_id, manufacturer_id, unit_id,
+        price, quantity, threshold_value, expiry_date, sku, media)
+        VALUES (:name, :description, :departmentId, :categoryId, :manufacturerId,
+        :unitId, :price, :quantity, :threshold, :expiryDate, NULL, :media)
+    ";
+
+        $mediaLinks = json_encode($mediaLinks);
+
+        $stmt = $this->db->prepare($sql);
+
+        $stmt->bindParam(':name', $data['name']);
+        $stmt->bindParam(':description', $data['description']);
+        $stmt->bindParam(':departmentId', $data['department_id']);
+        $stmt->bindParam(':categoryId', $data['category_id']);
+        $stmt->bindParam(':manufacturerId', $data['manufacturer_id']);
+        $stmt->bindParam(':unitId', $data['unit_id']);
+        $stmt->bindParam(':price', $data['price']);
+        $stmt->bindParam(':quantity', $data['quantity']);
+        $stmt->bindParam(':threshold', $data['threshold_value']);
+        $stmt->bindParam(':expiryDate', $data['expiry_date']);
+        $stmt->bindParam(':media', $mediaLinks);
+
+        if ($stmt->execute()) {
+            $itemId = $this->db->lastInsertId();
+
+            $sku = $this->generateSKU($data['name'], $itemId);
+
+            $updateSql = "UPDATE items SET sku = :sku WHERE id = :id";
+            $updateStmt = $this->db->prepare($updateSql);
+            $updateStmt->bindParam(':sku', $sku);
+            $updateStmt->bindParam(':id', $itemId, \PDO::PARAM_INT);
+            $updateStmt->execute();
+
+            return $itemId;
+        }
+
+        return false;
+    }
+
+    private function generateSKU($name, $itemId)
+    {
+        $sku = strtoupper(substr($name, 0, 3));
+        $formattedSerial = str_pad($itemId, 4, '0', STR_PAD_LEFT);
+        return $sku . '-' . $formattedSerial;
+    }
+
+    private function countInventory($filter = null)
+    {
+        $countSql = "
+            SELECT COUNT(id) AS total_count
+            FROM items
+        ";
+
+        $params = [];
+
+        if (!empty($filter['availability'])) {
+            $countSql .= " WHERE availability = :filterAvailability";
+            $params['filterAvailability'] = $filter['availability'];
+        }
+
+        $countStmt = $this->db->prepare($countSql);
+        if (!empty($filter['availability'])) {
+            $countStmt->bindParam(':filterAvailability', $params['filterAvailability']);
+        }
+        $countStmt->execute();
+
+        return $countStmt->fetchColumn();
     }
 
     public function getInventoryPlan($id)
