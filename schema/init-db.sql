@@ -156,8 +156,8 @@ CREATE TABLE customers (
         CHECK (customer_type IN ('individual', 'business')),
     salutation VARCHAR(10) 
         CHECK (salutation IN ('Mr', 'Mrs', 'Miss', 'Dr', 'Prof')),
-    first_name VARCHAR(255) NOT NULL,
-    last_name VARCHAR(255) NOT NULL,
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
     display_name VARCHAR(255),
     company_name VARCHAR(255),
     email VARCHAR(255),
@@ -165,8 +165,27 @@ CREATE TABLE customers (
     mobile_phone VARCHAR(20),
     address TEXT,
     social_media JSONB,
+    balance DECIMAL(10, 2) DEFAULT 0,
+    status VARCHAR(50) GENERATED ALWAYS AS (
+        CASE
+            WHEN balance > 0 THEN 'owing'
+            ELSE 'paid'
+        END
+    ) STORED,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Customer Transactions
+CREATE TABLE customer_transactions (
+    id SERIAL PRIMARY KEY,
+    customer_id INT REFERENCES customers(id) ON DELETE SET NULL,
+    transaction_type VARCHAR(50) 
+        CHECK (transaction_type IN ('credit', 'debit')),
+    amount DECIMAL(10, 2) NOT NULL,
+    reference_number VARCHAR(50) UNIQUE NOT NULL,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Purchase Orders

@@ -136,23 +136,32 @@ INSERT INTO vendors (
  1, 1, 2);
 
 -- Seed customers
-INSERT INTO customers (customer_type, salutation, first_name, last_name, display_name, company_name, email, work_phone, mobile_phone, address, social_media)
+INSERT INTO customers (customer_type, salutation, first_name, last_name, display_name, company_name, email, work_phone, mobile_phone, address, social_media, balance)
 VALUES
 ('individual', 'Mr', 'Aliyu', 'Abdullahi', 'Aliyu Abdullahi', 
  NULL, 'aliyuabdullahi@gmail.com', '0123456794', '08012345683', 
- 'No. 15 Market Road, Kano, Nigeria', '{"facebook": "https://facebook.com/aliyuabdullahi"}'),
+ 'No. 15 Market Road, Kano, Nigeria', '{"facebook": "https://facebook.com/aliyuabdullahi"}', 0.00),
 ('business', 'Mrs', 'Titi', 'Adedayo', 'Adedayo Enterprises', 
  'Adedayo Enterprises', 'titiadedayo@adedayoenterprises.ng', '0123456795', 
  '08012345684', 'Plot 7 Industrial Layout, Lagos, Nigeria', 
- '{"twitter": "https://twitter.com/adedayoenterprises"}'),
+ '{"twitter": "https://twitter.com/adedayoenterprises"}', 1200.00),
 ('individual', 'Miss', 'Bola', 'Ogunyemi', 'Bola Ogunyemi', 
  NULL, 'bolaogunyemi@yahoo.com', '0123456796', '08012345685', 
- 'Flat 3, Block B, Ibadan, Nigeria', '{"instagram": "https://instagram.com/bolaogunyemi"}'),
+ 'Flat 3, Block B, Ibadan, Nigeria', '{"instagram": "https://instagram.com/bolaogunyemi"}', 50000.00),
 ('business', 'Dr', 'Chinedu', 'Eze', 'Eze Agro Ltd.', 
  'Eze Agro Ltd.', 'chinedueze@ezeagro.ng', '0123456797', 
  '08012345686', '123 Farmland Avenue, Umuahia, Nigeria', 
- '{"linkedin": "https://linkedin.com/company/ezeagro"}'),
+ '{"linkedin": "https://linkedin.com/company/ezeagro"}', 0.00),
 ('individual', 'Prof', 'Amina', 'Yusuf', 'Prof. Amina Yusuf', 
  NULL, 'aminayusuf@gmail.com', '0123456798', '08012345687', 
- 'No. 10 Crescent, Abuja, Nigeria', '{"youtube": "https://youtube.com/aminayusuf"}');
+ 'No. 10 Crescent, Abuja, Nigeria', '{"youtube": "https://youtube.com/aminayusuf"}', 0.00);
+
+-- Seed customer transactions
+INSERT INTO customer_transactions 
+(customer_id, transaction_type, amount, reference_number, notes)
+VALUES
+(1, 'credit', 5000.00, 'REF1234567890', 'Initial deposit by Aliyu Abdullahi'),
+(2, 'debit', 3000.00, 'REF1234567891', 'Payment for supply of fresh chicken'),
+(4, 'debit', 4500.00, 'REF1234567893', 'Purchase of agricultural equipment'),
+(5, 'credit', 10000.00, 'REF1234567894', 'Payment for food supplies');
 
