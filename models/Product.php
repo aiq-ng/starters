@@ -14,8 +14,6 @@ class Product
         $this->db = Database::getInstance()->getConnection();
     }
 
-
-    // Create a new Product
     public function create($data, $files = [])
     {
         $this->db->beginTransaction();
@@ -180,6 +178,11 @@ class Product
             $bindings[':unit_id'] = $filter['unit_id'];
         }
 
+        if (isset($filter['warehouse_id'])) {
+            $conditions[] = "i.warehouse_id = :warehouse_id";
+            $bindings[':warehouse_id'] = $filter['warehouse_id'];
+        }
+
         if (isset($filter['search']) && !empty($filter['search'])) {
             $searchTerm = $filter['search'];
             $conditions[] = "(p.name ILIKE :search OR p.code ILIKE :search)";
@@ -286,7 +289,7 @@ class Product
 
         // Default selection if no specific filter is provided
         if (empty($selects)) {
-            $selects[] = "SUM(i.on_hand)";
+            $selects[] = "SUM(i.quantity)";
         }
 
         $query .= " " . implode(", ", $selects) . "
@@ -325,80 +328,69 @@ class Product
 
     public function updateProductQuantity($productId, $data)
     {
+        try {
+            $this->db->beginTransaction();
 
-        $currentQuantityQuery = "
+            $currentQuantityQuery = "
             SELECT quantity 
             FROM inventory 
             WHERE product_id = :product_id
         ";
-        $currentStmt = $this->db->prepare($currentQuantityQuery);
-        $currentStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
-        $currentStmt->execute();
-        $currentQuantity = $currentStmt->fetchColumn();
+            $currentStmt = $this->db->prepare($currentQuantityQuery);
+            $currentStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
+            $currentStmt->execute();
+            $currentQuantity = $currentStmt->fetchColumn();
 
-        if ($currentQuantity === false) {
-            return [
-                "message" => "Product not found in inventory."
-            ];
-        }
+            if ($currentQuantity === false) {
+                return [
+                    "message" => "Product not found in inventory."
+                ];
+            }
 
-        $discrepancy = $data['new_quantity'] - $currentQuantity;
+            $discrepancy = $data['new_quantity'] - $currentQuantity;
 
-        $updateQuery = "
+            $updateQuery = "
             UPDATE inventory
             SET quantity = :new_quantity
             WHERE product_id = :product_id
         ";
-        $updateStmt = $this->db->prepare($updateQuery);
-        $updateStmt->bindParam(':new_quantity', $data['new_quantity'], \PDO::PARAM_INT);
-        $updateStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
-        $updateStmt->execute();
+            $updateStmt = $this->db->prepare($updateQuery);
+            $updateStmt->bindParam(':new_quantity', $data['new_quantity'], \PDO::PARAM_INT);
+            $updateStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
+            $updateStmt->execute();
 
-        $auditQuery = "
-            INSERT INTO inventory_audit 
-            (product_id, user_id, old_quantity, new_quantity, discrepancy, reason, notes, updated_at)
-            VALUES (:product_id, :user_id, :old_quantity, :new_quantity, :discrepancy, :reason, :notes, NOW())
+            $auditQuery = "
+            INSERT INTO inventory_audits 
+            (product_id, user_id, old_quantity, new_quantity, discrepancy, reason_id, notes, updated_at)
+            VALUES (:product_id, :user_id, :old_quantity, :new_quantity, :discrepancy, :reason_id, :notes, NOW())
         ";
-        $auditStmt = $this->db->prepare($auditQuery);
-        $auditStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
-        $auditStmt->bindParam(':user_id', $data['user_id'], \PDO::PARAM_INT);
-        $auditStmt->bindParam(':old_quantity', $currentQuantity, \PDO::PARAM_INT);
-        $auditStmt->bindParam(':new_quantity', $data['new_quantity'], \PDO::PARAM_INT);
-        $auditStmt->bindParam(':discrepancy', $discrepancy, \PDO::PARAM_INT);
-        $auditStmt->bindParam(':reason', $data['reason'], \PDO::PARAM_STR);
-        $auditStmt->bindParam(':notes', $data['notes'], \PDO::PARAM_STR);
-        $auditStmt->execute();
+            $auditStmt = $this->db->prepare($auditQuery);
+            $auditStmt->bindParam(':product_id', $productId, \PDO::PARAM_INT);
+            $auditStmt->bindParam(':user_id', $data['user_id'], \PDO::PARAM_INT);
+            $auditStmt->bindParam(':old_quantity', $currentQuantity, \PDO::PARAM_INT);
+            $auditStmt->bindParam(':new_quantity', $data['new_quantity'], \PDO::PARAM_INT);
+            $auditStmt->bindParam(':discrepancy', $discrepancy, \PDO::PARAM_INT);
+            $auditStmt->bindParam(':reason_id', $data['reason'], \PDO::PARAM_INT);
+            $auditStmt->bindParam(':notes', $data['notes'], \PDO::PARAM_STR);
+            $auditStmt->execute();
 
-        return [
-            "current_quantity" => $currentQuantity,
-            "new_quantity" => $data['new_quantity'],
-            "discrepancy" => $discrepancy,
-            "reason" => $data['reason'],
-            "notes" => $data['notes'],
-            "user_id" => $data['user_id'],
-        ];
+            // Commit transaction if all operations are successful
+            $this->db->commit();
+
+            return [
+                "current_quantity" => (int) $currentQuantity,
+                "new_quantity" => (int) $data['new_quantity'],
+                "discrepancy" => (int) $discrepancy,
+                "reason" => $data['reason'],
+                "notes" => $data['notes'],
+                "user_id" => (int) $data['user_id'],
+            ];
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
     }
 
-
-    // Get All Products
-    public function getAll()
-    {
-        $query = "SELECT * FROM " . $this->table;
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-
-
-    // Get Single Product
-    public function get($id)
-    {
-        $query = "SELECT * FROM $this->table WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
-    }
 
     // Update a Product
     public function update($id, $name, $location, $vendor, $code, $price, $profit, $margin, $quantity, $unit, $image_path)
@@ -447,71 +439,5 @@ class Product
         $stmt->execute();
         return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
-
-    //Classify based on warehouses, warehouse A = Cold room, warehouse B = Kitchen
-
-    //Display the number of products in both warehouse
-    public function getWhNo()
-    {
-        $query = "SELECT location, COUNT(*) AS product_count FROM $this->table WHERE location IN ('Warehouse A', 'Warehouse B') GROUP BY location ORDER BY location";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-    //Display the number of items in both warehouses
-    public function getWhItems()
-    {
-        $query = "SELECT location, SUM(quantity) AS quantity_count FROM $this->table WHERE location IN ('Warehouse A', 'Warehouse B') GROUP BY location ORDER BY location";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-
-
-    //Display the  the products in warehouse A
-    public function getWhA()
-    {
-        $query = "SELECT * FROM $this->table WHERE location = 'Warehouse A'";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-
-    //Display the  the products in warehouse B
-
-    public function getWhB()
-    {
-        $query = "SELECT * FROM $this->table WHERE location = 'Warehouse B'";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-
-    //Display low stock alerts in Warehouse A
-    public function getLowStockAlertsA()
-    {
-        $query = "SELECT * FROM $this->table WHERE quantity <= 50 location = 'Warehouse A'";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }

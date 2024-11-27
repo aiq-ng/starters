@@ -1,42 +1,34 @@
--- Drop inventory_audits table
-DROP TABLE IF EXISTS inventory_audits CASCADE;
+-- Sales Orders and Items
+DROP TABLE IF EXISTS sales_order_items;
+DROP TABLE IF EXISTS sales_orders;
 
--- Drop sales table
-DROP TABLE IF EXISTS sales CASCADE;
+-- Purchase Orders and Items
+DROP TABLE IF EXISTS purchase_order_items;
+DROP TABLE IF EXISTS purchase_orders;
 
--- Drop inventory_activities table
-DROP TABLE IF EXISTS inventory_activities CASCADE;
+-- Customers and Vendors
+DROP TABLE IF EXISTS customer_transactions;
+DROP TABLE IF EXISTS vendor_transactions;
+DROP TABLE IF EXISTS customers;
+DROP TABLE IF EXISTS vendors;
 
--- Drop inventory_plan_items table
-DROP TABLE IF EXISTS inventory_plan_items CASCADE;
+-- Items and Related Entities
+DROP TABLE IF EXISTS items;
+DROP TABLE IF EXISTS item_manufacturers;
 
--- Drop inventory_plans table
-DROP TABLE IF EXISTS inventory_plans CASCADE;
+-- Supporting Entities
+DROP TABLE IF EXISTS taxes;
+DROP TABLE IF EXISTS units;
+DROP TABLE IF EXISTS payment_terms;
+DROP TABLE IF EXISTS payment_methods;
+DROP TABLE IF EXISTS vendor_categories;
+DROP TABLE IF EXISTS item_categories;
 
--- Drop inventory table
-DROP TABLE IF EXISTS inventory CASCADE;
+-- Branches and Departments
+DROP TABLE IF EXISTS branches;
+DROP TABLE IF EXISTS departments;
 
--- Drop product_vendors table
-DROP TABLE IF EXISTS product_vendors CASCADE;
-
--- Drop vendors table
-DROP TABLE IF EXISTS vendors CASCADE;
-
--- Drop warehouse_storages table
-DROP TABLE IF EXISTS warehouse_storages CASCADE;
-
--- Drop warehouses table
-DROP TABLE IF EXISTS warehouses CASCADE;
-
--- Drop products table
-DROP TABLE IF EXISTS products CASCADE;
-
---Drop units table
-DROP TABLE IF EXISTS units CASCADE;
-
--- Drop users table
-DROP TABLE IF EXISTS users CASCADE;
-
--- Drop roles table
-DROP TABLE IF EXISTS roles CASCADE;
-
+-- Core Entities
+DROP TABLE IF EXISTS currencies;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS roles;

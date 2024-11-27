@@ -2,14 +2,20 @@
 
 use Controllers\AuthController;
 use Controllers\ProductController;
-use Controllers\WarehouseController;
+use Controllers\CustomerController;
+use Controllers\TradeController;
 use Controllers\InventoryController;
+use Controllers\VendorController;
+use Controllers\DashboardController;
 
 // Create instances of the controllers
 $authController = new AuthController();
 $productController = new ProductController();
-$warehouseController = new WarehouseController();
+$customerController = new CustomerController();
+$vendorController = new VendorController();
+$tradeController = new TradeController();
 $inventoryController = new InventoryController();
+$dashboardController = new DashboardController();
 
 // Define routes
 $routes = [
@@ -20,37 +26,45 @@ $routes = [
         },
         '/auth/logout' => [$authController, 'logout'],
         '/roles' => [$authController, 'getRoles'],
-        '/products' => [$productController, 'index'],
-        '/warehouses' => [$warehouseController, 'index'],
-        '/vendors' => [$productController, 'getVendors'],
+        '/currencies' => [$productController, 'getCurrencies'],
+        '/payment_methods' => [$productController, 'getPaymentMethods'],
+        '/departments' => [$productController, 'getDepartments'],
+        '/item_categories' => [$productController, 'getItemCategories'],
+        '/item_manufacturers' => [$productController, 'getItemManufacturers'],
         '/units' => [$productController, 'getUnits'],
+        '/vendors' => [$vendorController, 'index'],
+        '/customers' => [$customerController, 'index'],
         '/dashboard/metrics' => [$productController, 'getDashboardMetrics'],
-        '/dashboard/warehouses/details' => [$productController, 'getWarehouseDetailsMetrics'],
-        '/dashboard/topsellingproducts' => [$productController, 'getTopSellingProducts'],
-        '/products/lowstockalerts' => [$productController, 'getLowStockAlerts'],
-        '/products/warehouseno' => [$productController, 'getWhNo'],
-        '/products/warehouseitems' => [$productController, 'getWhItems'],
-        '/products/warehousea' => [$productController, 'getWhA'],
-        '/products/warehouseb' => [$productController, 'getWhB'],
-        '/products/lowstockalertsa' => [$productController, 'getLowStockAlertsA'],
+        '/dashboard/overview' => [$dashboardController, 'overview'],
+        '/dashboard/products/lowstock' => [$dashboardController, 'lowQuantityStock'],
+        '/dashboard/products/topselling' => [$productController, 'getTopSellingProducts'],
+        '/dashboard/inventory/tracker' => [$inventoryController, 'getInventoryTracker'],
+        '/purchases' => [$tradeController, 'purchaseIndex'],
+        '/sales' => [$tradeController, 'saleIndex'],
         '/products/(\d+)' => [$productController, 'show'],
-        '/inventory' => [$inventoryController, 'getInventory'],
-        '/inventory/status' => [$inventoryController, 'getInventoryByStatus'],
+        '/inventory' => [$inventoryController, 'index'],
+        '/inventory/plans/(\d+)' => [$inventoryController, 'show'],
+        '/inventory/tracker' => [$inventoryController, 'inventoryTracker'],
         '/inventory/:id' => [$inventoryController, 'getInventoryPlan'],
         '/inventory/stock' => [$inventoryController, 'getStockProgress'],
-        
- 
+
+
 
     ],
     'POST' => [
         '/auth/register' => [$authController, 'register'],
         '/auth/login' => [$authController, 'login'],
         '/products' => [$productController, 'create'],
-        '/warehouses' => [$warehouseController, 'create'],
-        '/inventoryplans' => [$inventoryController, 'createInventoryPlan'],
+        '/customers' => [$customerController, 'create'],
+        '/vendors' => [$vendorController, 'create'],
+        '/purchases/orders' => [$tradeController, 'createPurchase'],
+        '/sales' => [$tradeController, 'createSale'],
+        '/inventory/items' => [$inventoryController, 'createItem'],
+        '/inventory/completed' => [$inventoryController, 'completeInventory'],
     ],
     'PUT' => [
         '/products/(\d+)' => [$productController, 'update'],
+        '/products/quantity/(\d+)' => [$productController, 'updateQuantity'],
     ],
     'DELETE' => [
         '/products/(\d+)' => [$productController, 'delete'],

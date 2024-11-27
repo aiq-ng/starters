@@ -114,6 +114,8 @@ class BaseController
 
         if (!empty($data)) {
             $response['data'] = $data;
+        } else {
+            $response['data'] = [];
         }
 
         if (!empty($meta)) {
@@ -124,24 +126,52 @@ class BaseController
         exit;
     }
 
-    public function fetchRoles()
+    protected function fetchData(string $table, array $columns = ['*'])
     {
-        $query = "SELECT * FROM roles";
+        $columnsList = implode(', ', $columns);
+        $query = "SELECT $columnsList FROM $table";
         $stmt = $this->db->query($query);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    public function fetchUnits()
+    public function getRoles()
     {
-        $query = "SELECT id, name, abbreviation FROM units";
-        $stmt = $this->db->query($query);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        return $this->sendResponse('success', 200, $this->fetchData('roles'));
+
     }
 
-    public function fetchVendors()
+    public function getUnits()
     {
-        $query = "SELECT * FROM vendors";
-        $stmt = $this->db->query($query);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        return $this->sendResponse('success', 200, $this->fetchData('units', ['id', 'name', 'abbreviation']));
+    }
+
+    public function getVendors()
+    {
+        return $this->sendResponse('success', 200, $this->fetchData('vendors'));
+    }
+
+    public function getCurrencies()
+    {
+        return $this->sendResponse('success', 200, $this->fetchData('currencies', ['id', 'name', 'symbol']));
+    }
+
+    public function getPaymentMethods()
+    {
+        return $this->sendResponse('success', 200, $this->fetchData('payment_methods', ['id', 'name', 'description']));
+    }
+
+    public function getDepartments()
+    {
+        return $this->sendResponse('success', 200, $this->fetchData('departments', ['id', 'name', 'description']));
+    }
+
+    public function getItemCategories()
+    {
+        return $this->sendResponse('success', 200, $this->fetchData('item_categories', ['id', 'name', 'description']));
+    }
+
+    public function getItemManufacturers()
+    {
+        return $this->sendResponse('success', 200, $this->fetchData('item_manufacturers', ['id', 'name', 'website']));
     }
 }
