@@ -123,8 +123,6 @@ class Purchase
         return (int) $stmt->fetchColumn();
     }
 
-
-
     public function createPurchase($data)
     {
         $this->db->beginTransaction();

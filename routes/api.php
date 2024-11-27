@@ -37,6 +37,7 @@ $routes = [
         '/dashboard/metrics' => [$productController, 'getDashboardMetrics'],
         '/dashboard/overview' => [$dashboardController, 'overview'],
         '/dashboard/products/lowstock' => [$dashboardController, 'lowQuantityStock'],
+        '/dashboard/products/mostpurchased' => [$dashboardController, 'mostPurchased'],
         '/dashboard/products/topselling' => [$productController, 'getTopSellingProducts'],
         '/dashboard/inventory/tracker' => [$inventoryController, 'getInventoryTracker'],
         '/purchases/orders' => [$tradeController, 'purchaseIndex'],
