@@ -29,7 +29,6 @@ class Vendor
 
         $stmt = $this->db->prepare($query);
 
-        // Bind parameters
         $stmt->bindParam(':salutation', $data['salutation']);
         $stmt->bindParam(':first_name', $data['first_name']);
         $stmt->bindParam(':last_name', $data['last_name']);
@@ -45,7 +44,6 @@ class Vendor
         $stmt->bindParam(':category_id', $data['category_id']);
         $stmt->bindParam(':website', $data['website']);
 
-        // Execute query
         if ($stmt->execute()) {
             return $this->db->lastInsertId();
         }
@@ -64,43 +62,113 @@ class Vendor
         return $stmt->fetch();
     }
 
-    public function getVendors()
+    public function getVendors($filters = [])
     {
+        $page = $filters['page'] ?? 1;
+        $pageSize = $filters['page_size'] ?? 10;
+        $offset = ($page - 1) * $pageSize;
+
         $query = "
-			SELECT 
-				v.id,
-				v.salutation || ' ' || v.first_name || ' ' || v.last_name AS name,
-				vc.name AS category,
-				v.email,
-				v.work_phone,
-				v.address,
-				COALESCE(SUM(t.amount), 0) AS total_transaction,
-				v.balance,
-				v.status
-			FROM 
-				vendors v
-			LEFT JOIN 
-				vendor_transactions t 
-			ON 
-				v.id = t.vendor_id
-			LEFT JOIN 
-				vendor_categories vc
-			ON 
-				v.category_id = vc.id
-			GROUP BY 
-				v.id, vc.name
-			ORDER BY 
-				v.id ASC
-		";
+            SELECT 
+                v.id,
+                v.salutation || ' ' || v.first_name || ' ' || v.last_name AS name,
+                vc.name AS category,
+                v.email,
+                v.work_phone,
+                v.address,
+                COALESCE(SUM(t.amount), 0) AS total_transaction,
+                v.balance,
+                v.status
+            FROM 
+                vendors v
+            LEFT JOIN 
+                vendor_transactions t 
+            ON 
+                v.id = t.vendor_id
+            LEFT JOIN 
+                vendor_categories vc
+            ON 
+                v.category_id = vc.id
+        ";
 
-        $stmt = $this->db->prepare($query);
+        $conditions = [];
+        $params = [];
 
-        if ($stmt->execute()) {
-            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        if (!empty($filters['category_id'])) {
+            $conditions[] = "v.category_id = :category_id";
+            $params['category_id'] = $filters['category_id'];
         }
 
-        return [];
+        if (!empty($conditions)) {
+            $query .= " WHERE " . implode(" AND ", $conditions);
+        }
+
+        $sortBy = $filters['sort_by'];
+        $sortOrder = strtoupper($filters['sort_order'] ?? 'DESC');
+
+        if (!in_array($sortOrder, ['ASC', 'DESC'])) {
+            $sortOrder = 'DESC';
+        }
+
+        $query .= "
+            GROUP BY v.id, vc.name
+            ORDER BY {$sortBy} {$sortOrder}
+            LIMIT :pageSize OFFSET :offset
+        ";
+
+        $params['pageSize'] = $pageSize;
+        $params['offset'] = $offset;
+
+        $stmt = $this->db->prepare($query);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR);
+        }
+        $stmt->execute();
+        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $totalItems = $this->getTotalVendorCount($filters);
+
+        $meta = [
+            'current_page' => (int) $page,
+            'page_size' => (int) $pageSize,
+            'total_data' => (int) $totalItems,
+            'total_pages' => ceil($totalItems / $pageSize),
+        ];
+
+        return [
+            'data' => $data,
+            'meta' => $meta,
+        ];
     }
 
+    private function getTotalVendorCount($filters = [])
+    {
+        $countQuery = "
+            SELECT COUNT(DISTINCT v.id) AS total_vendors
+            FROM vendors v
+            LEFT JOIN vendor_transactions t ON v.id = t.vendor_id
+            LEFT JOIN vendor_categories vc ON v.category_id = vc.id
+        ";
+
+        $conditions = [];
+        $params = [];
+
+        if (!empty($filters['category_id'])) {
+            $conditions[] = "v.category_id = :category_id";
+            $params['category_id'] = $filters['category_id'];
+        }
+
+        if (!empty($conditions)) {
+            $countQuery .= " WHERE " . implode(" AND ", $conditions);
+        }
+
+        $stmt = $this->db->prepare($countQuery);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR);
+        }
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
+    }
 
 }

@@ -70,4 +70,106 @@ class Dashboard
             return [];
         }
     }
+
+    public function getMostPurchasedItems($filters = [])
+    {
+        $page = $filters['page'] ?? 1;
+        $pageSize = $filters['page_size'] ?? 5;
+        $offset = ($page - 1) * $pageSize;
+
+        $query = "
+            SELECT 
+                i.name AS item_name,
+                SUM(poi.quantity) AS purchased_quantity,
+                i.quantity - SUM(poi.quantity) AS remaining_quantity,
+                SUM(poi.quantity * poi.price) AS total_amount
+            FROM
+                purchase_order_items poi
+            JOIN
+                items i
+            ON poi.item_id = i.id
+        ";
+
+        $conditions = [];
+        $params = [];
+
+        if (!empty($filters['month'])) {
+            $conditions[] = "DATE_PART('month', poi.created_at) = :month";
+            $params['month'] = (int) $filters['month'];
+        }
+
+        if (!empty($filters['year'])) {
+            $conditions[] = "DATE_PART('year', poi.created_at) = :year";
+            $params['year'] = (int) $filters['year'];
+        }
+
+        if (!empty($conditions)) {
+            $query .= " WHERE " . implode(" AND ", $conditions);
+        }
+
+        $query .= "
+        GROUP BY i.id, i.name, i.quantity
+        ORDER BY purchased_quantity DESC
+        LIMIT :pageSize OFFSET :offset
+    ";
+
+        $params['pageSize'] = $pageSize;
+        $params['offset'] = $offset;
+
+        $stmt = $this->db->prepare($query);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR);
+        }
+        $stmt->execute();
+        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $totalItems = $this->getTotalItemCount($filters);
+
+        $meta = [
+            'current_page' => (int) $page,
+            'page_size' => (int) $pageSize,
+            'total_data' => (int) $totalItems,
+            'total_pages' => ceil($totalItems / $pageSize),
+        ];
+
+        return [
+            'data' => $data,
+            'meta' => $meta,
+        ];
+    }
+
+    private function getTotalItemCount($filters = [])
+    {
+        $countQuery = "
+            SELECT COUNT(DISTINCT i.id) AS total_items
+            FROM purchase_order_items poi
+            JOIN items i
+            ON poi.item_id = i.id
+        ";
+
+        $conditions = [];
+        $params = [];
+
+        if (!empty($filters['month'])) {
+            $conditions[] = "DATE_PART('month', poi.created_at) = :month";
+            $params['month'] = (int) $filters['month'];
+        }
+
+        if (!empty($filters['year'])) {
+            $conditions[] = "DATE_PART('year', poi.created_at) = :year";
+            $params['year'] = (int) $filters['year'];
+        }
+
+        if (!empty($conditions)) {
+            $countQuery .= " WHERE " . implode(" AND ", $conditions);
+        }
+
+        $stmt = $this->db->prepare($countQuery);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR);
+        }
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
+    }
 }
