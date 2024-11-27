@@ -124,8 +124,13 @@ CREATE TABLE items (
     threshold_value INT DEFAULT 0,
     expiry_date DATE,
     media JSONB,
-    availability VARCHAR(50) DEFAULT 'in stock' 
-        CHECK (availability IN ('in stock', 'out of stock', 'low stock')),
+    availability VARCHAR(50) GENERATED ALWAYS AS (
+        CASE 
+            WHEN quantity = 0 THEN 'out of stock'
+            WHEN quantity < threshold_value THEN 'low stock'
+            ELSE 'in stock'
+        END
+    ) STORED,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

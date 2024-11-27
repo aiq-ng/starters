@@ -6,6 +6,7 @@ use Controllers\CustomerController;
 use Controllers\TradeController;
 use Controllers\InventoryController;
 use Controllers\VendorController;
+use Controllers\DashboardController;
 
 // Create instances of the controllers
 $authController = new AuthController();
@@ -14,6 +15,7 @@ $customerController = new CustomerController();
 $vendorController = new VendorController();
 $tradeController = new TradeController();
 $inventoryController = new InventoryController();
+$dashboardController = new DashboardController();
 
 // Define routes
 $routes = [
@@ -29,11 +31,12 @@ $routes = [
         '/departments' => [$productController, 'getDepartments'],
         '/item_categories' => [$productController, 'getItemCategories'],
         '/item_manufacturers' => [$productController, 'getItemManufacturers'],
+        '/units' => [$productController, 'getUnits'],
         '/vendors' => [$vendorController, 'index'],
         '/customers' => [$customerController, 'index'],
-        '/suppliers' => [$productController, 'getSuppliers'],
-        '/units' => [$productController, 'getUnits'],
         '/dashboard/metrics' => [$productController, 'getDashboardMetrics'],
+        '/dashboard/overview' => [$dashboardController, 'overview'],
+        '/dashboard/products/lowstock' => [$dashboardController, 'lowQuantityStock'],
         '/dashboard/products/topselling' => [$productController, 'getTopSellingProducts'],
         '/dashboard/inventory/tracker' => [$inventoryController, 'getInventoryTracker'],
         '/purchases' => [$tradeController, 'purchaseIndex'],

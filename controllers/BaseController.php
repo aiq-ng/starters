@@ -114,6 +114,8 @@ class BaseController
 
         if (!empty($data)) {
             $response['data'] = $data;
+        } else {
+            $response['data'] = [];
         }
 
         if (!empty($meta)) {
