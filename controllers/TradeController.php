@@ -21,7 +21,20 @@ class TradeController extends BaseController
     {
         $this->authorizeRequest();
 
-        $purchases = $this->purchase->getPurchases();
+        $filters = [
+            'page' => isset($_GET['page']) ? $_GET['page'] : 1,
+            'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
+            'status' => isset($_GET['status']) ? $_GET['status'] : null,
+            'start_date' => isset($_GET['start_date']) && !empty($_GET['start_date'])
+            ? $_GET['start_date']
+            : date('Y-m-d'),
+            'end_date' => isset($_GET['end_date']) && !empty($_GET['end_date'])
+            ? $_GET['end_date']
+            : date('Y-m-d')
+        ];
+
+
+        $purchases = $this->purchase->getPurchaseOrders(array_filter($filters));
 
         if ($purchases) {
             $this->sendResponse('success', 200, $purchases['data'], $purchases['meta']);
@@ -59,10 +72,23 @@ class TradeController extends BaseController
     {
         $this->authorizeRequest();
 
-        $sales = $this->sale->getSales();
+        $filters = [
+            'page' => isset($_GET['page']) ? $_GET['page'] : 1,
+            'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
+            'status' => isset($_GET['status']) ? $_GET['status'] : null,
+            'order_type' => isset($_GET['order_type']) ? $_GET['order_type'] : null,
+            'start_date' => isset($_GET['start_date']) && !empty($_GET['start_date'])
+            ? $_GET['start_date']
+            : date('Y-m-d'),
+            'end_date' => isset($_GET['end_date']) && !empty($_GET['end_date'])
+            ? $_GET['end_date']
+            : date('Y-m-d')
+        ];
 
-        if ($sales) {
-            $this->sendResponse('success', 200, $sales);
+        $sales = $this->sale->getSalesOrders(array_filter($filters));
+
+        if (!empty($sales)) {
+            $this->sendResponse('success', 200, $sales['data'], $sales['meta']);
         } else {
             $this->sendResponse('Sales not found', 404);
         }
@@ -74,7 +100,7 @@ class TradeController extends BaseController
 
         $data = $this->getRequestData();
 
-        if (!$this->validateFields($data['product'], $data['quantity'], $data['price'])) {
+        if (!$this->validateFields($data['delivery_option'], $data['order_type'])) {
             $this->sendResponse('Invalid fields', 400);
         }
 

@@ -42,7 +42,8 @@ INSERT INTO departments (name, description) VALUES
 -- Seed branches
 INSERT INTO branches (name, description) VALUES
 ('Lagos', 'Branch located in Lagos, Nigeria'),
-('Abuja', 'Branch located in Abuja, Nigeria');
+('Abuja', 'Branch located in Abuja, Nigeria'),
+('Port Harcourt', 'Branch located in Port Harcourt, Nigeria');
 
 -- Seed item categories
 INSERT INTO item_categories (name, description) VALUES
@@ -177,3 +178,64 @@ VALUES
 (3, 'debit', 200000.00, 'Purchase of catfish processing equipment'),
 (4, 'debit', 450000.00, 'Purchase of meat processing equipment'),
 (5, 'credit', 100000.00, 'Payment for meat supplies');
+
+-- Insert into purchase_orders
+INSERT INTO purchase_orders (
+    vendor_id, branch_id, delivery_date, 
+    payment_term_id, subject, notes, terms_and_conditions, 
+    discount, shipping_charge, total
+)
+VALUES
+(1, 1, '2024-11-20', 3, 
+    'Bulk Purchase of Food Items', 'Ensure quality items', 
+    'Goods must be delivered in good condition', 1000, 5000, 150000),
+(2, 2, '2024-11-15', 4, 
+    'Monthly Grocery Restock', 'Deliver to Abuja branch warehouse', 
+    'Invoice must include all taxes', 2000, 2500, 200000),
+(3, 3, '2024-11-10', 3, 
+    'Catering Supplies', 'Urgent delivery required', 
+    'Late delivery will incur penalties', 1500, 1000, 120000);
+
+-- Insert into purchase_order_items
+INSERT INTO purchase_order_items (
+    purchase_order_id, item_id, quantity, price, tax_id
+)
+VALUES
+(1, 1, 10, 30000, 1),
+(1, 2, 20, 10000, 1),
+(2, 3, 15, 25000, 2),
+(3, 1, 5, 30000, 1),
+(3, 3, 10, 25000, 2);
+
+-- Insert into sales_orders
+INSERT INTO sales_orders (
+    order_type, order_title, customer_id, payment_term_id, 
+    payment_method_id, delivery_option, assigned_driver_id, 
+    delivery_date, additional_note, customer_note, discount, 
+    delivery_charge, total, status
+)
+VALUES
+('order', 'Chicken Jumbo Pack', 1, 1, 1, 'delivery', 1, 
+    '2024-12-01', 'Deliver before noon', 'Please call on arrival', 
+    1000, 2000, 52000, 'upcoming'),
+('order', 'Maxi Puff Puff', 2, 2, 2, 'pickup', NULL, 
+    '2024-12-15', 'Ready for Christmas', 'Add plenty sugar', 
+    500, 0, 34500, 'pending'),
+ ('order', 'Salmon Special', 3, 3, 3, 'delivery', 2, 
+    '2024-12-20', 'Handle with care', 'Call before delivery', 
+    1500, 2500, 45000, 'completed'),
+ ('order', 'Beef Box', 4, 4, 1, 'pickup', NULL, 
+    '2024-12-25', 'Festive season order', 'Add extra spice', 
+    2000, 0, 30000, 'sent');
+
+-- Insert into sales_order_items
+INSERT INTO sales_order_items (sales_order_id, item_id, quantity, price)
+VALUES
+(1, 1, 1, 30000),
+(1, 2, 2, 10000),
+(2, 3, 1, 25000),
+(2, 2, 1, 10000),
+(3, 1, 1, 30000),
+(3, 3, 2, 25000),
+(4, 1, 1, 30000),
+(4, 2, 1, 10000);

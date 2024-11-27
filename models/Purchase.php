@@ -13,74 +13,116 @@ class Purchase
         $this->db = Database::getInstance()->getConnection();
     }
 
-    private function getTotalPurchasesCount()
+    public function getPurchaseOrders($filters = [])
     {
-        $countQuery = "
-            SELECT COUNT(DISTINCT p.id) AS total
-            FROM purchases p
-            JOIN suppliers s ON p.supplier_id = s.id
-            LEFT JOIN purchase_items pi ON p.id = pi.purchase_id;
-        ";
-
-        $countStmt = $this->db->query($countQuery);
-        return $countStmt->fetchColumn();
-    }
-
-
-    public function getPurchases($page = 1, $pageSize = 10)
-    {
-        $offset = ($page - 1) * $pageSize;
-
-        $total = $this->getTotalPurchasesCount();
-
+        $page = $filters['page'] ?? 1;
+        $pageSize = $filters['page_size'] ?? 10;
         $query = "
             SELECT 
-                p.purchase_date,
-                s.name AS supplier,
-                COUNT(pi.product_name) AS items,
-                COALESCE(SUM(pi.total_price), 0) AS total_cost,
-                JSON_AGG(
-                    JSON_BUILD_OBJECT(
-                        'product', pi.product_name,
-                        'quantity', pi.quantity,
-                        'price_per_unit', pi.price_per_unit,
-                        'total_price', pi.total_price
-                    )
-                )::TEXT AS products
+                po.purchase_order_number, 
+                CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name, 
+                po.created_at::DATE AS order_date, 
+                po.delivery_date, 
+                po.total, 
+                po.status
             FROM 
-                purchases p
-            JOIN 
-                suppliers s ON p.supplier_id = s.id
+                purchase_orders po
             LEFT JOIN 
-                purchase_items pi ON p.id = pi.purchase_id
-            GROUP BY 
-                p.purchase_date, s.name
-            ORDER BY 
-                p.purchase_date DESC
-            LIMIT :pageSize OFFSET :offset; -- Pagination
+                vendors v 
+                ON po.vendor_id = v.id
         ";
 
-        $stmt = $this->db->prepare($query);
-        $stmt->bindValue(':pageSize', $pageSize, \PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
-        $stmt->execute();
-        $purchases = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $conditions = [];
+        $params = [];
 
-        foreach ($purchases as &$purchase) {
-            $purchase['products'] = json_decode($purchase['products']);
+        if (!empty($filters['status'])) {
+            $conditions[] = "po.status = :status";
+            $params['status'] = $filters['status'];
         }
 
+        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+            $conditions[] = "po.created_at::DATE BETWEEN :start_date AND :end_date";
+            $params['start_date'] = $filters['start_date'];
+            $params['end_date'] = $filters['end_date'];
+        } elseif (!empty($filters['start_date'])) {
+            $conditions[] = "po.created_at::DATE >= :start_date";
+            $params['start_date'] = $filters['start_date'];
+        } elseif (!empty($filters['end_date'])) {
+            $conditions[] = "po.created_at::DATE <= :end_date";
+            $params['end_date'] = $filters['end_date'];
+        }
+
+        if ($conditions) {
+            $query .= " WHERE " . implode(' AND ', $conditions);
+        }
+
+        $query .= " ORDER BY po.created_at DESC LIMIT :limit OFFSET :offset";
+
+        $params['limit'] = $pageSize;
+        $params['offset'] = ($page - 1) * $pageSize;
+
+        $stmt = $this->db->prepare($query);
+
+        foreach ($params as $key => $value) {
+            $type = is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR;
+            $stmt->bindValue($key, $value, $type);
+        }
+
+        $stmt->execute();
+
+        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $total = $this->getPurchaseOrdersCount($filters);
+
         $meta = [
-            'current_page' => $page,
-            'last_page' => ceil($total / $pageSize),
-            'total' => $total
+            'current_page' => (int) $page,
+            'next_page' => (int) $page + 1,
+            'page_size' => $pageSize,
+            'total_data' => $total,
+            'total_pages' => ceil($total / $pageSize),
         ];
 
-        return [
-            'data' => $purchases,
-            'meta' => $meta
-        ];
+        return ['data' => $data, 'meta' => $meta];
     }
+
+    private function getPurchaseOrdersCount($filters = [])
+    {
+        $query = "
+            SELECT COUNT(*) AS count
+            FROM purchase_orders po
+            LEFT JOIN vendors v 
+            ON po.vendor_id = v.id
+        ";
+
+        $conditions = [];
+        $params = [];
+
+        if (!empty($filters['status'])) {
+            $conditions[] = "po.status = :status";
+            $params['status'] = $filters['status'];
+        }
+
+        if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
+            $conditions[] = "po.order_date BETWEEN :date_from AND :date_to";
+            $params['date_from'] = $filters['date_from'];
+            $params['date_to'] = $filters['date_to'];
+        } elseif (!empty($filters['date_from'])) {
+            $conditions[] = "po.order_date >= :date_from";
+            $params['date_from'] = $filters['date_from'];
+        } elseif (!empty($filters['date_to'])) {
+            $conditions[] = "po.order_date <= :date_to";
+            $params['date_to'] = $filters['date_to'];
+        }
+
+        if ($conditions) {
+            $query .= " WHERE " . implode(' AND ', $conditions);
+        }
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute($params);
+
+        return (int) $stmt->fetchColumn();
+    }
+
 
 
     public function createPurchase($data)
