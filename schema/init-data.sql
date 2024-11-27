@@ -50,11 +50,12 @@ INSERT INTO item_categories (name, description) VALUES
 
 -- Seed vendor categories
 INSERT INTO vendor_categories (name, description) VALUES
-('Fresh Produce Vendors', 'Vendors supplying fresh fruits and vegetables'),
-('Meat Vendors', 'Vendors supplying fresh and frozen meats'),
-('Seafood Vendors', 'Vendors supplying fresh and frozen seafood'),
-('Snacks Vendors', 'Vendors supplying local snacks like chin chin and plantain chips'),
-('Furniture Vendors', 'Vendors supplying household and office furniture');
+('Fresh Produce', 'Vendors supplying fresh fruits and vegetables'),
+('Kitchen Supply', 'Vendors supplying kitchenware and utensils'),
+('Meat', 'Vendors supplying fresh and frozen meats'),
+('Seafood', 'Vendors supplying fresh and frozen seafood'),
+('Snacks', 'Vendors supplying local snacks like chin chin and plantain chips'),
+('Furniture', 'Vendors supplying household and office furniture');
 
 -- Seed item manufacturers
 INSERT INTO item_manufacturers (name, website) VALUES
@@ -112,56 +113,66 @@ VALUES
 INSERT INTO vendors (
     salutation, first_name, last_name, company_name, display_name, 
     email, work_phone, mobile_phone, address, social_media, 
-    payment_term_id, currency_id, category_id
+    payment_term_id, currency_id, category_id, balance
 ) VALUES
 ('Mr', 'John', 'Doe', 'Beef Supplies Ltd.', 'John Doe (Beef Supplies)', 
  'johndoe@beefsupplies.ng', '0123456789', '08012345678', 
  '123 Meat Street, Lagos, Nigeria', '{"facebook": "https://facebook.com/beefsupplies"}', 
- 1, 1, 1),
+ 1, 1, 1, 0.00),
 ('Mrs', 'Jane', 'Smith', 'Fresh Chickens Ltd.', 'Jane Smith (Fresh Chickens)', 
  'janesmith@freshchickens.ng', '0123456790', '08012345679', 
  '456 Poultry Avenue, Ibadan, Nigeria', '{"twitter": "https://twitter.com/freshchickens"}', 
- 2, 1, 2),
+ 2, 1, 2, 50000.00),
 ('Miss', 'Mary', 'Johnson', 'Catfish Traders Co.', 'Mary Johnson (Catfish Traders)', 
  'maryjohnson@catfishco.ng', '0123456791', '08012345680', 
  '789 Fish Market, Port Harcourt, Nigeria', '{"instagram": "https://instagram.com/catfishco"}', 
- 3, 1, 1),
+ 3, 1, 1, 20000.00),
 ('Dr', 'Peter', 'Oluwole', 'Pork Processing Plc.', 'Dr. Peter Oluwole (Pork Processing)', 
  'peteroluwole@porkplc.ng', '0123456792', '08012345681', 
  '101 Meat Lane, Abuja, Nigeria', '{"linkedin": "https://linkedin.com/company/porkprocessing"}', 
- 4, 1, 2),
+ 4, 1, 2, 0.00),
 ('Prof', 'Amaka', 'Okafor', 'Lamb Lovers Inc.', 'Prof. Amaka Okafor (Lamb Lovers)', 
  'amakaokafor@lamblovers.ng', '0123456793', '08012345682', 
  '202 Sheep Street, Enugu, Nigeria', '{"youtube": "https://youtube.com/lamblovers"}', 
- 1, 1, 2);
+ 1, 1, 2, 0.00);
 
 -- Seed customers
 INSERT INTO customers (customer_type, salutation, first_name, last_name, display_name, company_name, email, work_phone, mobile_phone, address, social_media, balance)
 VALUES
 ('individual', 'Mr', 'Aliyu', 'Abdullahi', 'Aliyu Abdullahi', 
- NULL, 'aliyuabdullahi@gmail.com', '0123456794', '08012345683', 
+ 'Agro Tech LTD', 'aliyuabdullahi@gmail.com', '0123456794', '08012345683', 
  'No. 15 Market Road, Kano, Nigeria', '{"facebook": "https://facebook.com/aliyuabdullahi"}', 0.00),
 ('business', 'Mrs', 'Titi', 'Adedayo', 'Adedayo Enterprises', 
  'Adedayo Enterprises', 'titiadedayo@adedayoenterprises.ng', '0123456795', 
  '08012345684', 'Plot 7 Industrial Layout, Lagos, Nigeria', 
  '{"twitter": "https://twitter.com/adedayoenterprises"}', 1200.00),
 ('individual', 'Miss', 'Bola', 'Ogunyemi', 'Bola Ogunyemi', 
- NULL, 'bolaogunyemi@yahoo.com', '0123456796', '08012345685', 
+ 'Nat Agro Ltd', 'bolaogunyemi@yahoo.com', '0123456796', '08012345685', 
  'Flat 3, Block B, Ibadan, Nigeria', '{"instagram": "https://instagram.com/bolaogunyemi"}', 50000.00),
 ('business', 'Dr', 'Chinedu', 'Eze', 'Eze Agro Ltd.', 
  'Eze Agro Ltd.', 'chinedueze@ezeagro.ng', '0123456797', 
  '08012345686', '123 Farmland Avenue, Umuahia, Nigeria', 
  '{"linkedin": "https://linkedin.com/company/ezeagro"}', 0.00),
 ('individual', 'Prof', 'Amina', 'Yusuf', 'Prof. Amina Yusuf', 
- NULL, 'aminayusuf@gmail.com', '0123456798', '08012345687', 
+ 'Gerald Agro Ltd', 'aminayusuf@gmail.com', '0123456798', '08012345687', 
  'No. 10 Crescent, Abuja, Nigeria', '{"youtube": "https://youtube.com/aminayusuf"}', 0.00);
 
 -- Seed customer transactions
 INSERT INTO customer_transactions 
 (customer_id, transaction_type, amount, reference_number, notes)
 VALUES
-(1, 'credit', 5000.00, 'REF1234567890', 'Initial deposit by Aliyu Abdullahi'),
-(2, 'debit', 3000.00, 'REF1234567891', 'Payment for supply of fresh chicken'),
-(4, 'debit', 4500.00, 'REF1234567893', 'Purchase of agricultural equipment'),
-(5, 'credit', 10000.00, 'REF1234567894', 'Payment for food supplies');
+(1, 'credit', 500000.00, 'REF1234567890', 'Initial deposit by Aliyu Abdullahi'),
+(2, 'debit', 300000.00, 'REF1234567891', 'Payment for supply of fresh chicken'),
+(3, 'credit', 100000.00, 'REF1234567892', 'Payment for supply of fresh catfish'),
+(4, 'debit', 45000.00, 'REF1234567893', 'Purchase of fresh pork cuts'),
+(5, 'credit', 100000.00, 'REF1234567894', 'Payment for supply of fresh lamb cuts');
 
+-- Seed vendor transactions
+INSERT INTO vendor_transactions
+(vendor_id, transaction_type, amount, reference_number, notes)
+VALUES
+(1, 'credit', 500000.00, 'REF1234567890', 'Initial deposit by Beef Supplies Ltd.'),
+(2, 'debit', 300000.00, 'REF1234567891', 'Payment for supply of fresh beef'),
+(3, 'debit', 200000.00, 'REF1234567892', 'Purchase of catfish processing equipment'),
+(4, 'debit', 450000.00, 'REF1234567893', 'Purchase of meat processing equipment'),
+(5, 'credit', 100000.00, 'REF1234567894', 'Payment for meat supplies');

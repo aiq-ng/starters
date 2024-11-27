@@ -87,10 +87,4 @@ class AuthController extends BaseController
         $this->sendResponse('Logout successful', 200);
     }
 
-    public function getRoles()
-    {
-        $result = $this->fetchRoles();
-
-        $this->sendResponse('success', 200, $result);
-    }
 }

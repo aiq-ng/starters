@@ -7,6 +7,8 @@ DROP TABLE IF EXISTS purchase_order_items;
 DROP TABLE IF EXISTS purchase_orders;
 
 -- Customers and Vendors
+DROP TABLE IF EXISTS customer_transactions;
+DROP TABLE IF EXISTS vendor_transactions;
 DROP TABLE IF EXISTS customers;
 DROP TABLE IF EXISTS vendors;
 

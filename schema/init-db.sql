@@ -133,20 +133,40 @@ CREATE TABLE vendors (
     id SERIAL PRIMARY KEY,
     salutation VARCHAR(10) 
         CHECK (salutation IN ('Mr', 'Mrs', 'Miss', 'Dr', 'Prof')),
-    first_name VARCHAR(255) NOT NULL,
-    last_name VARCHAR(255) NOT NULL,
-    company_name VARCHAR(255) NOT NULL,
-    display_name VARCHAR(255) NOT NULL,
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
+    company_name VARCHAR(255),
+    display_name VARCHAR(255),
     email VARCHAR(255),
     work_phone VARCHAR(20),
     mobile_phone VARCHAR(20),
     address TEXT,
+    website VARCHAR(255),
     social_media JSONB,
     payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
     currency_id INT REFERENCES currencies(id) ON DELETE SET NULL,
     category_id INT REFERENCES vendor_categories(id) ON DELETE SET NULL,
+    balance DECIMAL(10, 2) DEFAULT 0,
+    status VARCHAR(50) GENERATED ALWAYS AS (
+        CASE
+            WHEN balance > 0 THEN 'owing'
+            ELSE 'paid'
+        END
+    ) STORED,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Vendor Transactions
+CREATE TABLE vendor_transactions (
+    id SERIAL PRIMARY KEY,
+    vendor_id INT REFERENCES vendors(id) ON DELETE SET NULL,
+    transaction_type VARCHAR(50) 
+        CHECK (transaction_type IN ('credit', 'debit')),
+    amount DECIMAL(10, 2) NOT NULL,
+    reference_number VARCHAR(50) UNIQUE NOT NULL,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Customers
@@ -164,6 +184,7 @@ CREATE TABLE customers (
     work_phone VARCHAR(20),
     mobile_phone VARCHAR(20),
     address TEXT,
+    website VARCHAR(255),
     social_media JSONB,
     balance DECIMAL(10, 2) DEFAULT 0,
     status VARCHAR(50) GENERATED ALWAYS AS (

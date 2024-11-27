@@ -140,7 +140,7 @@ class BaseController
 
     public function getUnits()
     {
-        return $this->fetchData('units', ['id', 'name', 'abbreviation']);
+        return $this->sendResponse('success', 200, $this->fetchData('units', ['id', 'name', 'abbreviation']));
     }
 
     public function getVendors()
@@ -150,26 +150,26 @@ class BaseController
 
     public function getCurrencies()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('currencies'));
+        return $this->sendResponse('success', 200, $this->fetchData('currencies', ['id', 'name', 'symbol']));
     }
 
     public function getPaymentMethods()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('payment_methods'));
+        return $this->sendResponse('success', 200, $this->fetchData('payment_methods', ['id', 'name', 'description']));
     }
 
     public function getDepartments()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('departments'));
+        return $this->sendResponse('success', 200, $this->fetchData('departments', ['id', 'name', 'description']));
     }
 
     public function getItemCategories()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('item_categories'));
+        return $this->sendResponse('success', 200, $this->fetchData('item_categories', ['id', 'name', 'description']));
     }
 
     public function getItemManufacturers()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('item_manufacturers'));
+        return $this->sendResponse('success', 200, $this->fetchData('item_manufacturers', ['id', 'name', 'website']));
     }
 }

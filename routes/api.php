@@ -5,11 +5,13 @@ use Controllers\ProductController;
 use Controllers\CustomerController;
 use Controllers\TradeController;
 use Controllers\InventoryController;
+use Controllers\VendorController;
 
 // Create instances of the controllers
 $authController = new AuthController();
 $productController = new ProductController();
 $customerController = new CustomerController();
+$vendorController = new VendorController();
 $tradeController = new TradeController();
 $inventoryController = new InventoryController();
 
@@ -27,11 +29,10 @@ $routes = [
         '/departments' => [$productController, 'getDepartments'],
         '/item_categories' => [$productController, 'getItemCategories'],
         '/item_manufacturers' => [$productController, 'getItemManufacturers'],
-        '/vendors' => [$productController, 'getVendors'],
+        '/vendors' => [$vendorController, 'index'],
         '/customers' => [$customerController, 'index'],
         '/suppliers' => [$productController, 'getSuppliers'],
         '/units' => [$productController, 'getUnits'],
-        '/reasons' => [$productController, 'getReasons'],
         '/dashboard/metrics' => [$productController, 'getDashboardMetrics'],
         '/dashboard/products/topselling' => [$productController, 'getTopSellingProducts'],
         '/dashboard/inventory/tracker' => [$inventoryController, 'getInventoryTracker'],
@@ -52,6 +53,7 @@ $routes = [
         '/auth/login' => [$authController, 'login'],
         '/products' => [$productController, 'create'],
         '/customers' => [$customerController, 'create'],
+        '/vendors' => [$vendorController, 'create'],
         '/purchases' => [$tradeController, 'createPurchase'],
         '/sales' => [$tradeController, 'createSale'],
         '/inventory/items' => [$inventoryController, 'createItem'],

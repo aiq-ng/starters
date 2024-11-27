@@ -128,39 +128,6 @@ class ProductController extends BaseController
         $this->sendResponse('Success', 200, $result['products'], $result['meta']);
     }
 
-    public function getVendors()
-    {
-        $this->authorizeRequest();
-
-        $result = $this->fetchVendors();
-        $this->sendResponse('Success', 200, $result);
-
-    }
-
-    public function getUnits()
-    {
-        $this->authorizeRequest();
-
-        $result = $this->fetchUnits();
-        $this->sendResponse('Success', 200, $result);
-    }
-
-    public function getReasons()
-    {
-        $this->authorizeRequest();
-
-        $result = $this->fetchReasons();
-        $this->sendResponse('Success', 200, $result);
-    }
-
-    public function getSuppliers()
-    {
-        $this->authorizeRequest();
-
-        $result = $this->fetchSuppliers();
-        $this->sendResponse('Success', 200, $result);
-    }
-
     public function updateQuantity($id)
     {
         $this->authorizeRequest();
