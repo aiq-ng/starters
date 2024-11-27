@@ -141,3 +141,14 @@ CREATE TABLE inventory_audits (
 	updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+
+--Admins 
+
+CREATE TYPE permission_type AS ENUM ('Accountant', 'HR', 'Inventory Manager', 'Sales');
+
+CREATE TABLE admins (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    permissions permission_type NOT NULL
+);

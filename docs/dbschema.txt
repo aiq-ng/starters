@@ -1,253 +1,27 @@
-Screen 1. Inventory Database tracking :
-a. Inform us how many products are available
-b. Inform us how many products are low in stock
-c. Categorize the products into Cold room items and Kitchen items
+Employees table. 
 
-Screen 2. Produts Database:
-a. Return all the products
-b. Group them based on Warehouse 
-c. Display each Warehouse with number of products, number of items and address
-d. Display the products in each warehouse with their code, price, name, image, quantity and low stock label (Yes or No)
+Columns: Id, FirstName, LastName, Department, Salaries, Bank Details, D.O.B (Date), Leave (Date), Joined On (Date), NIN(image), Passport(image)
 
+Admins table.  
 
-Screen 3: Products Creation
-a. Parameters for creating a product are; name, location, vendor, code, SKU, Barcode, Media (Image/Video), Price, Profit, Margin, Quantity, Unit.
+Columns: Id, Username, Password, Permissions
 
-Screen 4: Products Details
-a. Display Product images, number of products at hand, number of products to be delivered, number of products ordered
-b. Display product Basic information (Product name, Location, vendor, code, SKU, Barcode), Sales information (Price, Profit, Margin), Inventory information (Quantity, Unit)
+Endpoints 
 
-Screen 5: Update Product
-a. Parameters for updating a product are; New quantity, Reason for the update, Notes
-b. Display on update modal; Quantity, Code, Name, Image.
+Employees
+Screen 1: Get all Employees Data (Name (FirstName + LastName), Department, Salaries, Bank Details, Leave, Passport)
 
-Screen 6: Product updated modal
-a. Display on update modal; Product name, Current quantity, New quantity, Reason for the update, Discrepancies of the update, Notes, Account user
+Screen 2: Get one employee (FirstName, LastName, D.O.B, NIN, Passport, Joined On, Bank details, Department, Salaries, Bank Details)
 
-Screen 7: Inventory Tracker 
-a. Categorize the inventory based on Depleting Items, Unavailable Items, Available Items and KIV.
-b. Display product name, quantity, Warehouse (Location), Inventory Date, Status, Progress bar
+Screen 2b: Delete Employees
 
-Screen 8: Inventory Details 
-a. Display Warehouse (Location), Inventory Date, Product number, user, progress bar.
-b. Display Number of products in Warehouse, product image, name, on hand, counted, difference
+Screen 3: Add Employee (FirstName, LastName, D.O.B, NIN, Passport, Joined On (Date of Employment), Bank Details, Department, Salaries)
 
-Screen 9: Complete Inventory
-a. Display Warehouse (Location), Inventory Date, Duration of inventory, number of products, items counted, discrepancies.
+Screen 3b : On Success, return congratulatory message
 
-Database : Inventory_db
+Admins 
+Screen 1: Create Admin (Username, Password, Permissions)
 
-Tables:
+Screen 1b: Display Number of Admin by permissions (Sales), (Accountants), (Inventory Managers), (HR)
 
-
-1. CREATE TABLE Users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    role ENUM('Admin', 'Manager', 'Staff') DEFAULT 'Staff',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-
-
-2. CREATE TABLE Products (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    vendor_id INT,
-    location VARCHAR(100) NOT NULL,  -- Warehouse location
-    code VARCHAR(20) UNIQUE NOT NULL,
-    sku VARCHAR(50) UNIQUE,
-    barcode VARCHAR(50),
-    media_path VARCHAR(255),  -- Image or Video path
-    price DECIMAL(10, 2) NOT NULL,
-    profit DECIMAL(10, 2) NOT NULL, // Profit should be calculated on the server and returned, Through expenses and sales. 
-    margin INT NOT NULL,
-    quantity INT NOT NULL,
-    unit VARCHAR(50) NOT NULL,
-    low_stock_alert BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (vendor_id) REFERENCES Vendors(id) ON DELETE SET NULL
-);
-
-3.  TABLE InventoryTracker (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    product_id INT,
-    warehouse_id INT,
-    status ENUM('Available', 'Depleting', 'Unavailable', 'KIV') DEFAULT 'Available',
-    inventory_date DATE NOT NULL,
-    progress DECIMAL(5, 2) NOT NULL,  -- Progress bar percentage
-    FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE CASCADE,
-    FOREIGN KEY (warehouse_id) REFERENCES Warehouses(id) ON DELETE CASCADE
-);
-
-4. CREATE TABLE InventoryDetails (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    warehouse_id INT,
-    product_id INT,
-    user_id INT,
-    inventory_date DATE NOT NULL,
-    on_hand INT NOT NULL,  -- Quantity currently in stock
-    counted INT NOT NULL,  -- Quantity counted during inventory
-    difference INT NOT NULL,  -- Difference between on_hand and counted
-    FOREIGN KEY (warehouse_id) REFERENCES Warehouses(id) ON DELETE CASCADE,
-    FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE SET NULL
-);
-
-5. CREATE TABLE ProductUpdates (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    product_id INT,
-    user_id INT,
-    previous_quantity INT NOT NULL,
-    new_quantity INT NOT NULL,
-    reason VARCHAR(255) NOT NULL,
-    notes TEXT,
-    discrepancies INT NOT NULL,  -- Difference between old and new quantity
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE SET NULL
-);
-  
-
-
-
-Queries for Screen 1: Inventory Database Tracking
-
-How many products are available:
-
-SELECT COUNT(*) AS available_products FROM Products WHERE quantity > 0;
-
-
-How many products are low in stock
-
-SELECT COUNT(*) AS low_stock_products FROM Products WHERE low_stock_alert = TRUE;
-
-
-Categorize products into Cold room and Kitchen items:
-
-SELECT location, COUNT(*) AS product_count FROM Products WHERE location IN ('Cold Room', 'Kitchen') GROUP BY location;
-
-
-
-
-Queries for Screen 2: Products Database
-
-Return all products:
-
-SELECT * FROM Products;
-
-
-Group products based on warehouses:
-
-SELECT location AS warehouse, COUNT(*) AS product_count FROM Products GROUP BY location;
-
-
-Display warehouses with number of products, items, and address:
-
-SELECT  w.name AS warehouse_name, COUNT(p.id) AS product_count, SUM(p.quantity) AS total_items, w.address FROM Warehouses wLEFT JOIN Products p ON w.name = p.location GROUP BY w.name;
-
-
-Display products in each warehouse with details:
-
-SELECT p.name, p.code, p.price, p.quantity, p.media_path AS image, CASE WHEN p.low_stock_alert = TRUE THEN 'Yes' ELSE 'No' END AS low_stock_label FROM Products p WHERE p.location = 'Warehouse A';   //Replace with specific warehouse
-
-
-
-
-Queries for Screen 3: Product Creation
-
-Insert a new product:
-
-INSERT INTO Products (
-    name, location, vendor_id, code, sku, barcode, media_path, 
-    price, profit, margin, quantity, unit
-) VALUES (
-    'New Product', 'Warehouse B', 1, 'PROD123', 'SKU123', 'BAR123', 
-    '/path/to/image.jpg', 20.00, 5.00, 25, 100, 'pcs'
-);
-
-
-
-Queries for Screen 4: Product Details
-
-Display product details with stock and order information:
-
-SELECT p.name, p.location, p.vendor_id, p.code, p.sku, p.barcode, p.price, p.profit, p.margin, p.quantity, p.unit, i.to_be_delivered, i.to_be_ordered, p.media_path AS image FROM Products p JOIN Inventory i ON p.id = i.product_id
-WHERE p.id = 1;  //Replace with specific product ID
-
-
-
-Queries for Screen 5: Update Product
-
-Update product quantity and add update reason:
-
-INSERT INTO ProductUpdates (
-    product_id, user_id, previous_quantity, new_quantity, reason, notes, discrepancies
-) VALUES (
-    1, 2, 100, 120, 'Restocked', 'Received new stock today', 20
-);
-
-
-Display product details on update modal:
-
-SELECT p.name, p.quantity, p.code, p.media_path AS image FROM Products p WHERE p.id = 1;  //Replace with specific product ID
-
-
-Queries for Screen 6: Product Updated Modal
-
-Display product update history with discrepancies:
-
-SELECT p.name AS product_name, pu.previous_quantity, pu.new_quantity, pu.reason, pu.discrepancies, pu.notes, u.name AS user FROM ProductUpdates pu JOIN Products p ON pu.product_id = p.id JOIN Users u ON pu.user_id = u.id WHERE pu.product_id = 1;  -- Replace with specific product ID
-
-
-Queries for Screen 7: Inventory Tracker
-
-Categorize inventory by status:
-
-SELECT status, COUNT(*) AS product_count FROM InventoryTracker GROUP BY status;
-
-
-Display products with inventory progress:
-
-SELECT p.name, i.quantity, w.name AS warehouse, i.inventory_date, i.status, i.progress FROM InventoryTracker i JOIN Products p ON i.product_id = p.id JOIN Warehouses w ON i.warehouse_id = w.id;
-
-
-Queries for Screen 8: Inventory Details
-
-Display detailed inventory information:
-
-SELECT w.name AS warehouse, i.inventory_date, COUNT(i.product_id) AS product_number, u.name AS user, i.progress
-FROM InventoryDetails i
-JOIN Warehouses w ON i.warehouse_id = w.id
-JOIN Users u ON i.user_id = u.id
-WHERE w.id = 1;  -- Replace with specific warehouse ID
-
-
-Display individual product details in inventory:
-
-SELECT 
-    p.media_path AS image, p.name, 
-    i.on_hand, i.counted, i.difference 
-FROM InventoryDetails i
-JOIN Products p ON i.product_id = p.id
-WHERE i.warehouse_id = 1;  -- Replace with specific warehouse ID
-
-
-
-Queries for Screen 9: Complete Inventory
-
-Display completed inventory summary:
-
-SELECT 
-    w.name AS warehouse, i.inventory_date, 
-    TIMESTAMPDIFF(HOUR, i.inventory_date, NOW()) AS duration, 
-    COUNT(i.product_id) AS total_products, 
-    SUM(i.counted) AS items_counted, 
-    SUM(i.difference) AS discrepancies
-FROM InventoryDetails i
-JOIN Warehouses w ON i.warehouse_id = w.id
-WHERE i.progress = 100;  -- Replace with specific inventory status
-
-
-
+Screen 2: On success, Return success message, username and password

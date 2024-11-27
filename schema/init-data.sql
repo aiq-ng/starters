@@ -107,16 +107,18 @@ VALUES
 -- Seed data for inventory activities
 INSERT INTO inventory_activities (inventory_plan_id, user_id, action)
 VALUES
-(1, 1, 'create'),
-(2, 2, 'update');
+(1, 'credit', 500000.00, 'Initial deposit by Beef Supplies Ltd.'),
+(2, 'debit', 300000.00, 'Payment for supply of fresh beef'),
+(3, 'debit', 200000.00, 'Purchase of catfish processing equipment'),
+(4, 'debit', 450000.00, 'Purchase of meat processing equipment'),
+(5, 'credit', 100000.00, 'Payment for meat supplies');
 
--- Seed data for sales
-INSERT INTO sales (user_id, product_id, quantity, sale_price, total_price, sale_date) VALUES
-(1, 1, 10, 10.00, 100.00, '2024-01-15'),  -- Alice sold 10 Beef
-(2, 2, 5, 20.00, 100.00, '2024-01-20'),  -- Bob sold 5 Chicken
-(3, 3, 8, 15.00, 120.00, '2024-01-25'),  -- Charlie sold 8 Catfish
-(1, 4, 12, 12.00, 144.00, '2024-01-30'), -- Alice sold 12 Pork
-(2, 5, 15, 25.00, 375.00, '2024-02-05'), -- Bob sold 15 Lamb
-(3, 6, 3, 30.00, 90.00, '2024-02-10'),   -- Charlie sold 3 Salmon
-(1, 7, 20, 5.00, 100.00, '2024-02-15'),   -- Alice sold 20 Eggs
-(2, 8, 10, 3.50, 35.00, '2024-02-20');     -- Bob sold 10 Cheese
+
+-- Seed admins 
+
+INSERT INTO admins (username, password, permissions)
+VALUES 
+('john_doe', 'hashedpassword1', 'Accountant'),
+('jane_smith', 'hashedpassword2', 'HR'),
+('mary_jones', 'hashedpassword3', 'Inventory Manager'),
+('peter_brown', 'hashedpassword4', 'Sales');
