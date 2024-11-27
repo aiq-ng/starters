@@ -112,7 +112,9 @@ CREATE TABLE items (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    sku VARCHAR(100) UNIQUE,
+    sku VARCHAR(100) GENERATED ALWAYS AS (
+        UPPER(SUBSTRING(name FROM 1 FOR 3)) || '-' || LPAD(id::TEXT, 4, '0')
+    ) STORED,
     price DECIMAL(10, 2),
     department_id INT REFERENCES departments(id) ON DELETE SET NULL,
     manufacturer_id INT REFERENCES item_manufacturers(id) ON DELETE SET NULL,
@@ -164,7 +166,9 @@ CREATE TABLE vendor_transactions (
     transaction_type VARCHAR(50) 
         CHECK (transaction_type IN ('credit', 'debit')),
     amount DECIMAL(10, 2) NOT NULL,
-    reference_number VARCHAR(50) UNIQUE NOT NULL,
+    reference_number VARCHAR(50) GENERATED ALWAYS AS (
+        'REF' || LPAD(id::TEXT, 10, '0')
+    ) STORED,
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -204,7 +208,9 @@ CREATE TABLE customer_transactions (
     transaction_type VARCHAR(50) 
         CHECK (transaction_type IN ('credit', 'debit')),
     amount DECIMAL(10, 2) NOT NULL,
-    reference_number VARCHAR(50) UNIQUE NOT NULL,
+    reference_number VARCHAR(50) GENERATED ALWAYS AS (
+        'REF' || LPAD(id::TEXT, 10, '0')
+    ) STORED,
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -212,18 +218,20 @@ CREATE TABLE customer_transactions (
 -- Purchase Orders
 CREATE TABLE purchase_orders (
     id SERIAL PRIMARY KEY,
-    customer_id INT REFERENCES customers(id) ON DELETE SET NULL,
+    vendor_id INT REFERENCES vendors(id) ON DELETE SET NULL,
     branch_id INT REFERENCES branches(id) ON DELETE SET NULL,
-    purchase_order_number VARCHAR(50) UNIQUE NOT NULL,
-    reference_number VARCHAR(50) UNIQUE,
-    user_id INT REFERENCES users(id) ON DELETE SET NULL,
+    purchase_order_number VARCHAR(50) GENERATED ALWAYS AS (
+        'PO' || LPAD(id::TEXT, 5, '0')
+    ) STORED,
+    reference_number VARCHAR(50) GENERATED ALWAYS AS (
+        'REF' || LPAD(id::TEXT, 5, '0')
+    ) STORED,
     order_date DATE NOT NULL DEFAULT CURRENT_DATE,
     delivery_date DATE NOT NULL,
     payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
     subject TEXT,
     notes TEXT,
     terms_and_conditions TEXT,
-    items JSONB,
     discount DECIMAL(5, 2) DEFAULT 0,
     shipping_charge DECIMAL(10, 2) DEFAULT 0,
     total DECIMAL(10, 2) DEFAULT 0,
@@ -252,7 +260,9 @@ CREATE TABLE sales_orders (
     order_type VARCHAR(50) 
         CHECK (order_type IN ('order', 'service')),
     order_id VARCHAR(255) NOT NULL,
-    order_number VARCHAR(50) UNIQUE NOT NULL,
+    order_number VARCHAR(50) GENERATED ALWAYS AS (
+        'SO' || LPAD(id::TEXT, 5, '0')
+    ) STORED,
     vendor_id INT REFERENCES vendors(id) ON DELETE SET NULL,
     payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
     payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,

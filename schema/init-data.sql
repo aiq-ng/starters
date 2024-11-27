@@ -27,10 +27,11 @@ INSERT INTO payment_methods (name, description) VALUES
 
 -- Seed payment terms
 INSERT INTO payment_terms (name, description) VALUES
-('Net 7', 'Payment due in 7 days'),
-('Net 14', 'Payment due in 14 days'),
-('Net 30', 'Payment due in 30 days'),
-('COD', 'Cash on delivery');
+('Due on receipt', 'Payment due on receipt'),
+('Due on delivery', 'Payment due on delivery'),
+('Due in 7 days', 'Payment due in 7 days'),
+('Due in 14 days', 'Payment due in 14 days'),
+('Due in 30 days', 'Payment due in 30 days');
 
 -- Seed departments
 INSERT INTO departments (name, description) VALUES
@@ -86,28 +87,28 @@ INSERT INTO item_manufacturers (name, website) VALUES
 ('Honeywell Flour Mills', 'https://www.honeywellflour.com');
 
 
-INSERT INTO items (name, description, sku, price, department_id, manufacturer_id, category_id, unit_id, quantity, threshold_value, expiry_date, media, availability)
+INSERT INTO items (name, description, price, department_id, manufacturer_id, category_id, unit_id, quantity, threshold_value, expiry_date, media, availability)
 VALUES
-('Beef', 'Fresh beef cuts', 'SKU001', 10.00, 1, 1, 1, 1, 100, 10, '2025-12-31', '["https://i.imgur.com/IwdmYjG.jpeg"]', 'in stock'),
-('Chicken', 'Fresh chicken cuts', 'SKU002', 20.00, 2, 2, 2, 1, 50, 5, '2025-12-31', '["https://i.imgur.com/gnRz12P.png"]', 'in stock'),
-('Catfish', 'Fresh catfish fillets', 'SKU003', 15.00, 3, 3, 1, 1, 200, 20, '2025-12-31', '["https://i.imgur.com/MxiMX9v.png"]', 'in stock'),
-('Pork', 'Fresh pork cuts', 'SKU004', 12.00, 1, 1, 2, 1, 30, 3, '2025-12-31', '["https://i.imgur.com/dGGizfQ.png"]', 'out of stock'),
-('Lamb', 'Fresh lamb cuts', 'SKU005', 25.00, 2, 2, 1, 1, 10, 2, '2025-12-31', '["https://i.imgur.com/8TIGZM2.png"]', 'low stock'),
-('Salmon', 'Fresh salmon fillets', 'SKU006', 30.00, 3, 3, 2, 1, 150, 10, '2025-12-31', '["https://i.imgur.com/ISOOCLs.png"]', 'in stock'),
-('Eggs', 'Farm fresh eggs', 'SKU011', 5.00, 1, 1, 2, 1, 500, 50, '2025-12-31', '["https://i.imgur.com/G0mVY78.png"]', 'in stock'),
-('Cheese', 'Fresh cheese', 'SKU012', 3.50, 2, 2, 1, 1, 200, 20, '2025-12-31', '["https://i.imgur.com/IVCT63j.png"]', 'in stock'),
-('Milk', 'Fresh cow milk', 'SKU013', 2.00, 3, 3, 2, 1, 400, 40, '2025-12-31', '["https://i.imgur.com/5JXHh4d.png"]', 'low stock'),
-('Yogurt', 'Fresh yogurt', 'SKU014', 1.80, 1, 1, 1, 1, 300, 30, '2025-12-31', '["https://i.imgur.com/NQTBB4c.jpeg"]', 'in stock'),
-('Bread', 'Freshly baked bread', 'SKU016', 1.50, 1, 1, 1, 1, 100, 10, '2025-12-31', '["https://i.imgur.com/jA1O0Qb.png"]', 'in stock'),
-('Rice', 'Premium rice', 'SKU017', 2.50, 1, 2, 2, 1, 250, 25, '2025-12-31', '["https://i.imgur.com/pwXSxkn.png"]', 'in stock'),
-('Pasta', 'Premium pasta', 'SKU018', 1.00, 1, 3, 2, 1, 500, 50, '2025-12-31', '["https://i.imgur.com/ZLncFYM.png"]', 'out of stock'),
-('Honey', 'Organic honey', 'SKU023', 5.00, 3, 2, 2, 1, 100, 10, '2025-12-31', '["https://i.imgur.com/PheCs9s.png"]', 'in stock'),
-('Olive Oil', 'Extra virgin olive oil', 'SKU024', 6.00, 1, 1, 1, 1, 80, 8, '2025-12-31', '["https://i.imgur.com/GEkayag.png"]', 'in stock'),
-('Vegetable Oil', 'Pure vegetable oil', 'SKU025', 3.50, 2, 2, 1, 1, 200, 20, '2025-12-31', '["https://i.imgur.com/W5F6Gzv.png"]', 'low stock'),
-('Mustard', 'Organic mustard', 'SKU029', 1.50, 3, 3, 2, 1, 150, 15, '2025-12-31', '["https://i.imgur.com/GwxyZSF.png"]', 'in stock'),
-('Ketchup', 'Organic ketchup', 'SKU030', 1.50, 1, 1, 1, 1, 300, 30, '2025-12-31', '["https://i.imgur.com/JfO21Bm.png"]', 'in stock'),
-('Mayonnaise', 'Organic mayonnaise', 'SKU031', 2.00, 3, 3, 2, 1, 100, 10, '2025-12-31', '["https://i.imgur.com/PSuuQmI.png"]', 'out of stock'),
-('Soy Sauce', 'Premium soy sauce', 'SKU032', 1.00, 2, 2, 2, 1, 150, 15, '2025-12-31', '["https://i.imgur.com/zMLrQYD.png"]', 'in stock');
+('Beef', 'Fresh beef cuts', 10.00, 1, 1, 1, 1, 100, 10, '2025-12-31', '["https://i.imgur.com/IwdmYjG.jpeg"]', 'in stock'),
+('Chicken', 'Fresh chicken cuts', 20.00, 2, 2, 2, 1, 50, 5, '2025-12-31', '["https://i.imgur.com/gnRz12P.png"]', 'in stock'),
+('Catfish', 'Fresh catfish fillets', 15.00, 3, 3, 1, 1, 200, 20, '2025-12-31', '["https://i.imgur.com/MxiMX9v.png"]', 'in stock'),
+('Pork', 'Fresh pork cuts', 12.00, 1, 1, 2, 1, 30, 3, '2025-12-31', '["https://i.imgur.com/dGGizfQ.png"]', 'out of stock'),
+('Lamb', 'Fresh lamb cuts', 25.00, 2, 2, 1, 1, 10, 2, '2025-12-31', '["https://i.imgur.com/8TIGZM2.png"]', 'low stock'),
+('Salmon', 'Fresh salmon fillets', 30.00, 3, 3, 2, 1, 150, 10, '2025-12-31', '["https://i.imgur.com/ISOOCLs.png"]', 'in stock'),
+('Eggs', 'Farm fresh eggs', 5.00, 1, 1, 2, 1, 500, 50, '2025-12-31', '["https://i.imgur.com/G0mVY78.png"]', 'in stock'),
+('Cheese', 'Fresh cheese', 3.50, 2, 2, 1, 1, 200, 20, '2025-12-31', '["https://i.imgur.com/IVCT63j.png"]', 'in stock'),
+('Milk', 'Fresh cow milk', 2.00, 3, 3, 2, 1, 400, 40, '2025-12-31', '["https://i.imgur.com/5JXHh4d.png"]', 'low stock'),
+('Yogurt', 'Fresh yogurt', 1.80, 1, 1, 1, 1, 300, 30, '2025-12-31', '["https://i.imgur.com/NQTBB4c.jpeg"]', 'in stock'),
+('Bread', 'Freshly baked bread', 1.50, 1, 1, 1, 1, 100, 10, '2025-12-31', '["https://i.imgur.com/jA1O0Qb.png"]', 'in stock'),
+('Rice', 'Premium rice', 2.50, 1, 2, 2, 1, 250, 25, '2025-12-31', '["https://i.imgur.com/pwXSxkn.png"]', 'in stock'),
+('Pasta', 'Premium pasta', 1.00, 1, 3, 2, 1, 500, 50, '2025-12-31', '["https://i.imgur.com/ZLncFYM.png"]', 'out of stock'),
+('Honey', 'Organic honey', 5.00, 3, 2, 2, 1, 100, 10, '2025-12-31', '["https://i.imgur.com/PheCs9s.png"]', 'in stock'),
+('Olive Oil', 'Extra virgin olive oil', 6.00, 1, 1, 1, 1, 80, 8, '2025-12-31', '["https://i.imgur.com/GEkayag.png"]', 'in stock'),
+('Vegetable Oil', 'Pure vegetable oil', 3.50, 2, 2, 1, 1, 200, 20, '2025-12-31', '["https://i.imgur.com/W5F6Gzv.png"]', 'low stock'),
+('Mustard', 'Organic mustard', 1.50, 3, 3, 2, 1, 150, 15, '2025-12-31', '["https://i.imgur.com/GwxyZSF.png"]', 'in stock'),
+('Ketchup', 'Organic ketchup', 1.50, 1, 1, 1, 1, 300, 30, '2025-12-31', '["https://i.imgur.com/JfO21Bm.png"]', 'in stock'),
+('Mayonnaise', 'Organic mayonnaise', 2.00, 3, 3, 2, 1, 100, 10, '2025-12-31', '["https://i.imgur.com/PSuuQmI.png"]', 'out of stock'),
+('Soy Sauce', 'Premium soy sauce', 1.00, 2, 2, 2, 1, 150, 15, '2025-12-31', '["https://i.imgur.com/zMLrQYD.png"]', 'in stock');
 
 -- Seed vendors
 INSERT INTO vendors (
@@ -159,20 +160,20 @@ VALUES
 
 -- Seed customer transactions
 INSERT INTO customer_transactions 
-(customer_id, transaction_type, amount, reference_number, notes)
+(customer_id, transaction_type, amount, notes)
 VALUES
-(1, 'credit', 500000.00, 'REF1234567890', 'Initial deposit by Aliyu Abdullahi'),
-(2, 'debit', 300000.00, 'REF1234567891', 'Payment for supply of fresh chicken'),
-(3, 'credit', 100000.00, 'REF1234567892', 'Payment for supply of fresh catfish'),
-(4, 'debit', 45000.00, 'REF1234567893', 'Purchase of fresh pork cuts'),
-(5, 'credit', 100000.00, 'REF1234567894', 'Payment for supply of fresh lamb cuts');
+(1, 'credit', 500000.00, 'Initial deposit by Aliyu Abdullahi'),
+(2, 'debit', 300000.00, 'Payment for supply of fresh chicken'),
+(3, 'credit', 100000.00, 'Payment for supply of fresh catfish'),
+(4, 'debit', 45000.00, 'Purchase of fresh pork cuts'),
+(5, 'credit', 100000.00, 'Payment for supply of fresh lamb cuts');
 
 -- Seed vendor transactions
 INSERT INTO vendor_transactions
-(vendor_id, transaction_type, amount, reference_number, notes)
+(vendor_id, transaction_type, amount, notes)
 VALUES
-(1, 'credit', 500000.00, 'REF1234567890', 'Initial deposit by Beef Supplies Ltd.'),
-(2, 'debit', 300000.00, 'REF1234567891', 'Payment for supply of fresh beef'),
-(3, 'debit', 200000.00, 'REF1234567892', 'Purchase of catfish processing equipment'),
-(4, 'debit', 450000.00, 'REF1234567893', 'Purchase of meat processing equipment'),
-(5, 'credit', 100000.00, 'REF1234567894', 'Payment for meat supplies');
+(1, 'credit', 500000.00, 'Initial deposit by Beef Supplies Ltd.'),
+(2, 'debit', 300000.00, 'Payment for supply of fresh beef'),
+(3, 'debit', 200000.00, 'Purchase of catfish processing equipment'),
+(4, 'debit', 450000.00, 'Purchase of meat processing equipment'),
+(5, 'credit', 100000.00, 'Payment for meat supplies');

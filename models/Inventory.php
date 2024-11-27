@@ -83,9 +83,9 @@ class Inventory
         $sql = "
         INSERT INTO items
         (name, description, department_id, category_id, manufacturer_id, unit_id,
-        price, quantity, threshold_value, expiry_date, sku, media)
+        price, quantity, threshold_value, expiry_date, media)
         VALUES (:name, :description, :departmentId, :categoryId, :manufacturerId,
-        :unitId, :price, :quantity, :threshold, :expiryDate, NULL, :media)
+        :unitId, :price, :quantity, :threshold, :expiryDate, :media)
     ";
 
         $mediaLinks = json_encode($mediaLinks);
@@ -105,27 +105,10 @@ class Inventory
         $stmt->bindParam(':media', $mediaLinks);
 
         if ($stmt->execute()) {
-            $itemId = $this->db->lastInsertId();
-
-            $sku = $this->generateSKU($data['name'], $itemId);
-
-            $updateSql = "UPDATE items SET sku = :sku WHERE id = :id";
-            $updateStmt = $this->db->prepare($updateSql);
-            $updateStmt->bindParam(':sku', $sku);
-            $updateStmt->bindParam(':id', $itemId, \PDO::PARAM_INT);
-            $updateStmt->execute();
-
-            return $itemId;
+            return $this->db->lastInsertId();
         }
 
         return false;
-    }
-
-    private function generateSKU($name, $itemId)
-    {
-        $sku = strtoupper(substr($name, 0, 3));
-        $formattedSerial = str_pad($itemId, 4, '0', STR_PAD_LEFT);
-        return $sku . '-' . $formattedSerial;
     }
 
     private function countInventory($filter = null)

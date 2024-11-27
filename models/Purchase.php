@@ -85,59 +85,68 @@ class Purchase
 
     public function createPurchase($data)
     {
-        $purchaseDate = $data['date'];
-        $supplierId = $data['supplier'];
-        $items = $data['items'];
-        $userId = $data['user_id'];
-
         $this->db->beginTransaction();
 
         try {
-            $purchaseId = $this->insertPurchase($purchaseDate, $supplierId);
-            $this->insertPurchaseItems($purchaseId, $items);
-            $this->logInventoryActivity($userId);
+            $purchaseOrderId = $this->insertPurchaseOrder($data);
+
+            $this->insertPurchaseOrderItems($purchaseOrderId, $data['items']);
 
             $this->db->commit();
-            return $purchaseId;
+            return $purchaseOrderId;
         } catch (\Exception $e) {
             $this->db->rollBack();
             throw $e;
         }
     }
 
-    private function insertPurchase($purchaseDate, $supplierId)
+    private function insertPurchaseOrder($data)
     {
         $query = "
-            INSERT INTO purchases (purchase_date, supplier_id)
-            VALUES (:purchase_date, :supplier_id) RETURNING id;
+            INSERT INTO purchase_orders (delivery_date, vendor_id, 
+                branch_id, payment_term_id, subject, notes,
+                terms_and_conditions, discount, shipping_charge, total) 
+            VALUES (:delivery_date, :vendor_id, :branch_id,
+                :payment_term_id, :subject, :notes, :terms_and_conditions, 
+                :discount, :shipping_charge, :total)
+            RETURNING id;
         ";
 
         $stmt = $this->db->prepare($query);
         $stmt->execute([
-            ':purchase_date' => $purchaseDate,
-            ':supplier_id' => $supplierId
+            ':delivery_date' => $data['delivery_date'],
+            ':vendor_id' => $data['vendor_id'],
+            ':branch_id' => $data['branch_id'],
+            ':payment_term_id' => $data['payment_term_id'],
+            ':subject' => $data['subject'],
+            ':notes' => $data['notes'],
+            ':terms_and_conditions' => $data['terms_and_conditions'],
+            ':discount' => $data['discount'],
+            ':shipping_charge' => $data['shipping_charge'],
+            ':total' => $data['total'],
         ]);
 
         return $stmt->fetchColumn();
     }
 
-    private function insertPurchaseItems($purchaseId, $items)
+    private function insertPurchaseOrderItems($purchaseOrderId, $items)
     {
-        $itemQuery = "
-            INSERT INTO purchase_items (purchase_id, product_name, quantity, price_per_unit)
-            VALUES (:purchase_id, :product_id, :quantity, :price_per_unit);
+        $query = "
+            INSERT INTO purchase_order_items (purchase_order_id, item_id, 
+                quantity, price, tax_id)
+            VALUES (:purchase_order_id, :item_id, :quantity, :price, :tax_id);
         ";
 
-        $itemStmt = $this->db->prepare($itemQuery);
+        $stmt = $this->db->prepare($query);
 
         foreach ($items as $item) {
-            $itemStmt->execute([
-                ':purchase_id' => $purchaseId,
-                ':product_id' => $item['product'],
+            $stmt->execute([
+                ':purchase_order_id' => $purchaseOrderId,
+                ':item_id' => $item['item_id'],
                 ':quantity' => $item['quantity'],
-                ':price_per_unit' => $item['price_per_unit'],
+                ':price' => $item['price'],
+                ':tax_id' => $item['tax_id'] ?? null,
             ]);
-
         }
     }
 

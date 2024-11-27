@@ -36,7 +36,7 @@ class TradeController extends BaseController
 
         $data = $this->getRequestData();
 
-        if (!$this->validateFields($data['date'], $data['supplier'])) {
+        if (!$this->validateFields($data['vendor_id'])) {
             $this->sendResponse('Invalid fields', 400);
         }
 
