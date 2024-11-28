@@ -7,6 +7,8 @@ use Controllers\TradeController;
 use Controllers\InventoryController;
 use Controllers\VendorController;
 use Controllers\DashboardController;
+use Controllers\AdminController;
+use Controllers\EmployeeController;
 
 // Create instances of the controllers
 $authController = new AuthController();
@@ -16,6 +18,8 @@ $vendorController = new VendorController();
 $tradeController = new TradeController();
 $inventoryController = new InventoryController();
 $dashboardController = new DashboardController();
+$adminController = new AdminController();
+$employeeController = new EmployeeController();
 
 // Define routes
 $routes = [
@@ -49,6 +53,9 @@ $routes = [
         '/inventory/tracker' => [$inventoryController, 'inventoryTracker'],
         '/inventory/:id' => [$inventoryController, 'getInventoryPlan'],
         '/inventory/stock' => [$inventoryController, 'getStockProgress'],
+        '/admins/count' => [$adminController, 'numberOfAdmins'],
+        '/employees' => [$employeeController, 'index'],
+        'employees/:id' => [$employeeController, 'show']
 
 
 
@@ -63,6 +70,8 @@ $routes = [
         '/sales/orders' => [$tradeController, 'createSale'],
         '/inventory/items' => [$inventoryController, 'createItem'],
         '/inventory/completed' => [$inventoryController, 'completeInventory'],
+        '/admin/register' => [$adminController, 'registerAdmin'],
+        '/employees/register' => [$employeeController, 'create']
     ],
     'PUT' => [
         '/products/(\d+)' => [$productController, 'update'],
@@ -70,6 +79,7 @@ $routes = [
     ],
     'DELETE' => [
         '/products/(\d+)' => [$productController, 'delete'],
+        '/employees/(\d+)' => [$employeeController, 'delete']
     ],
 ];
 

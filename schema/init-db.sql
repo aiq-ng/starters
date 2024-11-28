@@ -4,6 +4,41 @@ CREATE TABLE roles (
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
+
+--Admins
+ CREATE TYPE permission_type AS ENUM ('Accountant', 'HR', 'Inventory Manager', 'Sales');
+
+ CREATE TABLE admins (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role_id INT DEFAULT 1,
+    permissions permission_type NOT NULL
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_admin_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET DEFAULT  
+);
+
+--Employees
+
+CREATE TABLE employees (
+    id SERIAL PRIMARY KEY,
+    firstname VARCHAR(100) NOT NULL,
+    lastname VARCHAR(100) NOT NULL,
+    department VARCHAR(100) NOT NULL,
+    salaries INT, 
+    bank_details JSONB,
+    date_of_birth DATE, 
+    leave DATE, 
+    date_of_employment DATE,
+    nin JSONB,
+    passport JSONB,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    
+);
+
+
 -- Users
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
