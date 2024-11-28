@@ -3,14 +3,29 @@ INSERT INTO roles (name) VALUES
 ('Admin'),
 ('Manager'),
 ('Staff'),
-('Rider');
+('Rider'),
+('HR'),
+('Inventory Manager'),
+('Sales'),
+('Accountant'),
+('Marketing'),
+('Finance'),
+('Customer Service'),;
+
+
 
 -- Seed data for users
 INSERT INTO users (name, email, password, role_id, avatar_url) VALUES
 ('Starters', 'starters@admin.com', 'password123', 1, 'https://example.com/avatars/admin.jpg'),
 ('Alice Johnson', 'alice@example.com', 'password123', 1, 'https://example.com/avatars/alice.jpg'),
 ('Bob Smith', 'bob@example.com', 'password123', 2, 'https://example.com/avatars/bob.jpg'),
-('Charlie Brown', 'charlie@example.com', 'password123', 3, 'https://example.com/avatars/charlie.jpg');
+('Charlie Brown', 'charlie@example.com', 'password123', 3, 'https://example.com/avatars/charlie.jpg'),
+('John Doe', 'john@example.com' 'hashedpassword1', 8, 'https://example.com/avatars/john.jpg'),
+('Jane Smith', 'jane@example.com' 'hashedpassword1', 5, 'https://example.com/avatars/jane.jpg'),
+('Mary Jones', 'mary@example.com' 'hashedpassword1', 6, 'https://example.com/avatars/mary.jpg'),
+('Peter Brown', 'peter@example.com' 'hashedpassword1', 7, 'https://example.com/avatars/peter.jpg'),
+
+;
 
 -- Seed currencies
 INSERT INTO currencies (name, symbol) VALUES
@@ -204,11 +219,4 @@ VALUES
 (5, 'credit', 100000.00, 'Payment for meat supplies');
 
 
--- Seed admins 
 
-INSERT INTO admins (username, password, permissions)
-VALUES 
-('john_doe', 'hashedpassword1', 'Accountant'),
-('jane_smith', 'hashedpassword2', 'HR'),
-('mary_jones', 'hashedpassword3', 'Inventory Manager'),
-('peter_brown', 'hashedpassword4', 'Sales');
