@@ -92,7 +92,7 @@ INSERT INTO items (name, description, price, department_id, manufacturer_id, cat
 VALUES
 ('Beef', 'Fresh beef cuts', 10.00, 1, 1, 1, 1, 100, 10, '2025-12-31', '["https://i.imgur.com/IwdmYjG.jpeg"]'),
 ('Chicken', 'Fresh chicken cuts', 20.00, 2, 2, 2, 1, 50, 5, '2025-12-31', '["https://i.imgur.com/gnRz12P.png"]'),
-('Catfish', 'Fresh catfish fillets', 15.00, 3, 3, 1, 1, 10, 20, '2025-12-31', '["https://i.imgur.com/MxiMX9v.png"]'),
+('Catfish', 'Fresh catfish fillets', 15.00, 3, 3, 1, 1, 100, 20, '2025-12-31', '["https://i.imgur.com/MxiMX9v.png"]'),
 ('Pork', 'Fresh pork cuts', 12.00, 1, 1, 2, 1, 30, 3, '2025-12-31', '["https://i.imgur.com/dGGizfQ.png"]'),
 ('Lamb', 'Fresh lamb cuts', 25.00, 2, 2, 1, 1, 10, 2, '2025-12-31', '["https://i.imgur.com/8TIGZM2.png"]'),
 ('Salmon', 'Fresh salmon fillets', 30.00, 3, 3, 2, 1, 5, 10, '2025-12-31', '["https://i.imgur.com/ISOOCLs.png"]'),
@@ -183,18 +183,21 @@ VALUES
 INSERT INTO purchase_orders (
     vendor_id, branch_id, delivery_date, 
     payment_term_id, subject, notes, terms_and_conditions, 
-    discount, shipping_charge, total
+    discount, shipping_charge, total, status
 )
 VALUES
 (1, 1, '2024-11-20', 3, 
     'Bulk Purchase of Food Items', 'Ensure quality items', 
-    'Goods must be delivered in good condition', 1000, 5000, 150000),
+    'Goods must be delivered in good condition', 1000, 5000, 150000, 'pending'),
 (2, 2, '2024-11-15', 4, 
     'Monthly Grocery Restock', 'Deliver to Abuja branch warehouse', 
-    'Invoice must include all taxes', 2000, 2500, 200000),
+    'Invoice must include all taxes', 2000, 2500, 200000, 'processing'),
 (3, 3, '2024-11-10', 3, 
     'Catering Supplies', 'Urgent delivery required', 
-    'Late delivery will incur penalties', 1500, 1000, 120000);
+    'Late delivery will incur penalties', 1500, 1000, 1120000, 'completed'),
+(3, 3, '2024-10-11', 2, 
+    'Bulk Purchase of Food Items', 'Ensure quality items', 
+    'Goods must be delivered in good condition', 1000, 5000, 150000, 'completed');
 
 -- Insert into purchase_order_items
 INSERT INTO purchase_order_items (
@@ -216,17 +219,20 @@ INSERT INTO sales_orders (
 )
 VALUES
 ('order', 'Chicken Jumbo Pack', 1, 1, 1, 'delivery', 1, 
-    '2024-12-01', 'Deliver before noon', 'Please call on arrival', 
-    1000, 2000, 52000, 'upcoming'),
+    '2024-11-01', 'Deliver before noon', 'Please call on arrival', 
+    1000, 2000, 520000, 'upcoming'),
 ('order', 'Maxi Puff Puff', 2, 2, 2, 'pickup', NULL, 
-    '2024-12-15', 'Ready for Christmas', 'Add plenty sugar', 
-    500, 0, 34500, 'pending'),
+    '2024-11-15', 'Ready for Christmas', 'Add plenty sugar', 
+    500, 0, 345000, 'pending'),
  ('order', 'Salmon Special', 3, 3, 3, 'delivery', 2, 
-    '2024-12-20', 'Handle with care', 'Call before delivery', 
-    1500, 2500, 45000, 'completed'),
+    '2024-11-20', 'Handle with care', 'Call before delivery', 
+    1500, 2500, 450000, 'completed'),
  ('order', 'Beef Box', 4, 4, 1, 'pickup', NULL, 
-    '2024-12-25', 'Festive season order', 'Add extra spice', 
-    2000, 0, 30000, 'sent');
+    '2024-11-25', 'Festive season order', 'Add extra spice', 
+    2000, 0, 300000, 'sent'),
+ ('order', 'Chicken Jumbo Pack', 1, 1, 1, 'delivery', 1, 
+    '2024-10-01', 'Deliver before noon', 'Please call on arrival', 
+    1000, 2000, 520000, 'completed');
 
 -- Insert into sales_order_items
 INSERT INTO sales_order_items (sales_order_id, item_id, quantity, price)
