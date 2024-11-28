@@ -18,10 +18,18 @@ class VendorController extends BaseController
     {
         $this->authorizeRequest();
 
-        $vendors = $this->vendor->getVendors();
+        $filters = [
+            'page' => isset($_GET['page']) ? $_GET['page'] : 1,
+            'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
+            'sort_by' => isset($_GET['sort_by']) ? $_GET['sort_by'] : 'created_at',
+            'sort_order' => isset($_GET['sort_order']) ? $_GET['sort_order'] : 'desc',
+        ];
+
+
+        $vendors = $this->vendor->getVendors($filters);
 
         if ($vendors) {
-            $this->sendResponse('success', 200, $vendors);
+            $this->sendResponse('success', 200, $vendors['data'], $vendors['meta']);
         } else {
             $this->sendResponse('Vendors not found', 404);
         }
