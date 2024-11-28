@@ -57,7 +57,8 @@ INSERT INTO departments (name, description) VALUES
 -- Seed branches
 INSERT INTO branches (name, description) VALUES
 ('Lagos', 'Branch located in Lagos, Nigeria'),
-('Abuja', 'Branch located in Abuja, Nigeria');
+('Abuja', 'Branch located in Abuja, Nigeria'),
+('Port Harcourt', 'Branch located in Port Harcourt, Nigeria');
 
 -- Seed item categories
 INSERT INTO item_categories (name, description) VALUES
@@ -106,7 +107,7 @@ INSERT INTO items (name, description, price, department_id, manufacturer_id, cat
 VALUES
 ('Beef', 'Fresh beef cuts', 10.00, 1, 1, 1, 1, 100, 10, '2025-12-31', '["https://i.imgur.com/IwdmYjG.jpeg"]'),
 ('Chicken', 'Fresh chicken cuts', 20.00, 2, 2, 2, 1, 50, 5, '2025-12-31', '["https://i.imgur.com/gnRz12P.png"]'),
-('Catfish', 'Fresh catfish fillets', 15.00, 3, 3, 1, 1, 10, 20, '2025-12-31', '["https://i.imgur.com/MxiMX9v.png"]'),
+('Catfish', 'Fresh catfish fillets', 15.00, 3, 3, 1, 1, 100, 20, '2025-12-31', '["https://i.imgur.com/MxiMX9v.png"]'),
 ('Pork', 'Fresh pork cuts', 12.00, 1, 1, 2, 1, 30, 3, '2025-12-31', '["https://i.imgur.com/dGGizfQ.png"]'),
 ('Lamb', 'Fresh lamb cuts', 25.00, 2, 2, 1, 1, 10, 2, '2025-12-31', '["https://i.imgur.com/8TIGZM2.png"]'),
 ('Salmon', 'Fresh salmon fillets', 30.00, 3, 3, 2, 1, 5, 10, '2025-12-31', '["https://i.imgur.com/ISOOCLs.png"]'),
@@ -192,31 +193,70 @@ VALUES
 (3, 'debit', 200000.00, 'Purchase of catfish processing equipment'),
 (4, 'debit', 450000.00, 'Purchase of meat processing equipment'),
 (5, 'credit', 100000.00, 'Payment for meat supplies');
-(1, 1, 50, 45, 48),
-(2, 2, 75, 70, 72);
 
--- Seed data for vendors
-INSERT INTO vendors (name, email, phone, address)
+-- Insert into purchase_orders
+INSERT INTO purchase_orders (
+    vendor_id, branch_id, delivery_date, 
+    payment_term_id, subject, notes, terms_and_conditions, 
+    discount, shipping_charge, total, status
+)
 VALUES
-('Mrs Abubakar Global Enterprises', 'info@acmesupplies.com', '08123456789', '12 Builders Lane, Abuja, Nigeria'),
-('Jumbo Foods Nigeria Ltd.', 'contact@jumbofoods.com.ng', '08012345678', '45 Olufemi Street, Lagos, Nigeria'),
-('Easy Fresh Farms', 'info@easyfreshfarms.com', '09012345678', '25 Greenfield Avenue, Ibadan, Oyo State, Nigeria'),
-('Sunshine Beverages', 'info@sunshinebeverages.com.ng', '08134567890', '55 Refreshment Avenue, Kaduna, Kaduna State, Nigeria');
+(1, 1, '2024-11-20', 3, 
+    'Bulk Purchase of Food Items', 'Ensure quality items', 
+    'Goods must be delivered in good condition', 1000, 5000, 150000, 'pending'),
+(2, 2, '2024-11-15', 4, 
+    'Monthly Grocery Restock', 'Deliver to Abuja branch warehouse', 
+    'Invoice must include all taxes', 2000, 2500, 200000, 'processing'),
+(3, 3, '2024-11-10', 3, 
+    'Catering Supplies', 'Urgent delivery required', 
+    'Late delivery will incur penalties', 1500, 1000, 1120000, 'completed'),
+(3, 3, '2024-10-11', 2, 
+    'Bulk Purchase of Food Items', 'Ensure quality items', 
+    'Goods must be delivered in good condition', 1000, 5000, 150000, 'completed');
 
--- Seed data for product_vendors
-INSERT INTO product_vendors (product_id, vendor_id)
+-- Insert into purchase_order_items
+INSERT INTO purchase_order_items (
+    purchase_order_id, item_id, quantity, price, tax_id
+)
 VALUES
-(1, 1),
-(2, 2);
+(1, 1, 10, 30000, 1),
+(1, 2, 20, 10000, 1),
+(2, 3, 15, 25000, 2),
+(3, 1, 5, 30000, 1),
+(3, 3, 10, 25000, 2);
 
--- Seed data for inventory activities
-INSERT INTO inventory_activities (inventory_plan_id, user_id, action)
+-- Insert into sales_orders
+INSERT INTO sales_orders (
+    order_type, order_title, customer_id, payment_term_id, 
+    payment_method_id, delivery_option, assigned_driver_id, 
+    delivery_date, additional_note, customer_note, discount, 
+    delivery_charge, total, status
+)
 VALUES
-(1, 'credit', 500000.00, 'Initial deposit by Beef Supplies Ltd.'),
-(2, 'debit', 300000.00, 'Payment for supply of fresh beef'),
-(3, 'debit', 200000.00, 'Purchase of catfish processing equipment'),
-(4, 'debit', 450000.00, 'Purchase of meat processing equipment'),
-(5, 'credit', 100000.00, 'Payment for meat supplies');
+('order', 'Chicken Jumbo Pack', 1, 1, 1, 'delivery', 1, 
+    '2024-11-01', 'Deliver before noon', 'Please call on arrival', 
+    1000, 2000, 520000, 'upcoming'),
+('order', 'Maxi Puff Puff', 2, 2, 2, 'pickup', NULL, 
+    '2024-11-15', 'Ready for Christmas', 'Add plenty sugar', 
+    500, 0, 345000, 'pending'),
+ ('order', 'Salmon Special', 3, 3, 3, 'delivery', 2, 
+    '2024-11-20', 'Handle with care', 'Call before delivery', 
+    1500, 2500, 450000, 'completed'),
+ ('order', 'Beef Box', 4, 4, 1, 'pickup', NULL, 
+    '2024-11-25', 'Festive season order', 'Add extra spice', 
+    2000, 0, 300000, 'sent'),
+ ('order', 'Chicken Jumbo Pack', 1, 1, 1, 'delivery', 1, 
+    '2024-10-01', 'Deliver before noon', 'Please call on arrival', 
+    1000, 2000, 520000, 'completed');
 
-
-
+-- Insert into sales_order_items
+INSERT INTO sales_order_items (sales_order_id, item_id, quantity, price)
+VALUES
+(1, 1, 1, 30000),
+(1, 2, 2, 10000),
+(2, 3, 1, 25000),
+(2, 2, 1, 10000),
+(3, 1, 1, 30000),
+(3, 3, 2, 25000),
+(4, 1, 1, 30000),
+(4, 2, 1, 10000);

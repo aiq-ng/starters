@@ -266,13 +266,12 @@ CREATE TABLE purchase_orders (
     reference_number VARCHAR(50) GENERATED ALWAYS AS (
         'REF' || LPAD(id::TEXT, 5, '0')
     ) STORED,
-    order_date DATE NOT NULL DEFAULT CURRENT_DATE,
     delivery_date DATE NOT NULL,
     payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
     subject TEXT,
     notes TEXT,
     terms_and_conditions TEXT,
-    discount DECIMAL(5, 2) DEFAULT 0,
+    discount DECIMAL(10, 2) DEFAULT 0,
     shipping_charge DECIMAL(10, 2) DEFAULT 0,
     total DECIMAL(10, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'pending' 
@@ -299,11 +298,14 @@ CREATE TABLE sales_orders (
     id SERIAL PRIMARY KEY,
     order_type VARCHAR(50) 
         CHECK (order_type IN ('order', 'service')),
-    order_id VARCHAR(255) NOT NULL,
-    order_number VARCHAR(50) GENERATED ALWAYS AS (
-        'SO' || LPAD(id::TEXT, 5, '0')
+    order_title VARCHAR(255),
+    order_id VARCHAR(255) GENERATED ALWAYS AS (
+        CASE
+            WHEN order_type = 'order' THEN 'SLO-' || LPAD(id::TEXT, 3, '0')
+            ELSE 'SLS-' || LPAD(id::TEXT, 3, '0')
+        END
     ) STORED,
-    vendor_id INT REFERENCES vendors(id) ON DELETE SET NULL,
+    customer_id INT REFERENCES customers(id) ON DELETE SET NULL,
     payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
     payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,
     delivery_option VARCHAR(50) 
@@ -312,7 +314,7 @@ CREATE TABLE sales_orders (
     delivery_date DATE NOT NULL,
     additional_note TEXT,
     customer_note TEXT,
-    discount DECIMAL(5, 2) DEFAULT 0,
+    discount DECIMAL(10, 2) DEFAULT 0,
     delivery_charge DECIMAL(10, 2) DEFAULT 0,
     total DECIMAL(10, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'pending' 
