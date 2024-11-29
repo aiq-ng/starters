@@ -132,5 +132,24 @@ class InventoryController extends BaseController
         }
     }
 
+    public function adjustStock($id)
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+
+        $data['user_id'] = $data['user_id'] ?? $_SESSION['user_id'];
+        $data['user_department_id'] = $data['user_department_id'] ?? $data['department_id'];
+
+        $result = $this->inventory->adjustStock($id, $data);
+
+        if ($result) {
+            $this->sendResponse('Success', 200);
+        } else {
+            $this->sendResponse('Failed to adjust item', 500);
+        }
+
+    }
+
 
 }

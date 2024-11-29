@@ -73,6 +73,7 @@ $routes = [
         '/admin/register' => [$adminController, 'registerAdmin'],
         '/employees/register' => [$employeeController, 'create'],
         '/inventory/items/(\d+)' => [$inventoryController, 'updateItem'],
+        '/inventory/items/stocks/(\d+)' => [$inventoryController, 'adjustStock'],
     ],
     'PUT' => [
         '/products/(\d+)' => [$productController, 'update'],

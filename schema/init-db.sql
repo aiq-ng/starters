@@ -250,12 +250,15 @@ CREATE TABLE item_stock_manufacturers (
 CREATE TABLE item_stock_adjustments (
     id SERIAL PRIMARY KEY,
     stock_id INT REFERENCES item_stocks(id) ON DELETE CASCADE,
+    user_id INT REFERENCES users(id) ON DELETE SET NULL,
+    user_department_id INT REFERENCES departments(id) ON DELETE SET NULL,
     quantity INT NOT NULL,
     adjustment_type VARCHAR(50) 
         CHECK (adjustment_type IN ('addition', 'subtraction')),
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
 
 -- Customers
 CREATE TABLE customers (

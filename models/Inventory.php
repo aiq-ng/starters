@@ -18,18 +18,17 @@ class Inventory
     {
         $page = $filter['page'] ?? 1;
         $pageSize = $filter['page_size'] ?? 10;
-        $order = $filter['order'] ?? 'item_stocks.created_at';
+        $order = $filter['order'] ?? 'i.id';
         $sort = $filter['sort'] ?? 'DESC';
 
         $sql = "
-                SELECT 
-                item_stocks.id,
-                i.id AS item_id, 
+            SELECT
+                i.id, 
                 i.name, 
-                CONCAT(i.on_hand, ' ', u.abbreviation) AS quantity,
+                CONCAT(COALESCE(SUM(item_stocks.quantity), 0), ' ', u.abbreviation) AS quantity,
                 CONCAT(i.threshold_value, ' ', u.abbreviation) AS threshold_value,
                 i.price AS buying_price, 
-                item_stocks.expiry_date,
+                MAX(item_stocks.expiry_date) AS expiry_date,
                 i.sku, 
                 i.availability, 
                 i.media
@@ -45,15 +44,19 @@ class Inventory
             $params['filterAvailability'] = $filter['availability'];
         }
 
-        $sql .= " ORDER BY $order $sort";
-        $sql .= " LIMIT :pageSize OFFSET :offset";
+        $sql .= "
+            GROUP BY 
+                i.id, i.name, i.threshold_value, i.price,
+                i.sku, i.availability, i.media, u.abbreviation
+            ORDER BY $order $sort
+            LIMIT :pageSize OFFSET :offset
+        ";
 
         $params['pageSize'] = $pageSize;
         $params['offset'] = ($page - 1) * $pageSize;
 
         $stmt = $this->db->prepare($sql);
 
-        // Bind parameters
         $stmt->bindValue(':pageSize', $params['pageSize'], \PDO::PARAM_INT);
         $stmt->bindValue(':offset', $params['offset'], \PDO::PARAM_INT);
 
@@ -90,9 +93,10 @@ class Inventory
     private function countInventory($filter = null)
     {
         $countSql = "
-            SELECT COUNT(DISTINCT item_stocks.id) AS total_count
+            SELECT COUNT(DISTINCT i.id) AS total_count
             FROM item_stocks
             JOIN items i ON item_stocks.item_id = i.id
+            LEFT JOIN units u ON i.unit_id = u.id
         ";
 
         $params = [];
@@ -105,7 +109,7 @@ class Inventory
         $countStmt = $this->db->prepare($countSql);
 
         if (!empty($filter['availability'])) {
-            $countStmt->bindParam(':filterAvailability', $params['filterAvailability']);
+            $countStmt->bindValue(':filterAvailability', $params['filterAvailability'], \PDO::PARAM_STR);
         }
 
         $countStmt->execute();
@@ -151,11 +155,6 @@ class Inventory
                 return false;
             }
 
-            if (!$this->upsertItemRelationships($itemId, $data)) {
-                throw new \Exception('Failed to insert item relationships.');
-                return false;
-            }
-
             $this->db->commit();
 
             return $itemId;
@@ -170,19 +169,35 @@ class Inventory
     private function createItemStock($itemId, $data)
     {
         $dateReceived = $data['date_received'] ?? date('Y-m-d');
-        $stockSql = "
-            INSERT INTO item_stocks (item_id, quantity, expiry_date,
-            date_received)
-            VALUES (:itemId, :quantity, :expiryDate, :dateReceived)
-        ";
 
-        $stockStmt = $this->db->prepare($stockSql);
-        $stockStmt->bindParam(':itemId', $itemId);
-        $stockStmt->bindParam(':quantity', $data['quantity']);
-        $stockStmt->bindParam(':expiryDate', $data['expiry_date']);
-        $stockStmt->bindParam(':dateReceived', $dateReceived);
+        try {
+            $stockSql = "
+                INSERT INTO item_stocks (item_id, quantity, expiry_date, date_received)
+                VALUES (:itemId, :quantity, :expiryDate, :dateReceived)
+                RETURNING id
+            ";
 
-        return $stockStmt->execute();
+            $stockStmt = $this->db->prepare($stockSql);
+            $stockStmt->bindParam(':itemId', $itemId, \PDO::PARAM_INT);
+            $stockStmt->bindParam(':quantity', $data['quantity'], \PDO::PARAM_INT);
+            $stockStmt->bindParam(':expiryDate', $data['expiry_date'], \PDO::PARAM_STR);
+            $stockStmt->bindParam(':dateReceived', $dateReceived, \PDO::PARAM_STR);
+
+            if (!$stockStmt->execute()) {
+                throw new \Exception('Failed to insert item stock.');
+            }
+
+            $stockId = $stockStmt->fetchColumn();
+
+            if (!$this->upsertItemRelationships($stockId, $data)) {
+                throw new \Exception('Failed to insert item relationships.');
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
+        }
     }
 
     public function updateStockItem($stockId, $data, $mediaLinks = [])
@@ -210,7 +225,7 @@ class Inventory
                 throw new \Exception('Failed to upsert item and update on_hand value.');
             }
 
-            if (!$this->upsertItemRelationships($data['item_id'], $data)) {
+            if (!$this->upsertItemRelationships($stockId, $data)) {
                 throw new \Exception('Failed to update or insert item relationships.');
             }
 
@@ -256,22 +271,22 @@ class Inventory
         return $stmt->execute();
     }
 
-    private function upsertItemRelationships($itemId, $data)
+    private function upsertItemRelationships($stockId, $data)
     {
         if (!empty($data['vendor_id'])) {
-            if (!$this->upsertItemStockVendor($itemId, $data['vendor_id'])) {
+            if (!$this->upsertItemStockVendor($stockId, $data['vendor_id'])) {
                 return false;
             }
         }
 
         if (!empty($data['department_id'])) {
-            if (!$this->upsertItemStockDepartment($itemId, $data['department_id'])) {
+            if (!$this->upsertItemStockDepartment($stockId, $data['department_id'])) {
                 return false;
             }
         }
 
         if (!empty($data['manufacturer_id'])) {
-            if (!$this->upsertItemStockManufacturer($itemId, $data['manufacturer_id'])) {
+            if (!$this->upsertItemStockManufacturer($stockId, $data['manufacturer_id'])) {
                 return false;
             }
         }
@@ -382,26 +397,63 @@ class Inventory
         return $stmt->execute();
     }
 
-    public function adjustStock($itemId, $data)
+    public function adjustStock($stockId, $data)
     {
-        if (!in_array($data['adjustment_type'], ['add', 'subtract'])) {
+        if (!in_array($data['adjustment_type'], ['addition', 'subtraction'])) {
             throw new \Exception('Invalid operation, must be add or subtract');
         }
 
-        $operation = $data['adjustment_type'] === 'add' ? '+' : '-';
         $quantity = $data['quantity'];
 
-        $sql = "
-            UPDATE items
-            SET quantity = quantity $operation :quantity
-            WHERE id = :itemId
-        ";
+        try {
+            $this->db->beginTransaction();
 
-        $stmt = $this->db->prepare($sql);
+            $sql = "
+                INSERT INTO item_stock_adjustments
+                (stock_id, quantity, adjustment_type,
+                description, user_id, user_department_id)
+                VALUES (:stockId, :quantity, :adjustmentType,
+                :description, :user_id, :user_department_id)
+            ";
+            $stmt = $this->db->prepare($sql);
 
-        $stmt->bindParam(':quantity', $quantity, \PDO::PARAM_INT);
-        $stmt->bindParam(':itemId', $itemId, \PDO::PARAM_INT);
+            $stmt->bindParam(':stockId', $stockId, \PDO::PARAM_INT);
+            $stmt->bindParam(':quantity', $quantity, \PDO::PARAM_INT);
+            $stmt->bindParam(':adjustmentType', $data['adjustment_type'], \PDO::PARAM_STR);
+            $stmt->bindParam(':description', $data['description'], \PDO::PARAM_STR);
+            $stmt->bindParam(':user_id', $data['user_id'], \PDO::PARAM_INT);
+            $stmt->bindParam(':user_department_id', $data['user_department_id'], \PDO::PARAM_INT);
 
-        return $stmt->execute();
+            if (!$stmt->execute()) {
+                throw new \Exception('Failed to insert stock adjustment.');
+            }
+
+            if ($data['adjustment_type'] === 'subtraction') {
+                $updateSql = "
+                    UPDATE item_stocks
+                    SET quantity = quantity - :quantity
+                    WHERE id = :stockId
+                ";
+                $updateStmt = $this->db->prepare($updateSql);
+
+                $updateStmt->bindParam(':quantity', $quantity, \PDO::PARAM_INT);
+                $updateStmt->bindParam(':stockId', $stockId, \PDO::PARAM_INT);
+
+                if (!$updateStmt->execute()) {
+                    throw new \Exception('Failed to update stock quantity.');
+                }
+            }
+
+            if ($data['adjustment_type'] === 'addition') {
+                $this->createItemStock($data['item_id'], $data);
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            error_log($e->getMessage());
+            throw $e;
+        }
     }
 }
