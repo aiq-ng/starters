@@ -215,37 +215,17 @@ CREATE TABLE item_stocks (
     id SERIAL PRIMARY KEY,
     item_id INT REFERENCES items(id) ON DELETE CASCADE,
     stock_code VARCHAR(100) GENERATED ALWAYS AS (
-        'STK' || LPAD(id::TEXT, 5, '0')
+        'STK-' || LPAD(id::TEXT, 5, '0')
     ) STORED,
     quantity INT DEFAULT 0 NOT NULL,
     date_received DATE DEFAULT CURRENT_DATE,
     expiry_date DATE,
+    vendor_id INT REFERENCES vendors(id) ON DELETE SET NULL,
+    department_id INT REFERENCES departments(id) ON DELETE SET NULL,
+    manufacturer_id INT REFERENCES item_manufacturers(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_item_stock UNIQUE (item_id, date_received)
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
-
--- Item Stock Vendors
-CREATE TABLE item_stock_vendors (
-    stock_id INT REFERENCES item_stocks(id) ON DELETE CASCADE,
-    vendor_id INT REFERENCES vendors(id) ON DELETE CASCADE,
-    PRIMARY KEY (stock_id, vendor_id)
-);
-
--- Item Stock Departments
-CREATE TABLE item_stock_departments (
-    stock_id INT REFERENCES item_stocks(id) ON DELETE CASCADE,
-    department_id INT REFERENCES departments(id) ON DELETE CASCADE,
-    PRIMARY KEY (stock_id, department_id)
-);
-
--- Item Stock Manufacturers
-CREATE TABLE item_stock_manufacturers (
-    stock_id INT REFERENCES item_stocks(id) ON DELETE CASCADE,
-    manufacturer_id INT REFERENCES item_manufacturers(id) ON DELETE CASCADE,
-    PRIMARY KEY (stock_id, manufacturer_id)
-);
-
 
 -- Item Stock Adjustments
 CREATE TABLE item_stock_adjustments (
@@ -257,7 +237,6 @@ CREATE TABLE item_stock_adjustments (
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
-
 
 -- Customers
 CREATE TABLE customers (
@@ -307,7 +286,7 @@ CREATE TABLE purchase_orders (
     vendor_id INT REFERENCES vendors(id) ON DELETE SET NULL,
     branch_id INT REFERENCES branches(id) ON DELETE SET NULL,
     purchase_order_number VARCHAR(50) GENERATED ALWAYS AS (
-        'PO' || LPAD(id::TEXT, 5, '0')
+        'PO-' || LPAD(id::TEXT, 5, '0')
     ) STORED,
     reference_number VARCHAR(50) GENERATED ALWAYS AS (
         'REF' || LPAD(id::TEXT, 5, '0')

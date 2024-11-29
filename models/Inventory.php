@@ -18,16 +18,24 @@ class Inventory
     {
         $page = $filter['page'] ?? 1;
         $pageSize = $filter['page_size'] ?? 10;
-        $order = $filter['order'] ?? 'created_at';
+        $order = $filter['order'] ?? 'item_stocks.created_at';
         $sort = $filter['sort'] ?? 'DESC';
 
         $sql = "
-            SELECT
-                i.id, i.name, i.media, i.price AS buying_price, 
-                i.on_hand AS quantity, i.threshold_value, 
-                item_stocks.expiry_date, i.sku, i.availability
-            FROM items i
-            LEFT JOIN item_stocks ON i.id = item_stocks.item_id
+                SELECT 
+                item_stocks.id,
+                i.id AS item_id, 
+                i.name, 
+                CONCAT(i.on_hand, ' ', u.abbreviation) AS quantity,
+                CONCAT(i.threshold_value, ' ', u.abbreviation) AS threshold_value,
+                i.price AS buying_price, 
+                item_stocks.expiry_date,
+                i.sku, 
+                i.availability, 
+                i.media
+            FROM item_stocks
+            JOIN items i ON item_stocks.item_id = i.id
+            LEFT JOIN units u ON i.unit_id = u.id
         ";
 
         $params = [];
@@ -37,9 +45,6 @@ class Inventory
             $params['filterAvailability'] = $filter['availability'];
         }
 
-        $sql .= " GROUP BY i.id, i.name, i.media, i.price, i.threshold_value,
-            item_stocks.expiry_date, i.sku, i.availability
-        ";
         $sql .= " ORDER BY $order $sort";
         $sql .= " LIMIT :pageSize OFFSET :offset";
 
@@ -85,9 +90,9 @@ class Inventory
     private function countInventory($filter = null)
     {
         $countSql = "
-            SELECT COUNT(DISTINCT i.id) AS total_count
-            FROM items i
-            LEFT JOIN item_stocks ON i.id = item_stocks.item_id
+            SELECT COUNT(DISTINCT item_stocks.id) AS total_count
+            FROM item_stocks
+            JOIN items i ON item_stocks.item_id = i.id
         ";
 
         $params = [];
@@ -98,9 +103,11 @@ class Inventory
         }
 
         $countStmt = $this->db->prepare($countSql);
+
         if (!empty($filter['availability'])) {
             $countStmt->bindParam(':filterAvailability', $params['filterAvailability']);
         }
+
         $countStmt->execute();
 
         return $countStmt->fetchColumn();
@@ -139,13 +146,8 @@ class Inventory
 
             $itemId = $this->db->lastInsertId();
 
-            if (!$this->upsertItemStock($itemId, $data)) {
+            if (!$this->createItemStock($itemId, $data)) {
                 throw new \Exception('Failed to insert item stock.');
-                return false;
-            }
-
-            if (!$this->upsertItemRelationships($itemId, $data)) {
-                throw new \Exception('Failed to insert item relationships.');
                 return false;
             }
 
@@ -160,49 +162,57 @@ class Inventory
         }
     }
 
-    public function updateItem($itemId, $data, $mediaLinks = [])
+    private function createItemStock($itemId, $data)
+    {
+        $dateReceived = $data['date_received'] ?? date('Y-m-d');
+        $stockSql = "
+            INSERT INTO item_stocks (item_id, quantity, expiry_date,
+            date_received, department_id, manufacturer_id)
+            VALUES (:itemId, :quantity, :expiryDate, :dateReceived,
+            :departmentId, :manufacturerId)
+        ";
+
+        $stockStmt = $this->db->prepare($stockSql);
+        $stockStmt->bindParam(':itemId', $itemId);
+        $stockStmt->bindParam(':quantity', $data['quantity']);
+        $stockStmt->bindParam(':expiryDate', $data['expiry_date']);
+        $stockStmt->bindParam(':dateReceived', $dateReceived);
+        $stockStmt->bindParam(':departmentId', $data['department_id']);
+        $stockStmt->bindParam(':manufacturerId', $data['manufacturer_id']);
+
+        return $stockStmt->execute();
+    }
+
+    public function updateStockItem($stockId, $data, $mediaLinks = [])
     {
         try {
             $this->db->beginTransaction();
 
             $sql = "
-                UPDATE items
-                SET name = :name, description = :description, unit_id = :unitId,
-                category_id = :categoryId,price = :price,
-                threshold_value = :threshold, media = :media,
-                opening_stock = :openingStock, on_hand = :onHand
-                WHERE id = :itemId
+                UPDATE item_stocks
+                SET quantity = :quantity, expiry_date = :expiryDate,
+                    department_id = :departmentId,
+                    manufacturer_id = :manufacturerId
+                WHERE id = :stockId
             ";
-
-            $mediaLinks = json_encode($mediaLinks);
 
             $stmt = $this->db->prepare($sql);
 
-            $stmt->bindParam(':name', $data['name']);
-            $stmt->bindParam(':description', $data['description']);
-            $stmt->bindParam(':unitId', $data['unit_id']);
-            $stmt->bindParam(':categoryId', $data['category_id']);
-            $stmt->bindParam(':price', $data['price']);
-            $stmt->bindParam(':threshold', $data['threshold_value']);
-            $stmt->bindParam(':media', $mediaLinks);
-            $stmt->bindParam(':openingStock', $data['quantity']);
-            $stmt->bindParam(':onHand', $data['quantity']);
-            $stmt->bindParam(':itemId', $itemId);
+            $stmt->bindParam(':quantity', $data['quantity']);
+            $stmt->bindParam(':expiryDate', $data['expiry_date']);
+            $stmt->bindParam(':departmentId', $data['department_id']);
+            $stmt->bindParam(':manufacturerId', $data['manufacturer_id']);
+            $stmt->bindParam(':stockId', $stockId);
 
             if (!$stmt->execute()) {
-                throw new \Exception('Failed to update item.');
+                throw new \Exception('Failed to update item stock.');
             }
 
-            if (!$this->upsertItemStock($itemId, $data)) {
-                throw new \Exception('Failed to update or insert item stock.');
-            }
-
-            if (!$this->upsertItemRelationships($itemId, $data)) {
-                throw new \Exception('Failed to update or insert item relationships.');
+            if (!$this->updateItemOnHand($data, $mediaLinks)) {
+                throw new \Exception('Failed to upsert item and update on_hand value.');
             }
 
             $this->db->commit();
-
             return true;
 
         } catch (\Exception $e) {
@@ -212,98 +222,38 @@ class Inventory
         }
     }
 
-    private function upsertItemStock($itemId, $data)
+    private function updateItemOnHand($data, $mediaLinks)
     {
-        $dateReceived = $data['date_received'] ?? date('Y-m-d');
-        $stockSql = "
-            INSERT INTO item_stocks (item_id, quantity, expiry_date, date_received)
-            VALUES (:itemId, :quantity, :expiryDate, :dateReceived)
-            ON CONFLICT (item_id, date_received)
-            DO UPDATE SET
-                quantity = EXCLUDED.quantity,
-                expiry_date = EXCLUDED.expiry_date,
-                date_received = EXCLUDED.date_received
+        $sql = "
+            UPDATE items
+            SET name = :name, description = :description, unit_id = :unitId,
+                category_id = :categoryId, price = :price,
+                threshold_value = :thresholdValue, media = :media,
+                opening_stock = :openingStock, 
+                on_hand = (
+                    SELECT COALESCE(SUM(quantity), 0)
+                    FROM item_stocks
+                    WHERE item_id = :itemId
+                )
+            WHERE id = :itemId
         ";
 
-        $stockStmt = $this->db->prepare($stockSql);
-        $stockStmt->bindParam(':itemId', $itemId);
-        $stockStmt->bindParam(':quantity', $data['quantity']);
-        $stockStmt->bindParam(':expiryDate', $data['expiry_date']);
-        $stockStmt->bindParam(':dateReceived', $dateReceived);
+        $mediaLinks = json_encode($mediaLinks);
+        $stmt = $this->db->prepare($sql);
 
-        return $stockStmt->execute();
+        $stmt->bindParam(':itemId', $data['item_id']);
+        $stmt->bindParam(':name', $data['name']);
+        $stmt->bindParam(':description', $data['description']);
+        $stmt->bindParam(':unitId', $data['unit_id']);
+        $stmt->bindParam(':categoryId', $data['category_id']);
+        $stmt->bindParam(':price', $data['price']);
+        $stmt->bindParam(':thresholdValue', $data['threshold_value']);
+        $stmt->bindParam(':media', $mediaLinks);
+        $stmt->bindParam(':openingStock', $data['quantity']);
+
+        return $stmt->execute();
     }
 
-    private function upsertItemRelationships($itemId, $data)
-    {
-        if (!empty($data['vendor_id'])) {
-            if (!$this->upsertItemStockVendor($itemId, $data['vendor_id'])) {
-                return false;
-            }
-        }
-
-        if (!empty($data['department_id'])) {
-            if (!$this->upsertItemStockDepartment($itemId, $data['department_id'])) {
-                return false;
-            }
-        }
-
-        if (!empty($data['manufacturer_id'])) {
-            if (!$this->upsertItemStockManufacturer($itemId, $data['manufacturer_id'])) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private function upsertItemStockVendor($itemId, $vendorId)
-    {
-        $vendorSql = "
-            INSERT INTO item_stock_vendors (stock_id, vendor_id)
-            VALUES (:itemId, :vendorId)
-            ON CONFLICT (stock_id, vendor_id) 
-            DO UPDATE SET vendor_id = EXCLUDED.vendor_id
-        ";
-
-        $vendorStmt = $this->db->prepare($vendorSql);
-        $vendorStmt->bindParam(':itemId', $itemId);
-        $vendorStmt->bindParam(':vendorId', $vendorId);
-        error_log("upsertItemStockVendor: $itemId, $vendorId");
-        return $vendorStmt->execute();
-    }
-
-    private function upsertItemStockDepartment($itemId, $departmentId)
-    {
-        $departmentSql = "
-            INSERT INTO item_stock_departments (stock_id, department_id)
-            VALUES (:itemId, :departmentId)
-            ON CONFLICT (stock_id, department_id) 
-            DO UPDATE SET department_id = EXCLUDED.department_id
-        ";
-
-        $departmentStmt = $this->db->prepare($departmentSql);
-        $departmentStmt->bindParam(':itemId', $itemId);
-        $departmentStmt->bindParam(':departmentId', $departmentId);
-
-        return $departmentStmt->execute();
-    }
-
-    private function upsertItemStockManufacturer($itemId, $manufacturerId)
-    {
-        $manufacturerSql = "
-            INSERT INTO item_stock_manufacturers (stock_id, manufacturer_id)
-            VALUES (:itemId, :manufacturerId)
-            ON CONFLICT (stock_id, manufacturer_id) 
-            DO UPDATE SET manufacturer_id = EXCLUDED.manufacturer_id
-        ";
-
-        $manufacturerStmt = $this->db->prepare($manufacturerSql);
-        $manufacturerStmt->bindParam(':itemId', $itemId);
-        $manufacturerStmt->bindParam(':manufacturerId', $manufacturerId);
-
-        return $manufacturerStmt->execute();
-    }
 
     public function getItem($itemId)
     {
@@ -311,7 +261,7 @@ class Inventory
             SELECT 
                 i.id AS item_id, 
                 i.name AS item_name, 
-                ic.name AS category, 
+                ic.name AS item_category, 
                 d.name AS department,
                 i.threshold_value, 
                 its.expiry_date, 
@@ -320,8 +270,7 @@ class Inventory
                 i.media
             FROM items i
             LEFT JOIN item_stocks its ON i.id = its.item_id
-            LEFT JOIN item_stock_departments isd ON its.id = isd.stock_id
-            LEFT JOIN departments d ON isd.department_id = d.id
+            LEFT JOIN departments d ON its.department_id = d.id
             LEFT JOIN item_categories ic ON i.category_id = ic.id
             WHERE i.id = :itemId
         ";

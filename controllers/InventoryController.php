@@ -102,7 +102,6 @@ class InventoryController extends BaseController
         $formData = $data['form_data'];
         $mediaFiles = $data['files']['media'] ?? [];
 
-        error_log(json_encode($formData));
         $requiredFields = [
             'name', 'department_id', 'category_id', 'manufacturer_id',
             'date_received', 'expiry_date', 'quantity', 'unit_id'
@@ -124,7 +123,7 @@ class InventoryController extends BaseController
 
         }
 
-        $result = $this->inventory->updateItem($id, $formData, $mediaLinks);
+        $result = $this->inventory->updateStockItem($id, $formData, $mediaLinks);
 
         if ($result) {
             $this->sendResponse('Success', 200, ['item_id' => $id]);

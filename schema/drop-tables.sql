@@ -8,9 +8,6 @@ DROP TABLE IF EXISTS purchase_orders CASCADE;
 
 -- Items and Related Entities
 DROP TABLE IF EXISTS item_stock_adjustments CASCADE;
-DROP TABLE IF EXISTS item_stock_vendors CASCADE;
-DROP TABLE IF EXISTS item_stock_manufacturers CASCADE;
-DROP TABLE IF EXISTS item_stock_departments CASCADE;
 DROP TABLE IF EXISTS item_stocks CASCADE;
 DROP TABLE IF EXISTS items CASCADE;
 DROP TABLE IF EXISTS item_manufacturers CASCADE;
