@@ -123,7 +123,10 @@ class InventoryController extends BaseController
 
         }
 
-        $result = $this->inventory->updateStockItem($id, $formData, $mediaLinks);
+        $formData['user_id'] = $formData['user_id'] ?? $_SESSION['user_id'];
+        $formData['user_department_id'] = $formData['user_department_id'] ?? $formData['department_id'];
+
+        $result = $this->inventory->updateItem($id, $formData, $mediaLinks);
 
         if ($result) {
             $this->sendResponse('Success', 200, ['item_id' => $id]);
@@ -144,7 +147,7 @@ class InventoryController extends BaseController
         $result = $this->inventory->adjustStock($id, $data);
 
         if ($result) {
-            $this->sendResponse('Success', 200);
+            $this->sendResponse('Success', 200, ['adjusted_stock_ids' => $result]);
         } else {
             $this->sendResponse('Failed to adjust item', 500);
         }

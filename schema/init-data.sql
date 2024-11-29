@@ -146,28 +146,28 @@ VALUES
 (5, 'credit', 100000.00, 'Payment for meat supplies');
 
 -- Seed data for items
-INSERT INTO items (name, description, price, unit_id, opening_stock, on_hand, threshold_value, media, category_id)
+INSERT INTO items (name, description, price, unit_id, opening_stock, threshold_value, media, category_id)
 VALUES
-('Beef', 'Fresh beef cuts', 10.00, 1, 100, 50, 10, '["https://i.imgur.com/IwdmYjG.jpeg"]', 1),
-('Chicken', 'Fresh chicken cuts', 20.00, 1, 500, 10, 50, '["https://i.imgur.com/gnRz12P.png"]', 1),
-('Catfish', 'Fresh catfish fillets', 15.00, 1, 100, 50, 50, '["https://i.imgur.com/MxiMX9v.png"]', 1),
-('Pork', 'Fresh pork cuts', 12.00, 1, 300, 0, 3, '["https://i.imgur.com/dGGizfQ.png"]', 1),
-('Lamb', 'Fresh lamb cuts', 25.00, 1, 100, 0, 2, '["https://i.imgur.com/8TIGZM2.png"]', 2),
-('Salmon', 'Fresh salmon fillets', 30.00, 1, 100, 1, 10, '["https://i.imgur.com/ISOOCLs.png"]',2),
-('Eggs', 'Farm fresh eggs', 5.00, 1, 500, 100, 50, '["https://i.imgur.com/G0mVY78.png"]', 2),
-('Cheese', 'Fresh cheese', 3.50, 1, 200, 21, 20, '["https://i.imgur.com/IVCT63j.png"]', 1),
-('Milk', 'Fresh cow milk', 2.00, 1, 400, 14, 40, '["https://i.imgur.com/5JXHh4d.png"]', 2),
-('Yogurt', 'Fresh yogurt', 1.80, 1, 300, 0, 30, '["https://i.imgur.com/NQTBB4c.jpeg"]', 1),
-('Bread', 'Freshly baked bread', 1.50, 1, 100, 1, 10, '["https://i.imgur.com/jA1O0Qb.png"]', 1),
-('Rice', 'Premium rice', 2.50, 1, 250, 100, 25, '["https://i.imgur.com/pwXSxkn.png"]', 2),
-('Pasta', 'Premium pasta', 1.00, 1, 500, 200, 50, '["https://i.imgur.com/ZLncFYM.png"]', 2),
-('Honey', 'Organic honey', 5.00, 1, 100, 50, 10, '["https://i.imgur.com/PheCs9s.png"]', 1),
-('Olive Oil', 'Extra virgin olive oil', 6.00, 1, 80, 18, 8, '["https://i.imgur.com/GEkayag.png"]', 2),
-('Vegetable Oil', 'Pure vegetable oil', 3.50, 1, 200, 2, 20, '["https://i.imgur.com/W5F6Gzv.png"]', 2),
-('Mustard', 'Organic mustard', 1.50, 1, 150, 0, 15, '["https://i.imgur.com/GwxyZSF.png"]', 1),
-('Ketchup', 'Organic ketchup', 1.50, 1, 200, 0, 30, '["https://i.imgur.com/JfO21Bm.png"]', 2),
-('Mayonnaise', 'Organic mayonnaise', 2.00, 1, 100, 0, 10, '["https://i.imgur.com/PSuuQmI.png"]', 1),
-('Soy Sauce', 'Premium soy sauce', 1.00, 1, 150, 5, 15, '["https://i.imgur.com/zMLrQYD.png"]', 2);
+('Beef', 'Fresh beef cuts', 10.00, 1, 100, 10, '["https://i.imgur.com/IwdmYjG.jpeg"]', 1),
+('Chicken', 'Fresh chicken cuts', 20.00, 1, 500, 50, '["https://i.imgur.com/gnRz12P.png"]', 1),
+('Catfish', 'Fresh catfish fillets', 15.00, 1, 100, 50, '["https://i.imgur.com/MxiMX9v.png"]', 1),
+('Pork', 'Fresh pork cuts', 12.00, 1, 300, 3, '["https://i.imgur.com/dGGizfQ.png"]', 1),
+('Lamb', 'Fresh lamb cuts', 25.00, 1, 100, 2, '["https://i.imgur.com/8TIGZM2.png"]', 2),
+('Salmon', 'Fresh salmon fillets', 30.00, 1, 100, 10, '["https://i.imgur.com/ISOOCLs.png"]',2),
+('Eggs', 'Farm fresh eggs', 5.00, 1, 500, 50, '["https://i.imgur.com/G0mVY78.png"]', 2),
+('Cheese', 'Fresh cheese', 3.50, 1, 200, 20, '["https://i.imgur.com/IVCT63j.png"]', 1),
+('Milk', 'Fresh cow milk', 2.00, 1, 400, 40, '["https://i.imgur.com/5JXHh4d.png"]', 2),
+('Yogurt', 'Fresh yogurt', 1.80, 1, 300, 30, '["https://i.imgur.com/NQTBB4c.jpeg"]', 1),
+('Bread', 'Freshly baked bread', 1.50, 1, 100, 10, '["https://i.imgur.com/jA1O0Qb.png"]', 1),
+('Rice', 'Premium rice', 2.50, 1, 250, 25, '["https://i.imgur.com/pwXSxkn.png"]', 2),
+('Pasta', 'Premium pasta', 1.00, 1, 500, 50, '["https://i.imgur.com/ZLncFYM.png"]', 2),
+('Honey', 'Organic honey', 5.00, 1, 100, 10, '["https://i.imgur.com/PheCs9s.png"]', 1),
+('Olive Oil', 'Extra virgin olive oil', 6.00, 1, 80, 8, '["https://i.imgur.com/GEkayag.png"]', 2),
+('Vegetable Oil', 'Pure vegetable oil', 3.50, 1, 200, 20, '["https://i.imgur.com/W5F6Gzv.png"]', 2),
+('Mustard', 'Organic mustard', 1.50, 1, 150, 15, '["https://i.imgur.com/GwxyZSF.png"]', 1),
+('Ketchup', 'Organic ketchup', 1.50, 1, 200, 30, '["https://i.imgur.com/JfO21Bm.png"]', 2),
+('Mayonnaise', 'Organic mayonnaise', 2.00, 1, 100, 10, '["https://i.imgur.com/PSuuQmI.png"]', 1),
+('Soy Sauce', 'Premium soy sauce', 1.00, 1, 150, 15, '["https://i.imgur.com/zMLrQYD.png"]', 2);
 
 -- Seed data for item_stocks
 INSERT INTO item_stocks (item_id, quantity, date_received, expiry_date)

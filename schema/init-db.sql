@@ -196,15 +196,8 @@ CREATE TABLE items (
     category_id INT REFERENCES item_categories(id) ON DELETE SET NULL,
     price DECIMAL(10, 2),
     opening_stock INT DEFAULT 0,
-    on_hand INT DEFAULT 0,
     threshold_value INT DEFAULT 0,
-    availability VARCHAR(50) GENERATED ALWAYS AS (
-        CASE 
-            WHEN on_hand = 0 THEN 'out of stock'
-            WHEN on_hand < threshold_value THEN 'low stock'
-            ELSE 'in stock'
-        END
-    ) STORED,
+    availability VARCHAR(50), 
     media JSONB,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -381,3 +374,33 @@ CREATE TABLE sales_order_items (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
+
+CREATE OR REPLACE FUNCTION update_item_availability()
+RETURNS TRIGGER AS $$
+DECLARE
+    total_stock INT;
+BEGIN
+    SELECT COALESCE(SUM(quantity), 0)
+    INTO total_stock
+    FROM item_stocks
+    WHERE item_id = NEW.item_id;
+
+    UPDATE items
+    SET availability = CASE
+        WHEN total_stock = 0 THEN 'out of stock'
+        WHEN total_stock < threshold_value THEN 'low stock'
+        ELSE 'in stock'
+    END,
+    updated_at = CURRENT_TIMESTAMP
+    WHERE id = NEW.item_id;
+
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_item_availability
+AFTER INSERT OR UPDATE OR DELETE
+ON item_stocks
+FOR EACH ROW
+EXECUTE FUNCTION update_item_availability();
