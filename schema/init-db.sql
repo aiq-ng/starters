@@ -6,37 +6,36 @@ CREATE TABLE roles (
 
 
 --Admins
- CREATE TYPE permission_type AS ENUM ('Accountant', 'HR', 'Inventory Manager', 'Sales');
+--CREATE TYPE permission_type AS ENUM ('Accountant', 'HR', 'Inventory Manager', 'Sales');
 
- CREATE TABLE admins (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    role_id INT DEFAULT 1,
-    permissions permission_type NOT NULL
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_admin_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET DEFAULT  
-);
+--CREATE TABLE admins (
+--    id SERIAL PRIMARY KEY,
+--    username VARCHAR(100) UNIQUE NOT NULL,
+--    password VARCHAR(255) NOT NULL,
+--    role_id INT DEFAULT 1,
+--    permissions permission_type NOT NULL
+--    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+--    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+--    CONSTRAINT fk_admin_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET DEFAULT  
+--);
 
 --Employees
 
-CREATE TABLE employees (
-    id SERIAL PRIMARY KEY,
-    firstname VARCHAR(100) NOT NULL,
-    lastname VARCHAR(100) NOT NULL,
-    department VARCHAR(100) NOT NULL,
-    salaries INT, 
-    bank_details JSONB,
-    date_of_birth DATE, 
-    leave DATE, 
-    date_of_employment DATE,
-    nin JSONB,
-    passport JSONB,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-    
-);
+--CREATE TABLE employees (
+--    id SERIAL PRIMARY KEY,
+--    firstname VARCHAR(100) NOT NULL,
+--    lastname VARCHAR(100) NOT NULL,
+--    department VARCHAR(100) NOT NULL,
+--    salaries INT, 
+--    bank_details JSONB,
+--    date_of_birth DATE, 
+--    leave DATE, 
+--    date_of_employment DATE,
+--    nin JSONB,
+--    passport JSONB,
+--    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+--    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP    
+--);
 
 
 -- Users
@@ -142,34 +141,6 @@ CREATE TABLE item_manufacturers (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- Items
-CREATE TABLE items (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    sku VARCHAR(100) GENERATED ALWAYS AS (
-        UPPER(SUBSTRING(name FROM 1 FOR 3)) || '-' || LPAD(id::TEXT, 4, '0')
-    ) STORED,
-    price DECIMAL(10, 2),
-    department_id INT REFERENCES departments(id) ON DELETE SET NULL,
-    manufacturer_id INT REFERENCES item_manufacturers(id) ON DELETE SET NULL,
-    category_id INT REFERENCES item_categories(id) ON DELETE SET NULL,
-    unit_id INT REFERENCES units(id) ON DELETE SET NULL,
-    quantity INT DEFAULT 0,
-    threshold_value INT DEFAULT 0,
-    expiry_date DATE,
-    media JSONB,
-    availability VARCHAR(50) GENERATED ALWAYS AS (
-        CASE 
-            WHEN quantity = 0 THEN 'out of stock'
-            WHEN quantity < threshold_value THEN 'low stock'
-            ELSE 'in stock'
-        END
-    ) STORED,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Vendors
 CREATE TABLE vendors (
     id SERIAL PRIMARY KEY,
@@ -212,6 +183,81 @@ CREATE TABLE vendor_transactions (
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Items
+CREATE TABLE items (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    sku VARCHAR(100) GENERATED ALWAYS AS (
+        UPPER(SUBSTRING(name FROM 1 FOR 3)) || '-' || LPAD(id::TEXT, 4, '0')
+    ) STORED,
+    unit_id INT REFERENCES units(id) ON DELETE SET NULL,
+    category_id INT REFERENCES item_categories(id) ON DELETE SET NULL,
+    price DECIMAL(10, 2),
+    opening_stock INT DEFAULT 0,
+    on_hand INT DEFAULT 0,
+    threshold_value INT DEFAULT 0,
+    availability VARCHAR(50) GENERATED ALWAYS AS (
+        CASE 
+            WHEN on_hand = 0 THEN 'out of stock'
+            WHEN on_hand < threshold_value THEN 'low stock'
+            ELSE 'in stock'
+        END
+    ) STORED,
+    media JSONB,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Item Stocks
+CREATE TABLE item_stocks (
+    id SERIAL PRIMARY KEY,
+    item_id INT REFERENCES items(id) ON DELETE CASCADE,
+    stock_code VARCHAR(100) GENERATED ALWAYS AS (
+        'STK' || LPAD(id::TEXT, 5, '0')
+    ) STORED,
+    quantity INT DEFAULT 0 NOT NULL,
+    date_received DATE DEFAULT CURRENT_DATE,
+    expiry_date DATE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_item_stock UNIQUE (item_id, date_received)
+);
+
+-- Item Stock Vendors
+CREATE TABLE item_stock_vendors (
+    stock_id INT REFERENCES item_stocks(id) ON DELETE CASCADE,
+    vendor_id INT REFERENCES vendors(id) ON DELETE CASCADE,
+    PRIMARY KEY (stock_id, vendor_id)
+);
+
+-- Item Stock Departments
+CREATE TABLE item_stock_departments (
+    stock_id INT REFERENCES item_stocks(id) ON DELETE CASCADE,
+    department_id INT REFERENCES departments(id) ON DELETE CASCADE,
+    PRIMARY KEY (stock_id, department_id)
+);
+
+-- Item Stock Manufacturers
+CREATE TABLE item_stock_manufacturers (
+    stock_id INT REFERENCES item_stocks(id) ON DELETE CASCADE,
+    manufacturer_id INT REFERENCES item_manufacturers(id) ON DELETE CASCADE,
+    PRIMARY KEY (stock_id, manufacturer_id)
+);
+
+
+-- Item Stock Adjustments
+CREATE TABLE item_stock_adjustments (
+    id SERIAL PRIMARY KEY,
+    stock_id INT REFERENCES item_stocks(id) ON DELETE CASCADE,
+    quantity INT NOT NULL,
+    adjustment_type VARCHAR(50) 
+        CHECK (adjustment_type IN ('addition', 'subtraction')),
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
 
 -- Customers
 CREATE TABLE customers (
@@ -334,4 +380,3 @@ CREATE TABLE sales_order_items (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
-

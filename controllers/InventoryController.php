@@ -51,10 +51,8 @@ class InventoryController extends BaseController
 
         $requiredFields = [
             'name', 'department_id', 'category_id', 'manufacturer_id',
-            'expiry_date', 'quantity', 'unit_id'
+            'date_received', 'expiry_date', 'quantity', 'unit_id'
         ];
-
-        error_log(json_encode($formData));
 
         $dataToValidate = array_intersect_key($formData, array_flip($requiredFields));
 
@@ -63,6 +61,7 @@ class InventoryController extends BaseController
         }
 
         // Handle media files using MediaHandler
+        $mediaLinks = [];
         if (!empty($mediaFiles)) {
             $mediaLinks = $this->mediaHandler->handleMediaFiles($mediaFiles);
 
@@ -82,180 +81,56 @@ class InventoryController extends BaseController
     }
 
 
-    public function show($id)
+    public function showItem($id)
     {
         $this->authorizeRequest();
-        $inventory = $this->inventory->getInventoryPlan($id);
 
-        if (empty($inventory)) {
-            $this->sendResponse('Inventory not found', 404, []);
+        $item = $this->inventory->getItem($id);
+
+        if (empty($item)) {
+            $this->sendResponse('item not found', 404, []);
         }
-        $this->sendResponse('success', 200, $inventory);
+        $this->sendResponse('success', 200, $item);
     }
 
-    public function create($data)
+    public function updateItem($id)
     {
         $this->authorizeRequest();
+
         $data = $this->getRequestData();
-        if (!$this->validateFields(
-            $data['name'],
-            $data['products'],
-            $data['plan_date']
-        )) {
-            $this->sendResponse('Missing required fields', 400);
-        }
 
-        if (!is_array($data['products'])) {
-            $this->sendResponse('Products must be an array', 400);
-        }
+        $formData = $data['form_data'];
+        $mediaFiles = $data['files']['media'] ?? [];
 
-        error_log(json_encode($data));
-
-        $planId = $this->inventory->saveInventoryPlan($data);
-
-        if (!$planId) {
-            $this->sendResponse('Failed to create Inventory Plan', 400);
-        }
-        $this->sendResponse('success', 200, ['plan_id' => $planId]);
-    }
-
-    public function getinventoryTracker()
-    {
-        $this->authorizeRequest();
-
-        $inventory = $this->inventory->getInventoryTracker();
-
-        if (empty($inventory)) {
-            $this->sendResponse('Inventory not found', 404, []);
-        }
-        $this->sendResponse('success', 200, $inventory);
-    }
-
-    public function getWarehouseInventory($warehouseId)
-    {
-        $this->authorizeRequest();
-        $params = [
-            'page' => isset($_GET['page']) ? (int)$_GET['page'] : 1,
-            'page_size' => isset($_GET['page_size']) ? (int)$_GET['page_size'] : 10,
+        error_log(json_encode($formData));
+        $requiredFields = [
+            'name', 'department_id', 'category_id', 'manufacturer_id',
+            'date_received', 'expiry_date', 'quantity', 'unit_id'
         ];
 
-        error_log(json_encode($params));
+        $dataToValidate = array_intersect_key($formData, array_flip($requiredFields));
 
-        $inventory = $this->inventory->getWarehouseInventory($warehouseId, $params);
-
-        if (empty($inventory)) {
-            $this->sendResponse('Inventory not found', 404, []);
-        }
-        $this->sendResponse('success', 200, $inventory['data'], $inventory['meta']);
-    }
-
-    public function completeInventory()
-    {
-        $this->authorizeRequest();
-        $data = $this->getRequestData();
-
-        if (!isset($data['products']) || !is_array($data['products'])) {
-            $this->sendResponse('Invalid data format', 400);
-            return;
+        if (!$this->validateFields(...array_values($dataToValidate))) {
+            $this->sendResponse('Invalid input data', 400);
         }
 
-        error_log(json_encode($data['products']));
+        $mediaLinks = [];
+        if (!empty($mediaFiles)) {
+            $mediaLinks = $this->mediaHandler->handleMediaFiles($mediaFiles);
 
+            if ($mediaLinks === false) {
+                $this->sendResponse('Error uploading media files', 500);
+            }
 
-        $updated = $this->inventory->updateInventoryCount($data['products']);
-
-        if (!$updated) {
-            $this->sendResponse('Failed to update Inventory for some products', 400);
-            return;
         }
 
-        $this->sendResponse('Success', 200, $updated);
-    }
+        $result = $this->inventory->updateItem($id, $formData, $mediaLinks);
 
-
-
-    // Get Inventory Items Grouped by Status (e.g., Available, Depleting, KIV)
-    public function getInventoryByStatus($status)
-    {
-        $plans = $this->inventory->getAllInventoryPlans();
-        $filteredPlans = array_filter($plans, function ($plan) use ($status) {
-            return strtolower($plan['status']) === strtolower($status);
-        });
-
-        if ($plans) {
-            $this->sendResponse('success', 200, array_values($filteredPlans));
+        if ($result) {
+            $this->sendResponse('Success', 200, ['item_id' => $id]);
         } else {
-            $this->sendResponse('Inventory plan not found', 400);
+            $this->sendResponse('Failed to update item', 500);
         }
-
-    }
-
-
-
-
-
-    public function getInventoryPlan($id)
-    {
-        $plan = $this->inventory->getInventoryPlan($id);
-        if ($plan) {
-            $this->sendResponse('success', 200, $plan);
-        } else {
-            $this->sendResponse('Inventory Plan not found', 400);
-        }
-    }
-
-    // Update an Existing Inventory Plan
-    public function updateInventoryPlan($id, $data)
-    {
-        $updated = $this->inventory->update($id, $data);
-        if ($updated) {
-            $this->sendResponse('success', 200, $updated);
-        } else {
-            $this->sendResponse('Failed to update Inventory Plan', 400);
-        }
-    }
-
-    // Get Stock Levels and Progress for a Warehouse
-    public function getStockProgress($warehouseId)
-    {
-        $inventory = $this->inventory->getInventoryByWarehouse($warehouseId);
-        if ($inventory) {
-            $this->sendResponse('success', 200, array_values($inventory));
-        } else {
-            $this->sendResponse('Inventory not found', 400);
-        }
-    }
-
-    // Update Stock Levels and Progress Bar for a Product in a Warehouse
-    public function updateStockProgress($warehouseId, $productId, $quantity, $progress)
-    {
-        $updated = $this->inventory->updateStock($warehouseId, $productId, $quantity, $progress);
-        if ($updated) {
-            $this->sendResponse('Stock updated successfully', 200, $updated);
-
-        } else {
-            $this->sendResponse('Failed to update stock', 400);
-
-        }
-    }
-
-    //Search through Inventory plans
-    public function searchInventory($keyword)
-    {
-        $plans = $this->inventory->getAllInventoryPlans();
-        $filtered = array_filter($plans, function ($plan) use ($keyword) {
-            return stripos($plan['name'], $keyword) !== false;
-        });
-
-        if ($filtered) {
-            $this->sendResponse('Stock updated successfully', 200, array_values($filtered));
-
-        } else {
-            $this->sendResponse('Failed to update stock', 400);
-
-        }
-
-
     }
 
 

@@ -10,7 +10,7 @@ INSERT INTO roles (name) VALUES
 ('Accountant'),
 ('Marketing'),
 ('Finance'),
-('Customer Service'),;
+('Customer Service');
 
 
 
@@ -20,12 +20,10 @@ INSERT INTO users (name, email, password, role_id, avatar_url) VALUES
 ('Alice Johnson', 'alice@example.com', 'password123', 1, 'https://example.com/avatars/alice.jpg'),
 ('Bob Smith', 'bob@example.com', 'password123', 2, 'https://example.com/avatars/bob.jpg'),
 ('Charlie Brown', 'charlie@example.com', 'password123', 3, 'https://example.com/avatars/charlie.jpg'),
-('John Doe', 'john@example.com' 'hashedpassword1', 8, 'https://example.com/avatars/john.jpg'),
-('Jane Smith', 'jane@example.com' 'hashedpassword1', 5, 'https://example.com/avatars/jane.jpg'),
-('Mary Jones', 'mary@example.com' 'hashedpassword1', 6, 'https://example.com/avatars/mary.jpg'),
-('Peter Brown', 'peter@example.com' 'hashedpassword1', 7, 'https://example.com/avatars/peter.jpg'),
-
-;
+('John Doe', 'john@example.com', 'hashedpassword1', 8, 'https://example.com/avatars/john.jpg'),
+('Jane Smith', 'jane@example.com', 'hashedpassword1', 5, 'https://example.com/avatars/jane.jpg'),
+('Mary Jones', 'mary@example.com', 'hashedpassword1', 6, 'https://example.com/avatars/mary.jpg'),
+('Peter Brown', 'peter@example.com', 'hashedpassword1', 7, 'https://example.com/avatars/peter.jpg');
 
 -- Seed currencies
 INSERT INTO currencies (name, symbol) VALUES
@@ -52,7 +50,9 @@ INSERT INTO payment_terms (name, description) VALUES
 INSERT INTO departments (name, description) VALUES
 ('Snacks', 'Department for local and imported snacks'),
 ('Beverages', 'Department for drinks, tea, coffee, and juices'),
-('Fresh Produce', 'Department for fresh fruits and vegetables');
+('Dispatch Riders', 'Department for dispatch riders'),
+('Kitchen', 'Department for kitchenware and utensils'),
+('Chef', 'Department for chefs and kitchen staff');
 
 -- Seed branches
 INSERT INTO branches (name, description) VALUES
@@ -78,7 +78,9 @@ INSERT INTO vendor_categories (name, description) VALUES
 INSERT INTO item_manufacturers (name, website) VALUES
 ('Yaale Electronics', 'https://www.yaaleelectronics.com'),
 ('FarmFresh Nigeria', 'https://www.farmfresh.com.ng'),
-('Vono Furniture', 'https://www.vonofurniture.com.ng');
+('Vono Furniture', 'https://www.vonofurniture.com.ng'),
+('Naija Snacks', 'https://www.naijasnacks.com'),
+('Kitchen Essentials', 'https://www.kitchenessentials.com');
 
 -- Seed taxes
 INSERT INTO taxes (name, rate, description) VALUES
@@ -92,6 +94,10 @@ INSERT INTO units (name, abbreviation) VALUES
 ('liter', 'L'),
 ('box', 'box'),
 ('meter', 'm'),
+('carton', 'ctn'),
+('pack', 'pk'),
+('crate', 'crate'),
+('bottle', 'btl'),
 ('dozen', 'doz');
 
 -- Seed item manufacturers
@@ -101,30 +107,6 @@ INSERT INTO item_manufacturers (name, website) VALUES
 ('PZ Cussons', 'https://www.pzcussons.com'),
 ('Chi Limited', 'https://www.houseofchi.com'),
 ('Honeywell Flour Mills', 'https://www.honeywellflour.com');
-
-
-INSERT INTO items (name, description, price, department_id, manufacturer_id, category_id, unit_id, quantity, threshold_value, expiry_date, media)
-VALUES
-('Beef', 'Fresh beef cuts', 10.00, 1, 1, 1, 1, 100, 10, '2025-12-31', '["https://i.imgur.com/IwdmYjG.jpeg"]'),
-('Chicken', 'Fresh chicken cuts', 20.00, 2, 2, 2, 1, 50, 5, '2025-12-31', '["https://i.imgur.com/gnRz12P.png"]'),
-('Catfish', 'Fresh catfish fillets', 15.00, 3, 3, 1, 1, 100, 20, '2025-12-31', '["https://i.imgur.com/MxiMX9v.png"]'),
-('Pork', 'Fresh pork cuts', 12.00, 1, 1, 2, 1, 30, 3, '2025-12-31', '["https://i.imgur.com/dGGizfQ.png"]'),
-('Lamb', 'Fresh lamb cuts', 25.00, 2, 2, 1, 1, 10, 2, '2025-12-31', '["https://i.imgur.com/8TIGZM2.png"]'),
-('Salmon', 'Fresh salmon fillets', 30.00, 3, 3, 2, 1, 5, 10, '2025-12-31', '["https://i.imgur.com/ISOOCLs.png"]'),
-('Eggs', 'Farm fresh eggs', 5.00, 1, 1, 2, 1, 500, 50, '2025-12-31', '["https://i.imgur.com/G0mVY78.png"]'),
-('Cheese', 'Fresh cheese', 3.50, 2, 2, 1, 1, 200, 20, '2025-12-31', '["https://i.imgur.com/IVCT63j.png"]'),
-('Milk', 'Fresh cow milk', 2.00, 3, 3, 2, 1, 400, 40, '2025-12-31', '["https://i.imgur.com/5JXHh4d.png"]'),
-('Yogurt', 'Fresh yogurt', 1.80, 1, 1, 1, 1, 300, 30, '2025-12-31', '["https://i.imgur.com/NQTBB4c.jpeg"]'),
-('Bread', 'Freshly baked bread', 1.50, 1, 1, 1, 1, 5, 10, '2025-12-31', '["https://i.imgur.com/jA1O0Qb.png"]'),
-('Rice', 'Premium rice', 2.50, 1, 2, 2, 1, 250, 25, '2025-12-31', '["https://i.imgur.com/pwXSxkn.png"]'),
-('Pasta', 'Premium pasta', 1.00, 1, 3, 2, 1, 500, 50, '2025-12-31', '["https://i.imgur.com/ZLncFYM.png"]'),
-('Honey', 'Organic honey', 5.00, 3, 2, 2, 1, 100, 10, '2025-12-31', '["https://i.imgur.com/PheCs9s.png"]'),
-('Olive Oil', 'Extra virgin olive oil', 6.00, 1, 1, 1, 1, 80, 8, '2025-12-31', '["https://i.imgur.com/GEkayag.png"]'),
-('Vegetable Oil', 'Pure vegetable oil', 3.50, 2, 2, 1, 1, 200, 20, '2025-12-31', '["https://i.imgur.com/W5F6Gzv.png"]'),
-('Mustard', 'Organic mustard', 1.50, 3, 3, 2, 1, 150, 15, '2025-12-31', '["https://i.imgur.com/GwxyZSF.png"]'),
-('Ketchup', 'Organic ketchup', 1.50, 1, 1, 1, 1, 29, 30, '2025-12-31', '["https://i.imgur.com/JfO21Bm.png"]'),
-('Mayonnaise', 'Organic mayonnaise', 2.00, 3, 3, 2, 1, 100, 10, '2025-12-31', '["https://i.imgur.com/PSuuQmI.png"]'),
-('Soy Sauce', 'Premium soy sauce', 1.00, 2, 2, 2, 1, 150, 15, '2025-12-31', '["https://i.imgur.com/zMLrQYD.png"]');
 
 -- Seed vendors
 INSERT INTO vendors (
@@ -152,6 +134,91 @@ INSERT INTO vendors (
  'amakaokafor@lamblovers.ng', '0123456793', '08012345682', 
  '202 Sheep Street, Enugu, Nigeria', '{"youtube": "https://youtube.com/lamblovers"}', 
  1, 1, 2, 0.00);
+
+-- Seed vendor transactions
+INSERT INTO vendor_transactions
+(vendor_id, transaction_type, amount, notes)
+VALUES
+(1, 'credit', 500000.00, 'Initial deposit by Beef Supplies Ltd.'),
+(2, 'debit', 300000.00, 'Payment for supply of fresh beef'),
+(3, 'debit', 200000.00, 'Purchase of catfish processing equipment'),
+(4, 'debit', 450000.00, 'Purchase of meat processing equipment'),
+(5, 'credit', 100000.00, 'Payment for meat supplies');
+
+-- Seed data for items
+INSERT INTO items (name, description, price, unit_id, opening_stock, on_hand, threshold_value, media, category_id)
+VALUES
+('Beef', 'Fresh beef cuts', 10.00, 1, 100, 50, 10, '["https://i.imgur.com/IwdmYjG.jpeg"]', 1),
+('Chicken', 'Fresh chicken cuts', 20.00, 1, 500, 10, 50, '["https://i.imgur.com/gnRz12P.png"]', 1),
+('Catfish', 'Fresh catfish fillets', 15.00, 1, 100, 50, 50, '["https://i.imgur.com/MxiMX9v.png"]', 1),
+('Pork', 'Fresh pork cuts', 12.00, 1, 300, 0, 3, '["https://i.imgur.com/dGGizfQ.png"]', 1),
+('Lamb', 'Fresh lamb cuts', 25.00, 1, 100, 0, 2, '["https://i.imgur.com/8TIGZM2.png"]', 2),
+('Salmon', 'Fresh salmon fillets', 30.00, 1, 100, 1, 10, '["https://i.imgur.com/ISOOCLs.png"]',2),
+('Eggs', 'Farm fresh eggs', 5.00, 1, 500, 100, 50, '["https://i.imgur.com/G0mVY78.png"]', 2),
+('Cheese', 'Fresh cheese', 3.50, 1, 200, 21, 20, '["https://i.imgur.com/IVCT63j.png"]', 1),
+('Milk', 'Fresh cow milk', 2.00, 1, 400, 14, 40, '["https://i.imgur.com/5JXHh4d.png"]', 2),
+('Yogurt', 'Fresh yogurt', 1.80, 1, 300, 0, 30, '["https://i.imgur.com/NQTBB4c.jpeg"]', 1),
+('Bread', 'Freshly baked bread', 1.50, 1, 100, 1, 10, '["https://i.imgur.com/jA1O0Qb.png"]', 1),
+('Rice', 'Premium rice', 2.50, 1, 250, 100, 25, '["https://i.imgur.com/pwXSxkn.png"]', 2),
+('Pasta', 'Premium pasta', 1.00, 1, 500, 200, 50, '["https://i.imgur.com/ZLncFYM.png"]', 2),
+('Honey', 'Organic honey', 5.00, 1, 100, 50, 10, '["https://i.imgur.com/PheCs9s.png"]', 1),
+('Olive Oil', 'Extra virgin olive oil', 6.00, 1, 80, 18, 8, '["https://i.imgur.com/GEkayag.png"]', 2),
+('Vegetable Oil', 'Pure vegetable oil', 3.50, 1, 200, 2, 20, '["https://i.imgur.com/W5F6Gzv.png"]', 2),
+('Mustard', 'Organic mustard', 1.50, 1, 150, 0, 15, '["https://i.imgur.com/GwxyZSF.png"]', 1),
+('Ketchup', 'Organic ketchup', 1.50, 1, 200, 0, 30, '["https://i.imgur.com/JfO21Bm.png"]', 2),
+('Mayonnaise', 'Organic mayonnaise', 2.00, 1, 100, 0, 10, '["https://i.imgur.com/PSuuQmI.png"]', 1),
+('Soy Sauce', 'Premium soy sauce', 1.00, 1, 150, 5, 15, '["https://i.imgur.com/zMLrQYD.png"]', 2);
+
+-- Seed data for item_stocks
+INSERT INTO item_stocks (item_id, quantity, date_received, expiry_date)
+VALUES
+(1, 100, '2023-12-01', '2025-12-31'),
+(2, 500, '2023-12-01', '2025-12-31'),
+(3, 100, '2023-12-01', '2025-12-31'),
+(4, 300, '2023-12-01', '2025-12-31'),
+(5, 100, '2023-12-01', '2025-12-31'),
+(6, 100, '2023-12-01', '2025-12-31'),
+(7, 500, '2023-12-01', '2025-12-31'),
+(8, 200, '2023-12-01', '2025-12-31'),
+(9, 400, '2023-12-01', '2025-12-31'),
+(10, 300, '2023-12-01', '2025-12-31'),
+(11, 100, '2023-12-01', '2025-12-31'),
+(12, 250, '2023-12-01', '2025-12-31'),
+(13, 500, '2023-12-01', '2025-12-31'),
+(14, 100, '2023-12-01', '2025-12-31'),
+(15, 80, '2023-12-01', '2025-12-31'),
+(16, 200, '2023-12-01', '2025-12-31'),
+(17, 150, '2023-12-01', '2025-12-31'),
+(18, 200, '2023-12-01', '2025-12-31'),
+(19, 100, '2023-12-01', '2025-12-31'),
+(20, 150, '2023-12-01', '2025-12-31');
+
+-- Seed data for item_stock_vendors
+INSERT INTO item_stock_vendors (stock_id, vendor_id)
+VALUES
+(1, 1),
+(2, 2),
+(3, 3),
+(4, 4),
+(5, 5);
+
+-- Seed data for item_stock_departments
+INSERT INTO item_stock_departments (stock_id, department_id)
+VALUES
+(1, 1),
+(2, 2),
+(3, 3),
+(4, 4),
+(5, 5);
+
+-- Seed data for item_stock_manufacturers
+INSERT INTO item_stock_manufacturers (stock_id, manufacturer_id)
+VALUES
+(1, 1),
+(2, 2),
+(3, 3),
+(4, 4),
+(5, 5);
 
 -- Seed customers
 INSERT INTO customers (customer_type, salutation, first_name, last_name, display_name, company_name, email, work_phone, mobile_phone, address, social_media, balance)
@@ -183,16 +250,6 @@ VALUES
 (3, 'credit', 100000.00, 'Payment for supply of fresh catfish'),
 (4, 'debit', 45000.00, 'Purchase of fresh pork cuts'),
 (5, 'credit', 100000.00, 'Payment for supply of fresh lamb cuts');
-
--- Seed vendor transactions
-INSERT INTO vendor_transactions
-(vendor_id, transaction_type, amount, notes)
-VALUES
-(1, 'credit', 500000.00, 'Initial deposit by Beef Supplies Ltd.'),
-(2, 'debit', 300000.00, 'Payment for supply of fresh beef'),
-(3, 'debit', 200000.00, 'Purchase of catfish processing equipment'),
-(4, 'debit', 450000.00, 'Purchase of meat processing equipment'),
-(5, 'credit', 100000.00, 'Payment for meat supplies');
 
 -- Insert into purchase_orders
 INSERT INTO purchase_orders (

@@ -1,34 +1,40 @@
 -- Sales Orders and Items
-DROP TABLE IF EXISTS sales_order_items;
-DROP TABLE IF EXISTS sales_orders;
+DROP TABLE IF EXISTS sales_order_items CASCADE;
+DROP TABLE IF EXISTS sales_orders CASCADE;
 
 -- Purchase Orders and Items
-DROP TABLE IF EXISTS purchase_order_items;
-DROP TABLE IF EXISTS purchase_orders;
-
--- Customers and Vendors
-DROP TABLE IF EXISTS customer_transactions;
-DROP TABLE IF EXISTS vendor_transactions;
-DROP TABLE IF EXISTS customers;
-DROP TABLE IF EXISTS vendors;
+DROP TABLE IF EXISTS purchase_order_items CASCADE;
+DROP TABLE IF EXISTS purchase_orders CASCADE;
 
 -- Items and Related Entities
-DROP TABLE IF EXISTS items;
-DROP TABLE IF EXISTS item_manufacturers;
+DROP TABLE IF EXISTS item_stock_adjustments CASCADE;
+DROP TABLE IF EXISTS item_stock_vendors CASCADE;
+DROP TABLE IF EXISTS item_stock_manufacturers CASCADE;
+DROP TABLE IF EXISTS item_stock_departments CASCADE;
+DROP TABLE IF EXISTS item_stocks CASCADE;
+DROP TABLE IF EXISTS items CASCADE;
+DROP TABLE IF EXISTS item_manufacturers CASCADE;
+DROP TABLE IF EXISTS item_categories CASCADE;
+
+-- Customers and Vendors
+DROP TABLE IF EXISTS customer_transactions CASCADE;
+DROP TABLE IF EXISTS vendor_transactions CASCADE;
+DROP TABLE IF EXISTS customers CASCADE;
+DROP TABLE IF EXISTS vendors CASCADE;
 
 -- Supporting Entities
-DROP TABLE IF EXISTS taxes;
-DROP TABLE IF EXISTS units;
-DROP TABLE IF EXISTS payment_terms;
-DROP TABLE IF EXISTS payment_methods;
-DROP TABLE IF EXISTS vendor_categories;
-DROP TABLE IF EXISTS item_categories;
+DROP TABLE IF EXISTS taxes CASCADE;
+DROP TABLE IF EXISTS units CASCADE;
+DROP TABLE IF EXISTS payment_terms CASCADE;
+DROP TABLE IF EXISTS payment_methods CASCADE;
+DROP TABLE IF EXISTS vendor_categories CASCADE;
 
 -- Branches and Departments
-DROP TABLE IF EXISTS branches;
-DROP TABLE IF EXISTS departments;
+DROP TABLE IF EXISTS branches CASCADE;
+DROP TABLE IF EXISTS departments CASCADE;
 
 -- Core Entities
-DROP TABLE IF EXISTS currencies;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS currencies CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS roles CASCADE;
+
