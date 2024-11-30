@@ -138,21 +138,20 @@ class Inventory
             SELECT 
                 i.id AS item_id, 
                 i.name AS item_name, 
-                ic.name AS category, 
-                d.name AS department,
+                STRING_AGG(DISTINCT ic.name, ', ') AS category,
+                STRING_AGG(DISTINCT d.name, ', ') AS department,
                 i.threshold_value, 
-                its.expiry_date, 
+                MAX(its.expiry_date) AS expiry_date,
                 i.opening_stock, 
                 COALESCE(SUM(its.quantity), 0) AS remaining_stock,
                 i.media
-            FROM items i
-            LEFT JOIN item_stocks its ON i.id = its.item_id
+            FROM item_stocks its
+            JOIN items i ON its.item_id = i.id
             LEFT JOIN item_stock_departments isd ON its.id = isd.stock_id
             LEFT JOIN departments d ON isd.department_id = d.id
             LEFT JOIN item_categories ic ON i.category_id = ic.id
-            WHERE i.id = :itemId
-            GROUP BY i.id, i.name, ic.name, d.name, i.threshold_value,
-            its.expiry_date, i.opening_stock, i.media
+            WHERE its.item_id = :itemId
+            GROUP BY i.id, i.name, i.threshold_value, i.opening_stock, i.media
         ";
 
         $stmt = $this->db->prepare($sql);

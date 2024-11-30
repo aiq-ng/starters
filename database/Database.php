@@ -14,11 +14,19 @@ class Database
 
     private function __construct()
     {
-        $this->host = getenv('DB_HOST');
-        $this->db_name = getenv('DB_NAME');
-        $this->user = getenv('DB_USER');
-        $this->password = getenv('DB_PASSWORD');
-        $this->port = getenv('DB_PORT');
+        if (getenv('ENV') === 'dev') {
+            $this->host = '127.0.0.1';
+            $this->db_name = 'startersdb';
+            $this->user = 'postgres';
+            $this->password = 'postgres';
+            $this->port = '5432';
+        } else {
+            $this->host = getenv('DB_HOST');
+            $this->db_name = getenv('DB_NAME');
+            $this->user = getenv('DB_USER');
+            $this->password = getenv('DB_PASSWORD');
+            $this->port = getenv('DB_PORT');
+        }
 
         try {
             // Create the PDO connection string
