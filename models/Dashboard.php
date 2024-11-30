@@ -139,15 +139,18 @@ class Dashboard
     public function getLowQuantityStock()
     {
         $query = "
-			SELECT 
-				i.id, 
-				i.name, 
-				i.media,
-				CONCAT(i.quantity, ' ', u.name) AS remaining_quantity 
-			FROM items i
-			LEFT JOIN units u ON i.unit_id = u.id
-			WHERE i.quantity < i.threshold_value
-		";
+            SELECT 
+                i.id, 
+                i.name, 
+                i.media,
+                CONCAT(COALESCE(SUM(item_stocks.quantity), 0), ' ', u.abbreviation) AS remaining_quantity 
+            FROM items i
+            LEFT JOIN item_stocks ON i.id = item_stocks.item_id
+            LEFT JOIN units u ON i.unit_id = u.id
+            WHERE i.availability = 'low stock'
+            GROUP BY 
+                i.id, i.name, i.media, u.abbreviation
+        ";
 
         $stmt = $this->db->prepare($query);
 
