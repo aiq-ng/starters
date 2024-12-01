@@ -51,6 +51,7 @@ $routes = [
         '/inventory' => [$inventoryController, 'index'],
         '/inventory/items/(\d+)' => [$inventoryController, 'showItem'],
         '/purchases/orders/invoice/(\d+)' => [$tradeController, 'getPurchaseInvoice'],
+        '/sales/orders/invoice/(\d+)' => [$tradeController, 'getSalesInvoice'],
         '/inventory/tracker' => [$inventoryController, 'inventoryTracker'],
         '/inventory/:id' => [$inventoryController, 'getInventoryPlan'],
         '/inventory/stock' => [$inventoryController, 'getStockProgress'],

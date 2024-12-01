@@ -348,6 +348,9 @@ CREATE TABLE sales_orders (
             ELSE 'SLS-' || LPAD(id::TEXT, 3, '0')
         END
     ) STORED,
+    invoice_number VARCHAR(50) GENERATED ALWAYS AS (
+        'INV-' || LPAD(id::TEXT, 5, '0')
+    ) STORED,
     customer_id INT REFERENCES customers(id) ON DELETE SET NULL,
     payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
     payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,

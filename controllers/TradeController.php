@@ -126,4 +126,18 @@ class TradeController extends BaseController
             $this->sendResponse('Invoice not found', 404);
         }
     }
+
+    public function getSalesInvoice($salesId)
+    {
+        $this->authorizeRequest();
+
+        $invoice = $this->purchase->getInvoiceDetails($salesId);
+
+        if ($invoice) {
+            $this->sendResponse('success', 200, $invoice);
+        } else {
+            $this->sendResponse('Invoice not found', 404);
+        }
+    }
+
 }

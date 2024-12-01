@@ -186,24 +186,29 @@ class Sale
             RETURNING id;
         ";
 
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([
-            'order_type' => $data['order_type'],
-            'order_title' => $data['order_title'],
-            'payment_term_id' => $data['payment_term_id'],
-            'payment_method_id' => $data['payment_method_id'],
-            'customer_id' => $data['customer_id'] ?? null,
-            'delivery_option' => $data['delivery_option'],
-            'assigned_driver_id' => $data['assigned_driver_id'],
-            'delivery_date' => $data['delivery_date'],
-            'additional_note' => $data['additional_note'],
-            'customer_note' => $data['customer_note'],
-            'discount' => $data['discount'],
-            'delivery_charge' => $data['delivery_charge'],
-            'total' => $data['total']
-        ]);
+        try {
+            $stmt = $this->db->prepare($query);
 
-        return $stmt->fetchColumn();
+            $stmt->execute([
+                'order_type' => $data['order_type'],
+                'order_title' => $data['order_title'],
+                'payment_term_id' => $data['payment_term_id'],
+                'payment_method_id' => $data['payment_method_id'],
+                'customer_id' => $data['customer_id'] ?? null,
+                'delivery_option' => $data['delivery_option'],
+                'assigned_driver_id' => $data['assigned_driver_id'],
+                'delivery_date' => $data['delivery_date'],
+                'additional_note' => $data['additional_note'],
+                'customer_note' => $data['customer_note'],
+                'discount' => $data['discount'],
+                'delivery_charge' => $data['delivery_charge'],
+                'total' => $data['total']
+            ]);
+
+            return $stmt->fetchColumn();
+        } catch (\PDOException $e) {
+            throw new \Exception("Failed to insert sales order: " . $e->getMessage());
+        }
     }
 
     private function insertSalesOrderItem($salesOrderId, $items)
@@ -225,16 +230,48 @@ class Sale
         }
     }
 
-    private function logActivity($userID)
+    public function getInvoiceDetails($salesOrderId)
     {
-        $activityQuery = "
-			INSERT INTO inventory_activities (inventory_plan_id, user_id, action)
-			VALUES (NULL, :user_id, 'sale');
-		";
+        $query = "
+            SELECT so.id,
+                so.invoice_number,
+                so.order_title,
+                so.order_type,
+                c.name AS customer_name,
+                so.discount,
+                so.delivery_charge,
+                so.total,
+                json_agg(
+                    json_build_object(
+                        'item_id', soi.item_id,
+                        'quantity', soi.quantity,
+                        'price', soi.price,
+                        'total', soi.total
+                    )
+                ) AS items
+            FROM sales_orders so
+            LEFT JOIN customers c ON so.customer_id = c.id
+            LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
+            WHERE so.id = :sales_order_id
+            GROUP BY so.id, c.name, so.invoice_number, so.order_title, so.order_type, 
+                     so.discount, so.delivery_charge, so.total;
+        ";
 
-        $activityStatement = $this->db->prepare($activityQuery);
-        $activityStatement->bindValue(':user_id', $userID, \PDO::PARAM_INT);
-        $activityStatement->execute();
+        $stmt = $this->db->prepare($query);
+
+        try {
+            $stmt->execute([':sales_order_id' => $salesOrderId]);
+
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if ($result) {
+                $result['items'] = json_decode($result['items'], true);
+                return $result;
+            }
+
+        } catch (\Exception $e) {
+            throw new \Exception("Failed to fetch invoice details: " . $e->getMessage());
+        }
     }
 
 }
