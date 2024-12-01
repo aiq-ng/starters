@@ -18,7 +18,8 @@ class Purchase
         $page = $filters['page'] ?? 1;
         $pageSize = $filters['page_size'] ?? 10;
         $query = "
-            SELECT 
+            SELECT
+                po.id, 
                 po.purchase_order_number, 
                 CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name, 
                 po.created_at::DATE AS order_date, 
@@ -133,7 +134,7 @@ class Purchase
             $this->insertPurchaseOrderItems($purchaseOrderId, $data['items']);
 
             $this->db->commit();
-            return $purchaseOrderId;
+            return $this->getInvoiceDetails($purchaseOrderId);
         } catch (\Exception $e) {
             $this->db->rollBack();
             throw $e;
@@ -190,18 +191,43 @@ class Purchase
         }
     }
 
-    private function logInventoryActivity($userId)
+    public function getInvoiceDetails($purchaseOrderId)
     {
+        $query = "
+        SELECT po.id,
+            po.subject,
+            po.invoice_number,
+            po.purchase_order_number, 
+            po.reference_number,
+            po.discount,
+            po.shipping_charge,
+            po.total,
+            po.created_at::DATE AS order_date,
+            po.delivery_date,
+            json_agg(
+                json_build_object(
+                    'item_id', poi.item_id,
+                    'quantity', poi.quantity,
+                    'price', poi.price,
+                    'tax_id', poi.tax_id
+                )
+            ) AS items
+        FROM purchase_orders po
+        LEFT JOIN purchase_order_items poi ON poi.purchase_order_id = po.id
+        WHERE po.id = :purchase_order_id
+        GROUP BY po.id, po.purchase_order_number, po.reference_number;
+    ";
 
-        $activityQuery = "
-            INSERT INTO inventory_activities (inventory_plan_id, user_id, action)
-            VALUES (NULL, :user_id, 'purchase');
-        ";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([':purchase_order_id' => $purchaseOrderId]);
 
-        $activityStmt = $this->db->prepare($activityQuery);
-        $activityStmt->execute([
-            ':user_id' => $userId,
-        ]);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!empty($result['items'])) {
+            $result['items'] = json_decode($result['items'], true);
+        }
+
+        return $result;
     }
 
 }

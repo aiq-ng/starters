@@ -258,18 +258,24 @@ INSERT INTO purchase_orders (
     discount, shipping_charge, total, status
 )
 VALUES
-(1, 1, '2024-11-20', 3, 
+(1, 1, '2024-12-20', 3, 
     'Bulk Purchase of Food Items', 'Ensure quality items', 
-    'Goods must be delivered in good condition', 1000, 5000, 150000, 'pending'),
-(2, 2, '2024-11-15', 4, 
+    'Goods must be delivered in good condition', 100, 5000, 150000, 'draft'),
+(2, 2, '2024-12-15', 4, 
     'Monthly Grocery Restock', 'Deliver to Abuja branch warehouse', 
-    'Invoice must include all taxes', 2000, 2500, 200000, 'processing'),
+    'Invoice must include all taxes', 200, 2500, 200000, 'sent'),
 (3, 3, '2024-11-10', 3, 
     'Catering Supplies', 'Urgent delivery required', 
-    'Late delivery will incur penalties', 1500, 1000, 1120000, 'completed'),
+    'Late delivery will incur penalties', 150, 1000, 1120000, 'received'),
 (3, 3, '2024-10-11', 2, 
     'Bulk Purchase of Food Items', 'Ensure quality items', 
-    'Goods must be delivered in good condition', 1000, 5000, 150000, 'completed');
+    'Goods must be delivered in good condition', 100, 5000, 150000, 'paid'),
+(4, 1, '2024-11-25', 3, 
+    'Monthly Meat Supplies', 'Deliver to Lagos branch warehouse', 
+    'Invoice must include all taxes', 200, 2500, 200000, 'overdue'),
+(5, 2, '2024-11-30', 3, 
+    'Bulk Purchase of Food Items', 'Ensure quality items', 
+    'Goods must be delivered in good condition', 100, 5000, 150000, 'issued');
 
 -- Insert into purchase_order_items
 INSERT INTO purchase_order_items (

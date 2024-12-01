@@ -306,6 +306,9 @@ CREATE TABLE purchase_orders (
     reference_number VARCHAR(50) GENERATED ALWAYS AS (
         'REF' || LPAD(id::TEXT, 5, '0')
     ) STORED,
+    invoice_number VARCHAR(50) GENERATED ALWAYS AS (
+        'INV-' || LPAD(id::TEXT, 5, '0')
+    ) STORED,
     delivery_date DATE NOT NULL,
     payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
     subject TEXT,
@@ -314,8 +317,8 @@ CREATE TABLE purchase_orders (
     discount DECIMAL(10, 2) DEFAULT 0,
     shipping_charge DECIMAL(10, 2) DEFAULT 0,
     total DECIMAL(10, 2) DEFAULT 0,
-    status VARCHAR(50) DEFAULT 'pending' 
-        CHECK (status IN ('pending', 'processing', 'completed', 'cancelled')),
+    status VARCHAR(50) DEFAULT 'issued' 
+        CHECK (status IN ('draft', 'sent', 'received', 'paid', 'overdue', 'cancelled', 'issued')),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -399,8 +402,25 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION set_status_to_overdue()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.delivery_date < CURRENT_DATE AND NEW.status NOT IN ('paid', 'cancelled') THEN
+        NEW.status := 'overdue';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
 CREATE TRIGGER trigger_update_item_availability
 AFTER INSERT OR UPDATE OR DELETE
 ON item_stocks
 FOR EACH ROW
 EXECUTE FUNCTION update_item_availability();
+
+CREATE TRIGGER check_overdue_status
+BEFORE UPDATE ON purchase_orders
+FOR EACH ROW
+EXECUTE FUNCTION set_status_to_overdue();
+

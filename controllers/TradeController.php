@@ -59,10 +59,10 @@ class TradeController extends BaseController
 
         $data['user_id'] = $_SESSION['user_id'];
 
-        $purchaseId = $this->purchase->createPurchase($data);
+        $invoice = $this->purchase->createPurchase($data);
 
-        if ($purchaseId) {
-            $this->sendResponse('success', 201, ['purchase_id' => $purchaseId]);
+        if ($invoice) {
+            $this->sendResponse('success', 201, $invoice);
         } else {
             $this->sendResponse('Failed to create purchase', 500);
         }
@@ -112,5 +112,18 @@ class TradeController extends BaseController
             $this->sendResponse('Failed to create sale', 500);
         }
         $this->sendResponse('success', 201, ['sale_id' => $saleId]);
+    }
+
+    public function getPurchaseInvoice($purchaseId)
+    {
+        $this->authorizeRequest();
+
+        $invoice = $this->purchase->getInvoiceDetails($purchaseId);
+
+        if ($invoice) {
+            $this->sendResponse('success', 200, $invoice);
+        } else {
+            $this->sendResponse('Invoice not found', 404);
+        }
     }
 }

@@ -50,6 +50,7 @@ $routes = [
         '/products/(\d+)' => [$productController, 'show'],
         '/inventory' => [$inventoryController, 'index'],
         '/inventory/items/(\d+)' => [$inventoryController, 'showItem'],
+        '/purchases/orders/invoice/(\d+)' => [$tradeController, 'getPurchaseInvoice'],
         '/inventory/tracker' => [$inventoryController, 'inventoryTracker'],
         '/inventory/:id' => [$inventoryController, 'getInventoryPlan'],
         '/inventory/stock' => [$inventoryController, 'getStockProgress'],
