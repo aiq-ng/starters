@@ -50,7 +50,7 @@ class Dashboard
             SELECT 
                 COALESCE((SELECT SUM(total) 
                           FROM sales_orders 
-                          WHERE status IN ('paid') 
+                          WHERE status IN ('completed') 
                           AND DATE_PART('month', created_at) = :month
                           AND DATE_PART('year', created_at) = :year), 0) AS total_income,
                 COALESCE((SELECT SUM(total) 
@@ -179,7 +179,7 @@ class Dashboard
             SELECT 
                 i.name AS item_name,
                 CONCAT(SUM(poi.quantity), '(', u.name, ')') AS purchased_quantity,
-                i.quantity - SUM(poi.quantity) AS remaining_quantity,
+                i.opening_stock - SUM(poi.quantity) AS remaining_quantity,
                 SUM(poi.quantity * poi.price) AS amount
             FROM
                 purchase_order_items poi
@@ -207,7 +207,7 @@ class Dashboard
         }
 
         $query .= "
-            GROUP BY i.id, i.name, i.quantity, u.name
+            GROUP BY i.id, i.name, i.opening_stock, u.name
             ORDER BY purchased_quantity DESC
             LIMIT :pageSize OFFSET :offset
         ";
@@ -248,7 +248,7 @@ class Dashboard
             SELECT 
                 i.name AS item_name,
                 SUM(soi.quantity) AS sold_quantity,
-                i.quantity - SUM(soi.quantity) AS remaining_quantity,
+                i.opening_stock - SUM(soi.quantity) AS remaining_quantity,
                 SUM(soi.quantity * soi.price) AS amount
             FROM
                 sales_order_items soi
@@ -276,7 +276,7 @@ class Dashboard
         }
 
         $query .= "
-            GROUP BY i.id, i.name, i.quantity, u.name
+            GROUP BY i.id, i.name, i.opening_stock, u.name
             ORDER BY sold_quantity DESC
             LIMIT :pageSize OFFSET :offset
         ";
