@@ -141,8 +141,9 @@ class InventoryController extends BaseController
 
         $data = $this->getRequestData();
 
-        $data['user_id'] = $data['user_id'] ?? $_SESSION['user_id'];
-        $data['user_department_id'] = $data['user_department_id'] ?? $data['department_id'];
+        $data['manager_id'] = $_SESSION['user_id'];
+        $data['source_id'] = $data['collector_id'] ?? $data['vendor_id'];
+        $data['source_department_id'] = $data['collector_department_id'] ?? $data['receiving_department_id'];
 
         $result = $this->inventory->adjustStock($id, $data);
 
@@ -152,6 +153,18 @@ class InventoryController extends BaseController
             $this->sendResponse('Failed to adjust item', 500);
         }
 
+    }
+
+    public function inventoryHistory($id)
+    {
+        $this->authorizeRequest();
+
+        $history = $this->inventory->getAdjustmentHistory($id);
+
+        if (empty($history)) {
+            $this->sendResponse('History not found', 404, []);
+        }
+        $this->sendResponse('success', 200, $history);
     }
 
 

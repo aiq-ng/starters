@@ -143,7 +143,8 @@ class Dashboard
                 i.id, 
                 i.name, 
                 i.media,
-                CONCAT(COALESCE(SUM(item_stocks.quantity), 0), ' ', u.abbreviation) AS remaining_quantity 
+            CONCAT(COALESCE(SUM(item_stocks.quantity), 0), ' ', u.abbreviation) AS remaining_quantity,
+            i.availability
             FROM items i
             LEFT JOIN item_stocks ON i.id = item_stocks.item_id
             LEFT JOIN units u ON i.unit_id = u.id
@@ -180,6 +181,7 @@ class Dashboard
                 i.name AS item_name,
                 CONCAT(SUM(poi.quantity), '(', u.name, ')') AS purchased_quantity,
                 i.opening_stock - SUM(poi.quantity) AS remaining_quantity,
+                poi.price AS price,
                 SUM(poi.quantity * poi.price) AS amount
             FROM
                 purchase_order_items poi
@@ -207,7 +209,7 @@ class Dashboard
         }
 
         $query .= "
-            GROUP BY i.id, i.name, i.opening_stock, u.name
+            GROUP BY i.id, i.name, i.opening_stock, u.name, poi.price
             ORDER BY purchased_quantity DESC
             LIMIT :pageSize OFFSET :offset
         ";
@@ -249,6 +251,7 @@ class Dashboard
                 i.name AS item_name,
                 SUM(soi.quantity) AS sold_quantity,
                 i.opening_stock - SUM(soi.quantity) AS remaining_quantity,
+                soi.price AS price,
                 SUM(soi.quantity * soi.price) AS amount
             FROM
                 sales_order_items soi
@@ -276,7 +279,7 @@ class Dashboard
         }
 
         $query .= "
-            GROUP BY i.id, i.name, i.opening_stock, u.name
+            GROUP BY i.id, i.name, i.opening_stock, u.name, soi.price
             ORDER BY sold_quantity DESC
             LIMIT :pageSize OFFSET :offset
         ";

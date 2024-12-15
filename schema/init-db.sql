@@ -243,8 +243,11 @@ CREATE TABLE item_stock_manufacturers (
 CREATE TABLE item_stock_adjustments (
     id SERIAL PRIMARY KEY,
     stock_id INT REFERENCES item_stocks(id) ON DELETE CASCADE,
-    user_id INT REFERENCES users(id) ON DELETE SET NULL,
-    user_department_id INT REFERENCES departments(id) ON DELETE SET NULL,
+    manager_id INT REFERENCES users(id) ON DELETE SET NULL,
+    source_type VARCHAR(10) NOT NULL 
+        CHECK (source_type IN ('user', 'vendor')),
+    source_id INT NOT NULL,
+    source_department_id INT REFERENCES departments(id) ON DELETE SET NULL,
     quantity INT NOT NULL,
     adjustment_type VARCHAR(50) 
         CHECK (adjustment_type IN ('addition', 'subtraction')),
@@ -252,6 +255,16 @@ CREATE TABLE item_stock_adjustments (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Comments
+CREATE TABLE comments (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE SET NULL,
+    parent_id INT REFERENCES comments(id) ON DELETE CASCADE,
+    entity_id INT NOT NULL,
+    entity_type VARCHAR(50) NOT NULL,
+    comment TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
 
 -- Customers
 CREATE TABLE customers (

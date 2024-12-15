@@ -15,6 +15,7 @@ DROP TABLE IF EXISTS item_stocks CASCADE;
 DROP TABLE IF EXISTS items CASCADE;
 DROP TABLE IF EXISTS item_manufacturers CASCADE;
 DROP TABLE IF EXISTS item_categories CASCADE;
+DROP TABLE IF EXISTS comments CASCADE;
 
 -- Customers and Vendors
 DROP TABLE IF EXISTS customer_transactions CASCADE;

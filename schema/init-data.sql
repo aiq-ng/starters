@@ -323,3 +323,36 @@ VALUES
 (3, 3, 2, 25000),
 (4, 1, 1, 30000),
 (4, 2, 1, 10000);
+
+-- Insert into item_stock_adjustments
+INSERT INTO item_stock_adjustments (
+    stock_id, manager_id, source_type, source_id, source_department_id, 
+    quantity, adjustment_type, description, created_at
+)
+VALUES
+(1, 1, 'vendor', 1, 1, 20, 'addition', 'Restocked beef inventory', '2024-01-10'),
+(2, 1, 'vendor', 2, 1, 10, 'addition', 'Restocked chicken inventory', '2024-01-12'),
+(3, 1, 'vendor', 3, 2, 15, 'addition', 'Restocked catfish inventory', '2024-01-15'),
+(4, 1, 'user', 1, 3, 5, 'subtraction', 'Sold pork cuts', '2024-01-18'),
+(5, 1, 'vendor', 2, 1, 10, 'addition', 'Restocked lamb inventory', '2024-01-20'),
+(6, 1, 'user', 3, 2, 5, 'subtraction', 'Sold salmon fillets', '2024-01-22'),
+(7, 1, 'vendor', 1, 3, 50, 'addition', 'Restocked eggs', '2024-01-24'),
+(8, 1, 'vendor', 2, 2, 10, 'addition', 'Restocked cheese', '2024-01-25'),
+(9, 1, 'user', 3, 1, 15, 'subtraction', 'Sold milk', '2024-01-26'),
+(10, 1, 'vendor', 1, 2, 20, 'addition', 'Restocked yogurt', '2024-01-28');
+
+
+-- Insert into item_stock_transfers
+INSERT INTO comments (user_id, parent_id, entity_id, entity_type, comment, created_at)
+VALUES
+(1, NULL, 1, 'item_stock_adjustment', 'Great quality beef!', '2024-01-10'),
+(2, NULL, 2, 'item_stock_adjustment', 'Chicken was fresh and tasty.', '2024-01-12'),
+(3, NULL, 3, 'item_stock_adjustment', 'Catfish fillets were amazing.', '2024-01-15'),
+(1, 1, 1, 'item_stock_adjustment', 'I agree, very fresh!', '2024-01-16'),
+(2, NULL, 4, 'item_stock_adjustment', 'Pork cuts were decent.', '2024-01-18'),
+(3, NULL, 5, 'item_stock_adjustment', 'Lamb was tender and juicy.', '2024-01-20'),
+(1, NULL, 6, 'item_stock_adjustment', 'Salmon was okay.', '2024-01-22'),
+(2, NULL, 7, 'item_stock_adjustment', 'Eggs are always good.', '2024-01-24'),
+(3, NULL, 8, 'item_stock_adjustment', 'Cheese was fresh.', '2024-01-25'),
+(1, NULL, 9, 'item_stock_adjustment', 'Milk was great!', '2024-01-26');
+

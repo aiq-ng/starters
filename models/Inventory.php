@@ -3,6 +3,7 @@
 namespace Models;
 
 use Database\Database;
+use Services\Utils;
 
 class Inventory
 {
@@ -435,9 +436,9 @@ class Inventory
                 $query = "
                     INSERT INTO item_stock_adjustments
                     (stock_id, quantity, adjustment_type,
-                    description, user_id, user_department_id)
+                    description, source_id, source_department_id, manager_id, source_type)
                     VALUES (:stockId, :quantity, :adjustmentType,
-                    :description, :user_id, :user_department_id)
+                    :description, :source_id, :source_department_id, :manager_id, 'vendor')
                 ";
                 $stmt = $this->db->prepare($query);
 
@@ -445,8 +446,9 @@ class Inventory
                 $stmt->bindValue(':quantity', $quantity, \PDO::PARAM_INT);
                 $stmt->bindValue(':adjustmentType', $data['adjustment_type'], \PDO::PARAM_STR);
                 $stmt->bindValue(':description', $data['description'], \PDO::PARAM_STR);
-                $stmt->bindValue(':user_id', $data['user_id'], \PDO::PARAM_INT);
-                $stmt->bindValue(':user_department_id', $data['user_department_id'], \PDO::PARAM_INT);
+                $stmt->bindValue(':source_id', $data['source_id'], \PDO::PARAM_INT);
+                $stmt->bindValue(':source_department_id', $data['source_department_id'], \PDO::PARAM_INT);
+                $stmt->bindValue(':manager_id', $data['manager_id'], \PDO::PARAM_INT);
 
                 if (!$stmt->execute()) {
                     throw new \Exception('Failed to log stock adjustment for addition.');
@@ -497,17 +499,18 @@ class Inventory
                     $logSql = "
                         INSERT INTO item_stock_adjustments
                         (stock_id, quantity, adjustment_type,
-                        description, user_id, user_department_id)
+                        description, source_id, source_department_id, manager_id, source_type)
                         VALUES (:stockId, :quantity, :adjustmentType,
-                        :description, :user_id, :user_department_id)
+                        :description, :source_id, :source_department_id, :manager_id, 'user')
                     ";
                     $logStmt = $this->db->prepare($logSql);
                     $logStmt->bindValue(':stockId', $stockId, \PDO::PARAM_INT);
                     $logStmt->bindValue(':quantity', $subtractAmount, \PDO::PARAM_INT);
                     $logStmt->bindValue(':adjustmentType', $data['adjustment_type'], \PDO::PARAM_STR);
                     $logStmt->bindValue(':description', $data['description'], \PDO::PARAM_STR);
-                    $logStmt->bindValue(':user_id', $data['user_id'], \PDO::PARAM_INT);
-                    $logStmt->bindValue(':user_department_id', $data['user_department_id'], \PDO::PARAM_INT);
+                    $logStmt->bindValue(':source_id', $data['source_id'], \PDO::PARAM_INT);
+                    $logStmt->bindValue(':source_department_id', $data['source_department_id'], \PDO::PARAM_INT);
+                    $logStmt->bindValue(':manager_id', $data['manager_id'], \PDO::PARAM_INT);
 
                     if (!$logStmt->execute()) {
                         throw new \Exception('Failed to log stock adjustment.');
@@ -542,5 +545,78 @@ class Inventory
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+
+    public function getAdjustmentHistory($itemId)
+    {
+        $sql = "
+            SELECT 
+                isa.id,
+                isa.adjustment_type,
+                manager.name AS manager,
+                d.name AS department,
+                CASE 
+                    WHEN isa.adjustment_type = 'addition' THEN isa.quantity
+                    ELSE NULL
+                END AS added_quantity,
+                CASE 
+                    WHEN isa.adjustment_type = 'subtraction' THEN isa.quantity
+                    ELSE NULL
+                END AS reduced_quantity,
+                CASE 
+                    WHEN isa.source_type = 'user' THEN collector.name
+                    ELSE NULL
+                END AS collector,
+                CASE
+                    WHEN isa.source_type = 'vendor' THEN CONCAT(
+                        vendors.salutation, ' ', vendors.first_name, ' ',
+                        vendors.last_name
+                    )
+                    ELSE NULL
+                END AS vendor,
+                isa.description,
+                isa.created_at,
+                COALESCE(
+                    json_agg(
+                        DISTINCT jsonb_strip_nulls(
+                            jsonb_build_object(
+                                'id', c.id,
+                                'user_id', c.user_id,
+                                'parent_id', c.parent_id,
+                                'comment', c.comment,
+                                'created_at', c.created_at
+                            )
+                        )
+                    ) FILTER (WHERE c.id IS NOT NULL), '[]'::json
+                ) AS comments            
+            FROM item_stock_adjustments isa
+            JOIN users manager ON isa.manager_id = manager.id
+            LEFT JOIN users collector ON isa.source_type = 'user' AND isa.source_id = collector.id
+            LEFT JOIN departments d ON isa.source_department_id = d.id
+            LEFT JOIN vendors ON isa.source_type = 'vendor' AND isa.source_id = vendors.id
+            LEFT JOIN comments c ON c.entity_id = isa.id AND c.entity_type = 'item_stock_adjustment'
+            WHERE isa.stock_id IN (
+                SELECT id
+                FROM item_stocks
+                WHERE item_id = :itemId
+            )
+            GROUP BY isa.id, manager.name, d.name, vendors.salutation,
+                vendors.first_name, vendors.last_name, collector.name
+            ORDER BY isa.created_at DESC
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':itemId', $itemId, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        foreach ($data as &$row) {
+            $row['comments'] = json_decode($row['comments'], true);
+        }
+
+        $filteredData = Utils::filterOutNull($data);
+
+        return $filteredData;
+    }
 
 }

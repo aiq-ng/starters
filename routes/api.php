@@ -49,6 +49,7 @@ $routes = [
         '/sales/orders' => [$tradeController, 'saleIndex'],
         '/products/(\d+)' => [$productController, 'show'],
         '/inventory' => [$inventoryController, 'index'],
+        '/inventory/history/(\d+)' => [$inventoryController, 'inventoryHistory'],
         '/inventory/items/(\d+)' => [$inventoryController, 'showItem'],
         '/purchases/orders/invoice/(\d+)' => [$tradeController, 'getPurchaseInvoice'],
         '/sales/orders/invoice/(\d+)' => [$tradeController, 'getSalesInvoice'],
