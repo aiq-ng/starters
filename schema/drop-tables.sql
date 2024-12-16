@@ -11,6 +11,7 @@ DROP TABLE IF EXISTS item_stock_adjustments CASCADE;
 DROP TABLE IF EXISTS item_stock_vendors CASCADE;
 DROP TABLE IF EXISTS item_stock_manufacturers CASCADE;
 DROP TABLE IF EXISTS item_stock_departments CASCADE;
+DROP TABLE IF EXISTS item_stock_branches CASCADE;
 DROP TABLE IF EXISTS item_stocks CASCADE;
 DROP TABLE IF EXISTS items CASCADE;
 DROP TABLE IF EXISTS item_manufacturers CASCADE;

@@ -68,6 +68,19 @@ class TradeController extends BaseController
         }
     }
 
+    public function markPurchaseAsReceived($purchaseId)
+    {
+        $this->authorizeRequest();
+
+        $result = $this->purchase->markAsReceived($purchaseId);
+
+        if ($result) {
+            $this->sendResponse('success', 200);
+        } else {
+            $this->sendResponse('Failed to mark purchase as received', 500);
+        }
+    }
+
     public function saleIndex()
     {
         $this->authorizeRequest();

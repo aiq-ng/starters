@@ -70,6 +70,7 @@ $routes = [
         '/customers' => [$customerController, 'create'],
         '/vendors' => [$vendorController, 'create'],
         '/purchases/orders' => [$tradeController, 'createPurchase'],
+        '/purchases/orders/received/(\d+)' => [$tradeController, 'markPurchaseAsReceived'],
         '/sales/orders' => [$tradeController, 'createSale'],
         '/inventory/items' => [$inventoryController, 'createItem'],
         '/inventory/completed' => [$inventoryController, 'completeInventory'],

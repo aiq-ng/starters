@@ -213,6 +213,7 @@ CREATE TABLE item_stocks (
     quantity INT DEFAULT 0 NOT NULL,
     date_received DATE DEFAULT CURRENT_DATE,
     expiry_date DATE,
+    branch_id INT REFERENCES branches(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -238,6 +239,12 @@ CREATE TABLE item_stock_manufacturers (
     PRIMARY KEY (stock_id, manufacturer_id)
 );
 
+-- Item Stock Branches
+CREATE TABLE item_stock_branches (
+    stock_id INT REFERENCES item_stocks(id) ON DELETE CASCADE,
+    branch_id INT REFERENCES branches(id) ON DELETE CASCADE,
+    PRIMARY KEY (stock_id, branch_id)
+);
 
 -- Item Stock Adjustments
 CREATE TABLE item_stock_adjustments (

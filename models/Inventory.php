@@ -237,7 +237,7 @@ class Inventory
         }
     }
 
-    private function createItemStock($itemId, $data)
+    public function createItemStock($itemId, $data)
     {
         $dateReceived = $data['date_received'] ?? date('Y-m-d');
 
@@ -363,6 +363,12 @@ class Inventory
                     return false;
                 }
             }
+
+            if (!empty($data['branch_id'])) {
+                if (!$this->upsertItemStockBranch($stockId, $data['branch_id'])) {
+                    return false;
+                }
+            }
         }
 
         return true;
@@ -416,6 +422,21 @@ class Inventory
         return $manufacturerStmt->execute();
     }
 
+    private function upsertItemStockBranch($stockId, $branchId)
+    {
+        $branchSql = "
+            INSERT INTO item_stock_branches (stock_id, branch_id)
+            VALUES (:stockId, :branchId)
+            ON CONFLICT (stock_id, branch_id) 
+            DO UPDATE SET branch_id = EXCLUDED.branch_id
+        ";
+
+        $branchStmt = $this->db->prepare($branchSql);
+        $branchStmt->bindParam(':stockId', $stockId);
+        $branchStmt->bindParam(':branchId', $branchId);
+
+        return $branchStmt->execute();
+    }
 
 
     public function adjustStock($itemId, $data)
