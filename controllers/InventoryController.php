@@ -123,8 +123,9 @@ class InventoryController extends BaseController
 
         }
 
-        $formData['user_id'] = $formData['user_id'] ?? $_SESSION['user_id'];
-        $formData['user_department_id'] = $formData['user_department_id'] ?? $formData['department_id'];
+        $formData['manager_id'] = $formData['user_id'] ?? $_SESSION['user_id'];
+        $formData['source_id'] = $formData['collector_id'] ?? $formData['vendor_id'] ?? $_SESSION['user_id'];
+        $formData['source_department_id'] = $formData['user_department_id'] ?? $formData['department_id'];
 
         $result = $this->inventory->updateItem($id, $formData, $mediaLinks);
 

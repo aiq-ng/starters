@@ -309,8 +309,10 @@ class Inventory
                     'quantity' => abs($difference),
                     'adjustment_type' => 'subtraction',
                     'description' => 'Edit item',
-                    'user_id' => $data['user_id'],
-                    'user_department_id' => $data['user_department_id']
+                    'manager_id' => $data['manager_id'],
+                    'source_id' => $data['source_id'],
+                    'source_department_id' => $data['source_department_id'],
+                    'source_type' => 'user',
                 ]);
             } elseif ($difference > 0) {
                 error_log("Adding stock");
@@ -318,8 +320,10 @@ class Inventory
                     'quantity' => $difference,
                     'adjustment_type' => 'addition',
                     'description' => 'Edit item',
-                    'user_id' => $data['user_id'],
-                    'user_department_id' => $data['user_department_id']
+                    'manager_id' => $data['manager_id'],
+                    'source_id' => $data['source_id'],
+                    'source_department_id' => $data['source_department_id'],
+                    'source_type' => 'vendor',
                 ]);
             } else {
                 error_log("No stock change required");
