@@ -88,6 +88,40 @@ class Purchase
         return ['data' => $data, 'meta' => $meta];
     }
 
+    public function getPurchaseOrder($purchaseOrderId)
+    {
+        $query = "
+            SELECT
+                po.id, 
+                po.purchase_order_number,
+                po.reference_number, 
+                CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name, 
+                po.created_at::DATE AS order_date, 
+                po.delivery_date, 
+                po.total, 
+                po.status,
+                CASE
+                    WHEN po.status = 'issued' THEN 'Issued'
+                ELSE pt.name
+                END AS payment
+            FROM purchase_orders po
+            LEFT JOIN vendors v ON po.vendor_id = v.id
+            LEFT JOIN payment_terms pt ON po.payment_term_id = pt.id
+            WHERE po.id = :purchase_order_id
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([':purchase_order_id' => $purchaseOrderId]);
+
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if ($result) {
+            $result['items'] = $this->getPurchaseOrderItems($purchaseOrderId);
+        }
+
+        return $result;
+    }
+
     private function getPurchaseOrdersCount($filters = [])
     {
         $query = "
@@ -197,29 +231,29 @@ class Purchase
     public function getInvoiceDetails($purchaseOrderId)
     {
         $query = "
-        SELECT po.id,
-            po.subject,
-            po.invoice_number,
-            po.purchase_order_number, 
-            po.reference_number,
-            po.discount,
-            po.shipping_charge,
-            po.total,
-            po.created_at::DATE AS order_date,
-            po.delivery_date,
-            json_agg(
-                json_build_object(
-                    'item_id', poi.item_id,
-                    'quantity', poi.quantity,
-                    'price', poi.price,
-                    'tax_id', poi.tax_id
-                )
-            ) AS items
-        FROM purchase_orders po
-        LEFT JOIN purchase_order_items poi ON poi.purchase_order_id = po.id
-        WHERE po.id = :purchase_order_id
-        GROUP BY po.id, po.purchase_order_number, po.reference_number;
-    ";
+            SELECT po.id,
+                po.subject,
+                po.invoice_number,
+                po.purchase_order_number, 
+                po.reference_number,
+                po.discount,
+                po.shipping_charge,
+                po.total,
+                po.created_at::DATE AS order_date,
+                po.delivery_date,
+                json_agg(
+                    json_build_object(
+                        'item_id', poi.item_id,
+                        'quantity', poi.quantity,
+                        'price', poi.price,
+                        'tax_id', poi.tax_id
+                    )
+                ) AS items
+            FROM purchase_orders po
+            LEFT JOIN purchase_order_items poi ON poi.purchase_order_id = po.id
+            WHERE po.id = :purchase_order_id
+            GROUP BY po.id, po.purchase_order_number, po.reference_number;
+        ";
 
         $stmt = $this->db->prepare($query);
         $stmt->execute([':purchase_order_id' => $purchaseOrderId]);
@@ -238,7 +272,11 @@ class Purchase
         try {
             $this->db->beginTransaction();
 
-            $this->updatePurchaseOrderStatus($purchaseOrderId);
+            $updatedRows = $this->updatePurchaseOrderStatus($purchaseOrderId);
+
+            if ($updatedRows === 0) {
+                throw new \Exception('Purchase order status update failed.');
+            }
 
             $items = $this->getPurchaseOrderItems($purchaseOrderId);
 
@@ -263,15 +301,33 @@ class Purchase
     public function updatePurchaseOrderStatus($purchaseOrderId)
     {
         $query = "
-            UPDATE purchase_orders
-            SET status = 'received'
+            SELECT status 
+            FROM purchase_orders 
             WHERE id = :purchase_order_id
         ";
 
         $stmt = $this->db->prepare($query);
         $stmt->execute([':purchase_order_id' => $purchaseOrderId]);
 
-        return $stmt->rowCount();
+        $currentStatus = $stmt->fetchColumn();
+
+        if ($currentStatus === 'received') {
+            throw new \Exception('Purchase order has already been marked as received.');
+        }
+
+        $updateQuery = "
+            UPDATE purchase_orders
+            SET status = 'received'
+            WHERE id = :purchase_order_id
+        ";
+
+        $updateStmt = $this->db->prepare($updateQuery);
+
+        $updateStmt->execute([':purchase_order_id' => $purchaseOrderId]);
+
+        $rowCount = $updateStmt->rowCount();
+
+        return $rowCount;
     }
 
     public function getPurchaseOrderItems($purchaseOrderId)
@@ -297,8 +353,6 @@ class Purchase
         foreach ($results as &$result) {
             $result['expiry_date'] = date('Y-m-d', strtotime('+1 year'));
         }
-
-        error_log(print_r($results, true));
 
         return $results;
     }

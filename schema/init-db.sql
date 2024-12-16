@@ -428,7 +428,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION set_status_to_overdue()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF NEW.delivery_date < CURRENT_DATE AND NEW.status NOT IN ('paid', 'cancelled') THEN
+    IF NEW.delivery_date < CURRENT_DATE AND NEW.status NOT IN ('paid', 'cancelled', 'received') THEN
         NEW.status := 'overdue';
     END IF;
     RETURN NEW;

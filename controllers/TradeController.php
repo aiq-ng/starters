@@ -43,6 +43,19 @@ class TradeController extends BaseController
         }
     }
 
+    public function showPurchase($purchaseId)
+    {
+        $this->authorizeRequest();
+
+        $purchase = $this->purchase->getPurchaseOrder($purchaseId);
+
+        if ($purchase) {
+            $this->sendResponse('success', 200, $purchase);
+        } else {
+            $this->sendResponse('Purchase not found', 404);
+        }
+    }
+
     public function createPurchase()
     {
         $this->authorizeRequest();
