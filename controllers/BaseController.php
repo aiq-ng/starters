@@ -168,6 +168,16 @@ class BaseController
         return $this->sendResponse('success', 200, $this->fetchData('payment_methods', ['id', 'name', 'description']));
     }
 
+    public function getPaymentTerms()
+    {
+        return $this->sendResponse('success', 200, $this->fetchData('payment_terms', ['id', 'name', 'description']));
+    }
+
+    public function getTaxes()
+    {
+        return $this->sendResponse('success', 200, $this->fetchData('taxes', ['id', 'name', 'rate',  'description']));
+    }
+
     public function getDepartments()
     {
         return $this->sendResponse('success', 200, $this->fetchData('departments', ['id', 'name', 'description']));
