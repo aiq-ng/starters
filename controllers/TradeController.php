@@ -166,4 +166,67 @@ class TradeController extends BaseController
         }
     }
 
+    public function createPriceList()
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+
+        if (!isset($data['list']) || !is_array($data['list'])) {
+            return $this->sendResponse('Invalid data format.', 400);
+        }
+
+        $result = $this->sale->createPriceList($data['list']);
+        if ($result) {
+            $this->sendResponse('success', 201);
+        } else {
+            $this->sendResponse('Failed to add price lists', 500);
+        }
+    }
+
+    public function getPriceList()
+    {
+        $this->authorizeRequest();
+
+        $priceList = $this->sale->getPriceList();
+
+        if ($priceList) {
+            $this->sendResponse('success', 200, $priceList);
+        } else {
+            $this->sendResponse('Price list not found', 404);
+        }
+    }
+
+    public function updatePriceList($priceListId)
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+        $data['id'] = $priceListId;
+
+        if (!isset($data['unit_price'])) {
+            return $this->sendResponse('Missing unit price.', 400);
+        }
+
+        $result = $this->sale->updatePriceList($data);
+        if ($result) {
+            $this->sendResponse('success', 200);
+        } else {
+            $this->sendResponse('Failed to update price list', 500);
+        }
+    }
+
+    public function deletePriceList($priceListId)
+    {
+        $this->authorizeRequest();
+
+        $result = $this->sale->deletePriceList($priceListId);
+
+        if ($result) {
+            $this->sendResponse('success', 200);
+        } else {
+            $this->sendResponse('Failed to delete price list', 500);
+        }
+    }
+
 }

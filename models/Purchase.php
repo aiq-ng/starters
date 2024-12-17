@@ -183,10 +183,10 @@ class Purchase
         $query = "
             INSERT INTO purchase_orders (delivery_date, vendor_id, 
                 branch_id, payment_term_id, subject, notes,
-                terms_and_conditions, discount, shipping_charge, total) 
+                terms_and_conditions, discount, shipping_charge, total, processed_by) 
             VALUES (:delivery_date, :vendor_id, :branch_id,
                 :payment_term_id, :subject, :notes, :terms_and_conditions, 
-                :discount, :shipping_charge, :total)
+                :discount, :shipping_charge, :total, :processed_by)
             RETURNING id;
         ";
 
@@ -202,6 +202,7 @@ class Purchase
             ':discount' => $data['discount'],
             ':shipping_charge' => $data['shipping_charge'],
             ':total' => $data['total'],
+            ':processed_by' => $data['user_id'],
         ]);
 
         return $stmt->fetchColumn();

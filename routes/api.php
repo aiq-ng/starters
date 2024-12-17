@@ -47,7 +47,10 @@ $routes = [
         '/dashboard/inventory/tracker' => [$inventoryController, 'getInventoryTracker'],
         '/purchases/orders' => [$tradeController, 'purchaseIndex'],
         '/sales/orders' => [$tradeController, 'saleIndex'],
+        '/sales/price-list' => [$tradeController, 'getpriceList'],
         '/inventory' => [$inventoryController, 'index'],
+        '/vendors/(\d+)' => [$vendorController, 'show'],
+        '/customers/(\d+)' => [$customerController, 'show'],
         '/products/(\d+)' => [$productController, 'show'],
         '/purchases/orders/(\d+)' => [$tradeController, 'showPurchase'],
         '/inventory/history/(\d+)' => [$inventoryController, 'inventoryHistory'],
@@ -73,6 +76,7 @@ $routes = [
         '/purchases/orders' => [$tradeController, 'createPurchase'],
         '/purchases/orders/received/(\d+)' => [$tradeController, 'markPurchaseAsReceived'],
         '/sales/orders' => [$tradeController, 'createSale'],
+        '/sales/price-list' => [$tradeController, 'createPriceList'],
         '/inventory/items' => [$inventoryController, 'createItem'],
         '/inventory/completed' => [$inventoryController, 'completeInventory'],
         '/admin/register' => [$adminController, 'registerAdmin'],
@@ -81,12 +85,18 @@ $routes = [
         '/inventory/items/stocks/(\d+)' => [$inventoryController, 'adjustStock'],
     ],
     'PUT' => [
-        '/products/(\d+)' => [$productController, 'update'],
         '/products/quantity/(\d+)' => [$productController, 'updateQuantity'],
+        '/sales/price-list/(\d+)' => [$tradeController, 'updatePriceList'],
+        '/products/(\d+)' => [$productController, 'update'],
+        '/customers/(\d+)' => [$customerController, 'update'],
+        '/vendors/(\d+)' => [$vendorController, 'update'],
     ],
     'DELETE' => [
+        '/sales/price-list/(\d+)' => [$tradeController, 'deletePriceList'],
         '/products/(\d+)' => [$productController, 'delete'],
-        '/employees/(\d+)' => [$employeeController, 'delete']
+        '/employees/(\d+)' => [$employeeController, 'delete'],
+        '/customers/(\d+)' => [$customerController, 'delete'],
+        '/vendors/(\d+)' => [$vendorController, 'delete'],
     ],
 ];
 

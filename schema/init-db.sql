@@ -55,6 +55,7 @@ CREATE TABLE currencies (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL,
     symbol VARCHAR(10) UNIQUE NOT NULL,
+    code VARCHAR(10) UNIQUE NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -86,6 +87,27 @@ CREATE TABLE item_categories (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Units of Measurement
+CREATE TABLE units (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    abbreviation VARCHAR(10) UNIQUE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Price Lists
+CREATE TABLE price_lists (
+    id SERIAL PRIMARY KEY,
+    item_category_id INT REFERENCES item_categories(id) ON DELETE SET NULL,
+    unit_id INT REFERENCES units(id) ON DELETE SET NULL,
+    item_details VARCHAR(100) NOT NULL UNIQUE,
+    unit_price DECIMAL(10, 2) NOT NULL,
+    minimum_order INT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Vendor Categories
 CREATE TABLE vendor_categories (
     id SERIAL PRIMARY KEY,
@@ -113,14 +135,6 @@ CREATE TABLE payment_terms (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- Units of Measurement
-CREATE TABLE units (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) UNIQUE NOT NULL,
-    abbreviation VARCHAR(10) UNIQUE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
 
 -- Taxes
 CREATE TABLE taxes (
@@ -181,6 +195,7 @@ CREATE TABLE vendor_transactions (
         'REF' || LPAD(id::TEXT, 10, '0')
     ) STORED,
     notes TEXT,
+    invoice_sent BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -290,6 +305,8 @@ CREATE TABLE customers (
     address TEXT,
     website VARCHAR(255),
     social_media JSONB,
+    payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
+    currency_id INT REFERENCES currencies(id) ON DELETE SET NULL,
     balance DECIMAL(10, 2) DEFAULT 0,
     status VARCHAR(50) GENERATED ALWAYS AS (
         CASE
@@ -312,6 +329,7 @@ CREATE TABLE customer_transactions (
         'REF' || LPAD(id::TEXT, 10, '0')
     ) STORED,
     notes TEXT,
+    invoice_sent BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -339,6 +357,7 @@ CREATE TABLE purchase_orders (
     total DECIMAL(10, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'issued' 
         CHECK (status IN ('draft', 'sent', 'received', 'paid', 'overdue', 'cancelled', 'issued')),
+    processed_by INT REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -385,6 +404,7 @@ CREATE TABLE sales_orders (
     total DECIMAL(10, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'pending' 
         CHECK (status IN ('upcoming', 'pending', 'sent', 'completed', 'cancelled')),
+    processed_by INT REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

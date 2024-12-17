@@ -26,11 +26,13 @@ INSERT INTO users (name, email, password, role_id, avatar_url) VALUES
 ('Peter Brown', 'peter@example.com', 'hashedpassword1', 7, 'https://example.com/avatars/peter.jpg');
 
 -- Seed currencies
-INSERT INTO currencies (name, symbol) VALUES
-('Naira', '₦'),
-('Cedis', 'GH₵'),
-('Dollar', '$'),
-('Rand', 'R');
+INSERT INTO currencies (name, symbol, code) VALUES
+('Naira', '₦', 'NGN'),
+('Pound', '£', 'GBP'),
+('Euro', '€', 'EUR'),
+('Cedis', 'GH₵', 'GHS'),
+('Dollar', '$', 'USD'),
+('Rand', 'R', 'ZAR');
 
 -- Seed payment methods
 INSERT INTO payment_methods (name, description) VALUES
@@ -60,10 +62,76 @@ INSERT INTO branches (name, description) VALUES
 ('Abuja', 'Branch located in Abuja, Nigeria'),
 ('Port Harcourt', 'Branch located in Port Harcourt, Nigeria');
 
+-- Seed data for units
+INSERT INTO units (name, abbreviation) VALUES
+('item', 'pcs'),
+('kilogram', 'kg'),
+('liter', 'L'),
+('box', 'box'),
+('meter', 'm'),
+('carton', 'ctn'),
+('pack', 'pk'),
+('crate', 'crate'),
+('bottle', 'btl'),
+('dozen', 'doz');
+
 -- Seed item categories
 INSERT INTO item_categories (name, description) VALUES
-('perishables', 'Food items with a short shelf life'),
-('non-perishables', 'Food items with a long shelf life');
+('pastry', 'Baked goods like bread, cakes, and pastries'),
+('seafood', 'Fresh and frozen seafood items'),
+('grill', 'Grilled food items like chicken and fish'),
+('meat', 'Fresh and frozen meat items'),
+('dairy', 'Milk, cheese, yogurt, and other dairy products'),
+('beverages', 'Drinks like water, juice, and soft drinks'),
+('condiments', 'Sauces, spices, and seasonings'),
+('canned', 'Canned food items like beans and tomatoes'),
+('frozen', 'Frozen food items like vegetables and fruits');
+
+INSERT INTO price_lists (item_category_id, item_details, unit_price, minimum_order, unit_id) VALUES
+-- Pastry (unit: pcs)
+(1, 'Croissant', 1.50, 10, 1),
+(1, 'Chocolate Cake', 15.00, 1, 1),
+(1, 'Baguette', 2.00, 5, 1),
+
+-- Seafood (unit: kg)
+(2, 'Salmon Fillet', 12.99, 2, 2),
+(2, 'Shrimp', 9.99, 5, 2),
+(2, 'Crab Legs', 25.00, 1, 2),
+
+-- Grill (unit: pcs)
+(3, 'Grilled Chicken Breast', 8.50, 2, 1),
+(3, 'BBQ Ribs', 15.00, 1, 1),
+(3, 'Grilled Fish', 10.00, 2, 1),
+
+-- Meat (unit: kg)
+(4, 'Beef Steak', 18.00, 1, 2),
+(4, 'Pork Chops', 12.00, 2, 2),
+(4, 'Ground Beef', 5.50, 5, 2),
+
+-- Dairy (unit: L and pcs)
+(5, 'Whole Milk', 2.50, 10, 3),
+(5, 'Cheddar Cheese', 4.00, 5, 1),
+(5, 'Greek Yogurt', 3.00, 8, 1),
+
+-- Beverages (unit: btl)
+(6, 'Orange Juice', 3.00, 6, 9),
+(6, 'Mineral Water', 1.00, 12, 9),
+(6, 'Cola Drink', 1.50, 12, 9),
+
+-- Condiments (unit: btl)
+(7, 'Tomato Ketchup', 2.00, 10, 9),
+(7, 'Mayonnaise', 2.50, 10, 9),
+(7, 'BBQ Sauce', 3.00, 5, 9),
+
+-- Canned Goods (unit: ctn)
+(8, 'Canned Beans', 1.20, 20, 6),
+(8, 'Canned Tomatoes', 1.50, 15, 6),
+(8, 'Canned Corn', 1.30, 20, 6),
+
+-- Frozen Goods (unit: pk)
+(9, 'Frozen Peas', 2.00, 10, 7),
+(9, 'Frozen Strawberries', 4.00, 8, 7),
+(9, 'Frozen Spinach', 2.50, 10, 7);
 
 -- Seed vendor categories
 INSERT INTO vendor_categories (name, description) VALUES
@@ -86,19 +154,6 @@ INSERT INTO item_manufacturers (name, website) VALUES
 INSERT INTO taxes (name, rate, description) VALUES
 ('VAT', 7.50, 'Value Added Tax in Nigeria'),
 ('Sales Tax', 5.00, 'General Sales Tax in West Africa');
-
--- Seed data for units
-INSERT INTO units (name, abbreviation) VALUES
-('item', 'pcs'),
-('kilogram', 'kg'),
-('liter', 'L'),
-('box', 'box'),
-('meter', 'm'),
-('carton', 'ctn'),
-('pack', 'pk'),
-('crate', 'crate'),
-('bottle', 'btl'),
-('dozen', 'doz');
 
 -- Seed item manufacturers
 INSERT INTO item_manufacturers (name, website) VALUES
@@ -221,25 +276,25 @@ VALUES
 (5, 5);
 
 -- Seed customers
-INSERT INTO customers (customer_type, salutation, first_name, last_name, display_name, company_name, email, work_phone, mobile_phone, address, social_media, balance)
+INSERT INTO customers (customer_type, salutation, first_name, last_name, display_name, company_name, email, work_phone, mobile_phone, address, social_media, balance, payment_term_id, currency_id)
 VALUES
 ('individual', 'Mr', 'Aliyu', 'Abdullahi', 'Aliyu Abdullahi', 
  'Agro Tech LTD', 'aliyuabdullahi@gmail.com', '0123456794', '08012345683', 
- 'No. 15 Market Road, Kano, Nigeria', '{"facebook": "https://facebook.com/aliyuabdullahi"}', 0.00),
+ 'No. 15 Market Road, Kano, Nigeria', '{"facebook": "https://facebook.com/aliyuabdullahi"}', 0.00, 1, 1),
 ('business', 'Mrs', 'Titi', 'Adedayo', 'Adedayo Enterprises', 
  'Adedayo Enterprises', 'titiadedayo@adedayoenterprises.ng', '0123456795', 
  '08012345684', 'Plot 7 Industrial Layout, Lagos, Nigeria', 
- '{"twitter": "https://twitter.com/adedayoenterprises"}', 1200.00),
+ '{"twitter": "https://twitter.com/adedayoenterprises"}', 1200.00, 2, 1),
 ('individual', 'Miss', 'Bola', 'Ogunyemi', 'Bola Ogunyemi', 
  'Nat Agro Ltd', 'bolaogunyemi@yahoo.com', '0123456796', '08012345685', 
- 'Flat 3, Block B, Ibadan, Nigeria', '{"instagram": "https://instagram.com/bolaogunyemi"}', 50000.00),
+ 'Flat 3, Block B, Ibadan, Nigeria', '{"instagram": "https://instagram.com/bolaogunyemi"}', 50000.00, 3, 1),
 ('business', 'Dr', 'Chinedu', 'Eze', 'Eze Agro Ltd.', 
  'Eze Agro Ltd.', 'chinedueze@ezeagro.ng', '0123456797', 
  '08012345686', '123 Farmland Avenue, Umuahia, Nigeria', 
- '{"linkedin": "https://linkedin.com/company/ezeagro"}', 0.00),
+ '{"linkedin": "https://linkedin.com/company/ezeagro"}', 0.00, 4, 1),
 ('individual', 'Prof', 'Amina', 'Yusuf', 'Prof. Amina Yusuf', 
  'Gerald Agro Ltd', 'aminayusuf@gmail.com', '0123456798', '08012345687', 
- 'No. 10 Crescent, Abuja, Nigeria', '{"youtube": "https://youtube.com/aminayusuf"}', 0.00);
+ 'No. 10 Crescent, Abuja, Nigeria', '{"youtube": "https://youtube.com/aminayusuf"}', 0.00, 1, 1);
 
 -- Seed customer transactions
 INSERT INTO customer_transactions 
@@ -255,27 +310,27 @@ VALUES
 INSERT INTO purchase_orders (
     vendor_id, branch_id, delivery_date, 
     payment_term_id, subject, notes, terms_and_conditions, 
-    discount, shipping_charge, total, status
+    discount, shipping_charge, total, status, processed_by
 )
 VALUES
 (1, 1, '2024-12-20', 3, 
     'Bulk Purchase of Food Items', 'Ensure quality items', 
-    'Goods must be delivered in good condition', 100, 5000, 150000, 'draft'),
+    'Goods must be delivered in good condition', 100, 5000, 150000, 'draft', 1),
 (2, 2, '2024-12-15', 4, 
     'Monthly Grocery Restock', 'Deliver to Abuja branch warehouse', 
-    'Invoice must include all taxes', 200, 2500, 200000, 'sent'),
+    'Invoice must include all taxes', 200, 2500, 200000, 'sent', 1),
 (3, 3, '2024-11-10', 3, 
     'Catering Supplies', 'Urgent delivery required', 
-    'Late delivery will incur penalties', 150, 1000, 1120000, 'received'),
+    'Late delivery will incur penalties', 150, 1000, 1120000, 'received', 1),
 (3, 3, '2024-10-11', 2, 
     'Bulk Purchase of Food Items', 'Ensure quality items', 
-    'Goods must be delivered in good condition', 100, 5000, 150000, 'paid'),
+    'Goods must be delivered in good condition', 100, 5000, 150000, 'paid', 1),
 (4, 1, '2024-11-25', 3, 
     'Monthly Meat Supplies', 'Deliver to Lagos branch warehouse', 
-    'Invoice must include all taxes', 200, 2500, 200000, 'overdue'),
+    'Invoice must include all taxes', 200, 2500, 200000, 'overdue', 1), 
 (5, 2, '2024-11-30', 3, 
     'Bulk Purchase of Food Items', 'Ensure quality items', 
-    'Goods must be delivered in good condition', 100, 5000, 150000, 'issued');
+    'Goods must be delivered in good condition', 100, 5000, 150000, 'issued', 1);
 
 -- Insert into purchase_order_items
 INSERT INTO purchase_order_items (
@@ -293,24 +348,24 @@ INSERT INTO sales_orders (
     order_type, order_title, customer_id, payment_term_id, 
     payment_method_id, delivery_option, assigned_driver_id, 
     delivery_date, additional_note, customer_note, discount, 
-    delivery_charge, total, status
+    delivery_charge, total, status, processed_by
 )
 VALUES
 ('order', 'Chicken Jumbo Pack', 1, 1, 1, 'delivery', 1, 
     '2024-11-01', 'Deliver before noon', 'Please call on arrival', 
-    1000, 2000, 520000, 'upcoming'),
+    1000, 2000, 520000, 'upcoming', 1),
 ('order', 'Maxi Puff Puff', 2, 2, 2, 'pickup', NULL, 
     '2024-11-15', 'Ready for Christmas', 'Add plenty sugar', 
-    500, 0, 345000, 'pending'),
+    500, 0, 345000, 'pending', 1),
  ('order', 'Salmon Special', 3, 3, 3, 'delivery', 2, 
     '2024-11-20', 'Handle with care', 'Call before delivery', 
-    1500, 2500, 450000, 'completed'),
+    1500, 2500, 450000, 'completed', 1),
  ('order', 'Beef Box', 4, 4, 1, 'pickup', NULL, 
     '2024-11-25', 'Festive season order', 'Add extra spice', 
-    2000, 0, 300000, 'sent'),
+    2000, 0, 300000, 'sent', 1),
  ('order', 'Chicken Jumbo Pack', 1, 1, 1, 'delivery', 1, 
     '2024-10-01', 'Deliver before noon', 'Please call on arrival', 
-    1000, 2000, 520000, 'completed');
+    1000, 2000, 520000, 'completed', 1);
 
 -- Insert into sales_order_items
 INSERT INTO sales_order_items (sales_order_id, item_id, quantity, price)

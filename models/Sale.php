@@ -13,6 +13,111 @@ class Sale
         $this->db = Database::getInstance()->getConnection();
     }
 
+    public function createPriceList($data)
+    {
+        $query = "
+            INSERT INTO price_lists 
+            (item_category_id, item_details, unit_price, minimum_order, unit_id)
+            VALUES 
+        ";
+
+        $values = [];
+        $placeholders = [];
+
+        foreach ($data as $item) {
+            $placeholders[] = "(?, ?, ?, ?, ?)";
+            $values[] = $item['item_category_id'];
+            $values[] = $item['item_details'];
+            $values[] = $item['unit_price'];
+            $values[] = $item['minimum_order'];
+            $values[] = $item['unit_id'];
+        }
+
+        $query .= implode(", ", $placeholders);
+
+        $stmt = $this->db->prepare($query);
+
+        $result = $stmt->execute($values);
+
+        if ($result) {
+            return $stmt->rowCount();
+        }
+
+        return false;
+    }
+
+    public function getPriceList()
+    {
+        $query = "
+            SELECT 
+                pl.id, 
+                ic.name AS item_category, 
+                pl.item_details, 
+                pl.unit_price, 
+                pl.minimum_order, 
+                u.abbreviation AS unit
+            FROM 
+                price_lists pl
+            LEFT JOIN 
+                item_categories ic 
+                ON pl.item_category_id = ic.id
+            LEFT JOIN 
+                units u 
+                ON pl.unit_id = u.id
+            ORDER BY 
+                pl.created_at DESC
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute();
+
+        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        return $data;
+    }
+
+    public function updatePriceList($data)
+    {
+        $query = "
+            UPDATE price_lists 
+            SET 
+                item_category_id = :item_category_id, 
+                item_details = :item_details, 
+                unit_price = :unit_price, 
+                minimum_order = :minimum_order, 
+                unit_id = :unit_id
+                WHERE 
+                id = :id
+        ";
+
+        $stmt = $this->db->prepare($query);
+
+        $result = $stmt->execute([
+            'item_category_id' => $data['item_category_id'],
+            'item_details' => $data['item_details'],
+            'unit_price' => $data['unit_price'],
+            'minimum_order' => $data['minimum_order'],
+            'unit_id' => $data['unit_id'],
+            'id' => $data['id']
+        ]);
+
+        if ($result) {
+            return $stmt->rowCount();
+        }
+
+        return false;
+    }
+
+    public function deletePriceList($id)
+    {
+        $query = "DELETE FROM price_lists WHERE id = :id";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->rowCount();
+    }
+
     public function getSalesOrders($filters = [])
     {
         $page = $filters['page'] ?? 1;
