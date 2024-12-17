@@ -32,12 +32,13 @@ DROP TABLE IF EXISTS payment_terms CASCADE;
 DROP TABLE IF EXISTS payment_methods CASCADE;
 DROP TABLE IF EXISTS vendor_categories CASCADE;
 
--- Branches and Departments
-DROP TABLE IF EXISTS branches CASCADE;
-DROP TABLE IF EXISTS departments CASCADE;
-
 -- Core Entities
 DROP TABLE IF EXISTS currencies CASCADE;
+DROP TABLE IF EXISTS user_leaves CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
 
+-- Branches and Departments
+DROP TABLE IF EXISTS branches CASCADE;
+DROP TABLE IF EXISTS departments CASCADE;
+DROP TABLE IF EXISTS base_pay_types CASCADE;

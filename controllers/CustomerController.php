@@ -30,7 +30,7 @@ class CustomerController extends BaseController
         $customers = $this->customer->getCustomers($filters);
 
         if ($customers) {
-            $this->sendResponse('success', 200, $customers);
+            $this->sendResponse('success', 200, $customers['data'], $customers['meta']);
         } else {
             $this->sendResponse('Customers not found', 404);
         }

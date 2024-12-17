@@ -138,6 +138,16 @@ class BaseController
 
     }
 
+    public function isAdmin()
+    {
+        $stmt = $this->db->prepare("SELECT role_id FROM users WHERE id = :id");
+        $stmt->bindParam(':id', $_SESSION['user_id'], \PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        return $result['role_id'] == 1;
+    }
+
     public function getUnits()
     {
         return $this->sendResponse('success', 200, $this->fetchData('units', ['id', 'name', 'abbreviation']));
@@ -171,5 +181,15 @@ class BaseController
     public function getItemManufacturers()
     {
         return $this->sendResponse('success', 200, $this->fetchData('item_manufacturers', ['id', 'name', 'website']));
+    }
+
+    public function getBasePayTypes()
+    {
+        return $this->sendResponse('success', 200, $this->fetchData('base_pay_types'));
+    }
+
+    public function getUsers()
+    {
+        return $this->sendResponse('success', 200, $this->fetchData('users', ['id', 'name', 'email', 'role_id']));
     }
 }

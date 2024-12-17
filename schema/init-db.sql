@@ -4,52 +4,6 @@ CREATE TABLE roles (
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
-
---Admins
---CREATE TYPE permission_type AS ENUM ('Accountant', 'HR', 'Inventory Manager', 'Sales');
-
---CREATE TABLE admins (
---    id SERIAL PRIMARY KEY,
---    username VARCHAR(100) UNIQUE NOT NULL,
---    password VARCHAR(255) NOT NULL,
---    role_id INT DEFAULT 1,
---    permissions permission_type NOT NULL
---    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
---    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
---    CONSTRAINT fk_admin_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET DEFAULT  
---);
-
---Employees
-
---CREATE TABLE employees (
---    id SERIAL PRIMARY KEY,
---    firstname VARCHAR(100) NOT NULL,
---    lastname VARCHAR(100) NOT NULL,
---    department VARCHAR(100) NOT NULL,
---    salaries INT, 
---    bank_details JSONB,
---    date_of_birth DATE, 
---    leave DATE, 
---    date_of_employment DATE,
---    nin JSONB,
---    passport JSONB,
---    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
---    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP    
---);
-
-
--- Users
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    role_id INT DEFAULT 3,
-    avatar_url TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_user_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET DEFAULT
-);
-
 -- Currencies
 CREATE TABLE currencies (
     id SERIAL PRIMARY KEY,
@@ -60,10 +14,21 @@ CREATE TABLE currencies (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Base Types
+CREATE TABLE base_pay_types (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT
+);
+
 -- Departments
 CREATE TABLE departments (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) UNIQUE NOT NULL,
+    salary_type VARCHAR(50) CHECK (salary_type IN ('fixed', 'base')),
+    base_type_id INT REFERENCES base_pay_types(id) ON DELETE SET NULL,
+    base_rate DECIMAL(5, 2), -- rate per hour or delivery
+    base_salary DECIMAL(10, 2), -- for fixed salary
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -92,6 +57,42 @@ CREATE TABLE units (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL,
     abbreviation VARCHAR(10) UNIQUE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE,
+    password VARCHAR(255),
+    firstname VARCHAR(100),
+    lastname VARCHAR(100),
+    name VARCHAR(255) GENERATED ALWAYS AS (firstname || ' ' || lastname) STORED,
+    avatar_url VARCHAR(255),
+    date_of_birth DATE,
+    address TEXT,
+    next_of_kin VARCHAR(100),
+    date_of_employment DATE,
+    department_id INT REFERENCES departments(id) ON DELETE SET NULL,
+    role_id INT REFERENCES roles(id) ON DELETE SET NULL,
+    salary DECIMAL(10, 2),
+    bank_details JSONB,
+    leave DATE, 
+    nin VARCHAR(20),
+    passport VARCHAR(255),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP    
+);
+
+CREATE TABLE user_leaves (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    leave_type VARCHAR(50) CHECK (leave_type IN ('annual', 'sick', 'maternity', 'paternity', 'compassionate', 'study', 'unpaid')),
+    start_date DATE,
+    end_date DATE,
+    days INT,
+    status VARCHAR(50) DEFAULT 'booked' CHECK (status IN ('booked', 'on leave', 'leave taken', 'cancelled')),
+    notes TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

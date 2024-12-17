@@ -9,6 +9,7 @@ use Controllers\VendorController;
 use Controllers\DashboardController;
 use Controllers\AdminController;
 use Controllers\EmployeeController;
+use Controllers\HumanResourceController;
 
 // Create instances of the controllers
 $authController = new AuthController();
@@ -20,6 +21,7 @@ $inventoryController = new InventoryController();
 $dashboardController = new DashboardController();
 $adminController = new AdminController();
 $employeeController = new EmployeeController();
+$humanResourceController = new HumanResourceController();
 
 // Define routes
 $routes = [
@@ -36,7 +38,10 @@ $routes = [
         '/item_categories' => [$productController, 'getItemCategories'],
         '/item_manufacturers' => [$productController, 'getItemManufacturers'],
         '/units' => [$productController, 'getUnits'],
+        '/base-pay-types' => [$productController, 'getBasePayTypes'],
         '/vendors' => [$vendorController, 'index'],
+        '/users' => [$adminController, 'getUsers'],
+        '/admins' => [$humanResourceController, 'getAdmins'],
         '/customers' => [$customerController, 'index'],
         '/dashboard/business' => [$dashboardController, 'businessOverview'],
         '/dashboard/metrics' => [$productController, 'getDashboardMetrics'],
@@ -45,6 +50,9 @@ $routes = [
         '/dashboard/products/mostpurchased' => [$dashboardController, 'mostPurchased'],
         '/dashboard/products/topselling' => [$dashboardController, 'topSelling'],
         '/dashboard/inventory/tracker' => [$inventoryController, 'getInventoryTracker'],
+        '/human-resources/departments' => [$humanResourceController, 'getDepartments'],
+        '/human-resources/employees' => [$humanResourceController, 'getEmployees'],
+        '/human-resources/overview' => [$humanResourceController, 'overview'],
         '/purchases/orders' => [$tradeController, 'purchaseIndex'],
         '/sales/orders' => [$tradeController, 'saleIndex'],
         '/sales/price-list' => [$tradeController, 'getpriceList'],
@@ -52,20 +60,12 @@ $routes = [
         '/vendors/(\d+)' => [$vendorController, 'show'],
         '/customers/(\d+)' => [$customerController, 'show'],
         '/products/(\d+)' => [$productController, 'show'],
+        '/human-resources/employees/(\d+)' => [$humanResourceController, 'showEmployee'],
         '/purchases/orders/(\d+)' => [$tradeController, 'showPurchase'],
         '/inventory/history/(\d+)' => [$inventoryController, 'inventoryHistory'],
         '/inventory/items/(\d+)' => [$inventoryController, 'showItem'],
         '/purchases/orders/invoice/(\d+)' => [$tradeController, 'getPurchaseInvoice'],
         '/sales/orders/invoice/(\d+)' => [$tradeController, 'getSalesInvoice'],
-        '/inventory/tracker' => [$inventoryController, 'inventoryTracker'],
-        '/inventory/:id' => [$inventoryController, 'getInventoryPlan'],
-        '/inventory/stock' => [$inventoryController, 'getStockProgress'],
-        '/admins/count' => [$adminController, 'numberOfAdmins'],
-        '/employees' => [$employeeController, 'index'],
-        'employees/:id' => [$employeeController, 'show']
-
-
-
     ],
     'POST' => [
         '/auth/register' => [$authController, 'register'],
@@ -73,6 +73,8 @@ $routes = [
         '/products' => [$productController, 'create'],
         '/customers' => [$customerController, 'create'],
         '/vendors' => [$vendorController, 'create'],
+        '/human-resources/departments' => [$humanResourceController, 'createDepartment'],
+        '/human-resources/employees' => [$humanResourceController, 'createEmployee'],
         '/purchases/orders' => [$tradeController, 'createPurchase'],
         '/purchases/orders/received/(\d+)' => [$tradeController, 'markPurchaseAsReceived'],
         '/sales/orders' => [$tradeController, 'createSale'],
@@ -93,6 +95,7 @@ $routes = [
     ],
     'DELETE' => [
         '/sales/price-list/(\d+)' => [$tradeController, 'deletePriceList'],
+        '/human-resources/employees/(\d+)' => [$humanResourceController, 'deleteEmployee'],
         '/products/(\d+)' => [$productController, 'delete'],
         '/employees/(\d+)' => [$employeeController, 'delete'],
         '/customers/(\d+)' => [$customerController, 'delete'],

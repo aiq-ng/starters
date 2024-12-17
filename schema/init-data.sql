@@ -12,18 +12,64 @@ INSERT INTO roles (name) VALUES
 ('Finance'),
 ('Customer Service');
 
+-- Seed data for departments
+INSERT INTO base_pay_types (name, description)
+VALUES 
+('hourly', 'Base salary calculated based on hourly rates'),
+('delivery', 'Base salary calculated based on delivery rates');
 
+-- Seed departments
+INSERT INTO departments (name, salary_type, base_type_id, base_rate, base_salary, description)
+VALUES
+('Snacks', 'fixed', NULL, NULL, 2500.00, 'Department for local and imported snacks'),
+('Beverages', 'fixed', NULL, NULL, 2000.00, 'Department for drinks, tea, coffee, and juices'),
+('Dispatch Riders', 'base', 2, 15.00, NULL, 'Department for dispatch riders'),
+('Kitchen', 'fixed', NULL, NULL, 2200.00, 'Department for kitchenware and utensils'),
+('Chef', 'fixed', NULL, NULL, 3000.00, 'Department for chefs and kitchen staff'),
+('Sales Representatives', 'base', 1, 20.00, NULL, 'Department for sales staff, paid hourly');
 
 -- Seed data for users
-INSERT INTO users (name, email, password, role_id, avatar_url) VALUES
-('Starters', 'starters@admin.com', 'password123', 1, 'https://example.com/avatars/admin.jpg'),
-('Alice Johnson', 'alice@example.com', 'password123', 1, 'https://example.com/avatars/alice.jpg'),
-('Bob Smith', 'bob@example.com', 'password123', 2, 'https://example.com/avatars/bob.jpg'),
-('Charlie Brown', 'charlie@example.com', 'password123', 3, 'https://example.com/avatars/charlie.jpg'),
-('John Doe', 'john@example.com', 'hashedpassword1', 8, 'https://example.com/avatars/john.jpg'),
-('Jane Smith', 'jane@example.com', 'hashedpassword1', 5, 'https://example.com/avatars/jane.jpg'),
-('Mary Jones', 'mary@example.com', 'hashedpassword1', 6, 'https://example.com/avatars/mary.jpg'),
-('Peter Brown', 'peter@example.com', 'hashedpassword1', 7, 'https://example.com/avatars/peter.jpg');
+INSERT INTO users (
+    firstname, lastname, email, password, role_id, avatar_url, 
+    date_of_birth, address, next_of_kin, date_of_employment, salary, 
+    bank_details, leave, nin, passport, department_id
+) VALUES
+('Starters', 'Admin', 'starters@admin.com', 'password123', 1, 'https://i.imgur.com/0GY9tnz.jpeg', 
+ NULL, NULL, NULL, NULL, NULL, 
+ NULL, NULL, NULL, NULL, NULL),
+('Alice', 'Johnson', 'alice@example.com', 'password123', 2, 'https://i.imgur.com/0GY9tnz.jpeg', 
+ '1990-05-15', '123 Main St, Cityville', 'Tom Johnson', '2020-01-01', 3500.00, 
+ '{"bank_name": "Bank ABC", "account_number": "1234567890"}', NULL, 'AB1234567C', 'A1234567', 1),
+('Bob', 'Smith', 'bob@example.com', 'password123', 2, 'https://i.imgur.com/0GY9tnz.jpeg', 
+ '1985-10-20', '456 Oak St, Townsville', 'Sarah Smith', '2018-09-15', 4000.00, 
+ '{"bank_name": "Bank XYZ", "account_number": "9876543210"}', '2023-06-01', 'CD2345678D', 'B2345678', 2),
+('Charlie', 'Brown', 'charlie@example.com', 'password123', 3, 'https://i.imgur.com/0GY9tnz.jpeg', 
+ '1992-08-10', '789 Pine St, Villageville', 'Emily Brown', '2019-02-18', 2800.00, 
+ '{"bank_name": "Bank LMN", "account_number": "1112233445"}', '2023-05-15', 'EF3456789E', 'C3456789', 3),
+('John', 'Doe', 'john@example.com', 'hashedpassword1', 8, 'https://i.imgur.com/0GY9tnz.jpeg', 
+ '1988-12-05', '321 Elm St, Hamletville', 'Anna Doe', '2021-07-21', 4200.00, 
+ '{"bank_name": "Bank DEF", "account_number": "9988776655"}', NULL, 'GH4567890F', 'D4567890', 4),
+('Jane', 'Smith', 'jane@example.com', 'hashedpassword1', 5, 'https://i.imgur.com/0GY9tnz.jpeg', 
+ '1994-03-25', '654 Maple St, Citytown', 'Linda Smith', '2022-06-11', 3100.00, 
+ '{"bank_name": "Bank GHI", "account_number": "6677889900"}', '2023-08-01', 'IJ5678901G', 'E5678901', 2),
+('Mary', 'Jones', 'mary@example.com', 'hashedpassword1', 6, 'https://i.imgur.com/0GY9tnz.jpeg', 
+ '1991-11-30', '987 Cedar St, Smallville', 'John Jones', '2017-04-09', 3600.00, 
+ '{"bank_name": "Bank JKL", "account_number": "1122334455"}', NULL, 'KL6789012H', 'F6789012', 3),
+('Peter', 'Brown', 'peter@example.com', 'hashedpassword1', 7, 'https://i.imgur.com/0GY9tnz.jpeg', 
+ '1989-07-15', '123 Birch St, Greenfield', 'Samantha Brown', '2016-03-20', 3900.00, 
+ '{"bank_name": "Bank MNO", "account_number": "2233445566"}', '2023-02-28', 'MN7890123I', 'G7890123', 2);
+
+
+-- Seed data for user_leaves
+INSERT INTO user_leaves (user_id, leave_type, start_date, end_date, days, status, notes)
+VALUES
+(1, 'annual', '2024-01-15', '2024-01-20', 6, 'leave taken', 'Annual leave for vacation'),
+(2, 'sick', '2024-02-05', '2024-02-07', 3, 'booked', 'Recovering from flu'),
+(3, 'maternity', '2024-03-01', '2024-05-30', 92, 'on leave', 'Maternity leave for childbirth'),
+(4, 'paternity', '2024-03-10', '2024-03-14', 5, 'leave taken', 'Paternity leave for newborn support'),
+(5, 'study', '2024-04-01', '2024-04-15', 15, 'cancelled', 'Cancelled due to change in schedule'),
+(6, 'compassionate', '2024-05-10', '2024-05-12', 3, 'booked', 'Family emergency'),
+(7, 'unpaid', '2024-06-01', '2024-06-07', 7, 'booked', 'Personal matters');
 
 -- Seed currencies
 INSERT INTO currencies (name, symbol, code) VALUES
@@ -48,15 +94,6 @@ INSERT INTO payment_terms (name, description) VALUES
 ('Due in 14 days', 'Payment due in 14 days'),
 ('Due in 30 days', 'Payment due in 30 days');
 
--- Seed departments
-INSERT INTO departments (name, description) VALUES
-('Snacks', 'Department for local and imported snacks'),
-('Beverages', 'Department for drinks, tea, coffee, and juices'),
-('Dispatch Riders', 'Department for dispatch riders'),
-('Kitchen', 'Department for kitchenware and utensils'),
-('Chef', 'Department for chefs and kitchen staff');
-
--- Seed branches
 INSERT INTO branches (name, description) VALUES
 ('Lagos', 'Branch located in Lagos, Nigeria'),
 ('Abuja', 'Branch located in Abuja, Nigeria'),
