@@ -204,4 +204,49 @@ class HumanResource
 
         return $stmt->rowCount();
     }
+
+    public function addToLeave($data)
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO user_leaves 
+            (user_id, start_date, end_date, status, note) 
+            VALUES (?, ?, ?, ?, ?)'
+        );
+
+        $stmt->execute([
+            $data['user_id'],
+            $data['start_date'] ?? null,
+            $data['end_date'] ?? null,
+            $data['status'] ?? null,
+            $data['note'] ?? null
+        ]);
+
+        return $this->db->lastInsertId();
+    }
+
+    public function putOnLeave($employeeId)
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE user_leaves 
+            SET status = \'on leave\' 
+            WHERE user_id = ?'
+        );
+
+        $stmt->execute([$employeeId]);
+
+        return $stmt->rowCount();
+    }
+
+    public function suspendEmployee($employeeId)
+    {
+        $stmt = $this->db->prepare(
+            'UPDATE users 
+            SET status = \'inactive\' 
+            WHERE id = ?'
+        );
+
+        $stmt->execute([$employeeId]);
+
+        return $stmt->rowCount();
+    }
 }

@@ -108,4 +108,41 @@ class HumanResourceController extends BaseController
             $this->sendResponse('Employee not found', 404);
         }
     }
+
+    public function bookLeave($id)
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+
+        if (!$this->validateFields(
+            $data['employee_id'],
+            $data['start_date'],
+            $data['end_date'],
+            $data['notes'],
+        )) {
+            $this->sendResponse('Invalid input data', 400);
+        }
+
+        $result = $this->humanResource->addToLeave($id, $data);
+
+        if ($result) {
+            $this->sendResponse('Leave booked successfully', 201);
+        } else {
+            $this->sendResponse('Leave not booked', 500);
+        }
+    }
+
+    public function putOnLeave($id)
+    {
+        $this->authorizeRequest();
+
+        $result = $this->humanResource->putOnLeave($id);
+
+        if ($result) {
+            $this->sendResponse('Employee put on leave successfully', 200);
+        } else {
+            $this->sendResponse('Employee not found', 404);
+        }
+    }
 }

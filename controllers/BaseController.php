@@ -173,6 +173,11 @@ class BaseController
         return $this->sendResponse('success', 200, $this->fetchData('departments', ['id', 'name', 'description']));
     }
 
+    public function getBranches()
+    {
+        return $this->sendResponse('success', 200, $this->fetchData('branches', ['id', 'name']));
+    }
+
     public function getItemCategories()
     {
         return $this->sendResponse('success', 200, $this->fetchData('item_categories', ['id', 'name', 'description']));

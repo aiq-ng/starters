@@ -80,6 +80,7 @@ CREATE TABLE users (
     leave DATE, 
     nin VARCHAR(20),
     passport VARCHAR(255),
+    status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP    
 );
@@ -88,9 +89,14 @@ CREATE TABLE user_leaves (
     id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users(id) ON DELETE CASCADE,
     leave_type VARCHAR(50) CHECK (leave_type IN ('annual', 'sick', 'maternity', 'paternity', 'compassionate', 'study', 'unpaid')),
-    start_date DATE,
+    start_date DATE DEFAULT CURRENT_DATE,
     end_date DATE,
-    days INT,
+    days INT GENERATED ALWAYS AS (
+        CASE
+            WHEN end_date IS NOT NULL THEN (end_date - start_date)
+            ELSE NULL
+        END
+    ) STORED,
     status VARCHAR(50) DEFAULT 'booked' CHECK (status IN ('booked', 'on leave', 'leave taken', 'cancelled')),
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
