@@ -109,17 +109,16 @@ class HumanResourceController extends BaseController
         }
     }
 
-    public function bookLeave($id)
+    public function applyLeave()
     {
         $this->authorizeRequest();
 
         $data = $this->getRequestData();
+        $id = $_SESSION['user_id'];
 
         if (!$this->validateFields(
-            $data['employee_id'],
-            $data['start_date'],
+            $data['leave_type'],
             $data['end_date'],
-            $data['notes'],
         )) {
             $this->sendResponse('Invalid input data', 400);
         }
@@ -133,7 +132,7 @@ class HumanResourceController extends BaseController
         }
     }
 
-    public function putOnLeave($id)
+    public function approveLeave($id)
     {
         $this->authorizeRequest();
 
@@ -141,6 +140,19 @@ class HumanResourceController extends BaseController
 
         if ($result) {
             $this->sendResponse('Employee put on leave successfully', 200);
+        } else {
+            $this->sendResponse('Employee not found', 404);
+        }
+    }
+
+    public function suspendEmployee($id)
+    {
+        $this->authorizeRequest();
+
+        $result = $this->humanResource->suspendEmployee($id);
+
+        if ($result) {
+            $this->sendResponse('Employee suspended successfully', 200);
         } else {
             $this->sendResponse('Employee not found', 404);
         }

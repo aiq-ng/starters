@@ -37,13 +37,13 @@ INSERT INTO users (
 ('Starters', 'Admin', 'starters@admin.com', 'password123', 1, 'https://i.imgur.com/0GY9tnz.jpeg', 
  NULL, NULL, NULL, NULL, NULL, 
  NULL, NULL, NULL, NULL, NULL),
-('Alice', 'Johnson', 'alice@example.com', 'password123', 2, 'https://i.imgur.com/0GY9tnz.jpeg', 
+('Opororo', 'Nathaniel', 'nat@aiq.com', 'password', 2, 'https://i.imgur.com/0GY9tnz.jpeg', 
  '1990-05-15', '123 Main St, Cityville', 'Tom Johnson', '2020-01-01', 3500.00, 
  '{"bank_name": "Bank ABC", "account_number": "1234567890"}', NULL, 'AB1234567C', 'A1234567', 1),
-('Bob', 'Smith', 'bob@example.com', 'password123', 2, 'https://i.imgur.com/0GY9tnz.jpeg', 
+('Emmanuel', 'Afcon', 'sog@aiq.com', 'password', 2, 'https://i.imgur.com/0GY9tnz.jpeg', 
  '1985-10-20', '456 Oak St, Townsville', 'Sarah Smith', '2018-09-15', 4000.00, 
  '{"bank_name": "Bank XYZ", "account_number": "9876543210"}', '2023-06-01', 'CD2345678D', 'B2345678', 2),
-('Charlie', 'Brown', 'charlie@example.com', 'password123', 3, 'https://i.imgur.com/0GY9tnz.jpeg', 
+('Babanla', 'Odunlami', 'odun@aiq.com', 'password', 3, 'https://i.imgur.com/0GY9tnz.jpeg', 
  '1992-08-10', '789 Pine St, Villageville', 'Emily Brown', '2019-02-18', 2800.00, 
  '{"bank_name": "Bank LMN", "account_number": "1112233445"}', '2023-05-15', 'EF3456789E', 'C3456789', 3),
 ('John', 'Doe', 'john@example.com', 'hashedpassword1', 8, 'https://i.imgur.com/0GY9tnz.jpeg', 
@@ -61,15 +61,15 @@ INSERT INTO users (
 
 
 -- Seed data for user_leaves
-INSERT INTO user_leaves (user_id, leave_type, start_date, end_date, days, status, notes)
+INSERT INTO user_leaves (user_id, leave_type, start_date, end_date, status, notes)
 VALUES
-(1, 'annual', '2024-01-15', '2024-01-20', 6, 'leave taken', 'Annual leave for vacation'),
-(2, 'sick', '2024-02-05', '2024-02-07', 3, 'booked', 'Recovering from flu'),
-(3, 'maternity', '2024-03-01', '2024-05-30', 92, 'on leave', 'Maternity leave for childbirth'),
-(4, 'paternity', '2024-03-10', '2024-03-14', 5, 'leave taken', 'Paternity leave for newborn support'),
-(5, 'study', '2024-04-01', '2024-04-15', 15, 'cancelled', 'Cancelled due to change in schedule'),
-(6, 'compassionate', '2024-05-10', '2024-05-12', 3, 'booked', 'Family emergency'),
-(7, 'unpaid', '2024-06-01', '2024-06-07', 7, 'booked', 'Personal matters');
+(1, 'annual', '2024-01-15', '2024-01-20', 'leave taken', 'Annual leave for vacation'),
+(2, 'sick', '2024-02-05', '2024-02-07', 'booked', 'Recovering from flu'),
+(3, 'maternity', '2024-03-01', '2024-05-30', 'on leave', 'Maternity leave for childbirth'),
+(4, 'paternity', '2024-03-10', '2024-03-14', 'leave taken', 'Paternity leave for newborn support'),
+(5, 'study', '2024-04-01', '2024-04-15', 'cancelled', 'Cancelled due to change in schedule'),
+(6, 'compassionate', '2024-05-10', '2024-05-12', 'booked', 'Family emergency'),
+(7, 'unpaid', '2024-06-01', '2024-06-07', 'booked', 'Personal matters');
 
 -- Seed currencies
 INSERT INTO currencies (name, symbol, code) VALUES

@@ -205,20 +205,20 @@ class HumanResource
         return $stmt->rowCount();
     }
 
-    public function addToLeave($data)
+    public function addToLeave($employeeId, $data)
     {
         $stmt = $this->db->prepare(
             'INSERT INTO user_leaves 
-            (user_id, start_date, end_date, status, note) 
-            VALUES (?, ?, ?, ?, ?)'
+        (user_id, start_date, end_date, notes, leave_type) 
+        VALUES (?, ?, ?, ?, ?)'
         );
 
         $stmt->execute([
-            $data['user_id'],
+            $employeeId,
             $data['start_date'] ?? null,
             $data['end_date'] ?? null,
-            $data['status'] ?? null,
-            $data['note'] ?? null
+            $data['notes'] ?? null,
+            $data['leave_type'] ?? 'annual'
         ]);
 
         return $this->db->lastInsertId();

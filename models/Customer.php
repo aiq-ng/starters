@@ -254,16 +254,19 @@ class Customer
                 c.customer_type,
                 cu.code AS default_currency,
                 pt.name AS payment_term,
-                COALESCE(
-                    SUM(
-                        CASE WHEN ct.transaction_type = 'credit' THEN ct.amount ELSE 0 END
-                    ), 0
-                ) AS total_paid,
-                COALESCE(
-                    SUM(
-                        CASE WHEN ct.transaction_type = 'debit' THEN ct.amount ELSE 0 END
-                    ), 0
-                ) AS total_outstanding,
+                JSONB_BUILD_OBJECT(
+                    'currency', cu.code,
+                    'total_outstanding', COALESCE(
+                        SUM(
+                            CASE WHEN ct.transaction_type = 'debit' THEN ct.amount ELSE 0 END
+                        ), 0
+                    ),
+                    'total_paid', COALESCE(
+                        SUM(
+                            CASE WHEN ct.transaction_type = 'credit' THEN ct.amount ELSE 0 END
+                        ), 0
+                    )
+                ) AS receivables,
                 COALESCE(
                     JSON_AGG(
                         JSONB_BUILD_OBJECT(
@@ -297,9 +300,8 @@ class Customer
             $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             if ($result) {
+                $result['receivables'] = json_decode($result['receivables'], true);
                 $result['transactions'] = json_decode($result['transactions'], true);
-                $result['total_paid'] = (float) $result['total_paid'];
-                $result['total_outstanding'] = (float) $result['total_outstanding'];
             }
 
             return $result;

@@ -247,16 +247,19 @@ class Vendor
                 vc.name AS vendor_category,
                 c.code AS default_currency,
                 pt.name AS payment_term,
-                COALESCE(
-                    SUM(
-                        CASE WHEN vt.transaction_type = 'credit' THEN vt.amount ELSE 0 END
-                    ), 0
-                ) AS total_paid,
-                COALESCE(
-                    SUM(
-                        CASE WHEN vt.transaction_type = 'debit' THEN vt.amount ELSE 0 END
-                    ), 0
-                ) AS total_outstanding,
+                JSONB_BUILD_OBJECT(
+                    'currency', c.code,
+                    'total_outstanding', COALESCE(
+                        SUM(
+                            CASE WHEN vt.transaction_type = 'debit' THEN vt.amount ELSE 0 END
+                        ), 0
+                    ),
+                    'total_paid', COALESCE(
+                        SUM(
+                            CASE WHEN vt.transaction_type = 'credit' THEN vt.amount ELSE 0 END
+                        ), 0
+                    )
+                ) AS receivables,
                 COALESCE(
                     JSON_AGG(
                         JSONB_BUILD_OBJECT(
@@ -271,7 +274,7 @@ class Vendor
                         )
                     ) FILTER (WHERE vt.id IS NOT NULL),
                     '[]'
-                ) AS receivables
+                ) AS transactions
             FROM vendors v
             LEFT JOIN vendor_transactions vt ON v.id = vt.vendor_id
             LEFT JOIN purchase_orders po ON v.id = po.vendor_id
@@ -293,8 +296,8 @@ class Vendor
 
             if ($result) {
                 $result['receivables'] = json_decode($result['receivables'], true);
-                $result['total_paid'] = (float) $result['total_paid'];
-                $result['total_outstanding'] = (float) $result['total_outstanding'];
+                $result['transactions'] = json_decode($result['transactions'], true);
+
             }
 
             return $result;
