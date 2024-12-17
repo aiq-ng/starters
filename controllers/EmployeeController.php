@@ -3,34 +3,31 @@
 namespace Controllers;
 
 use Models\Employee;
-use Services\MediaHandler;
 
-class EmployeeController extends BaseController {
-
+class EmployeeController extends BaseController
+{
     private $employee;
-
-    private $mediaHandler;
 
     public function __construct()
     {
         parent::__construct();
         $this->employee = new Employee();
-        $this->mediaHandler = new MediaHandler();
     }
 
 
-    public function index() {
+    public function index()
+    {
         $this->authorizeRequest();
 
 
         $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
         $pageSize = isset($_GET['pageSize']) ? intval($_GET['pageSize']) : 10;
-    
+
         $totalEmployees = $this->employee->countEmployees(); // Get the total number of employees
         $totalPages = ceil($totalEmployees / $pageSize); // Calculate total pages
-    
+
         $employees = $this->employee->getAllEmployees($page, $pageSize);
-        
+
 
         $response = [
             'status' => 'success',
@@ -40,12 +37,13 @@ class EmployeeController extends BaseController {
             'total_employees' => $totalEmployees,
             'data' => $employees
             ];
-       
-            $this->sendResponse("Success", 200, $response);
+
+        $this->sendResponse("Success", 200, $response);
     }
 
 
-    public function create() {
+    public function create()
+    {
         $this->authorizeRequest();
 
         $data = $this->getRequestData();
@@ -62,8 +60,8 @@ class EmployeeController extends BaseController {
 
         $dataToValidate = array_intersect_key($formData, array_flip($requiredFields));
 
-         // Validate required fields
-         foreach ($requiredFields as $field) {
+        // Validate required fields
+        foreach ($requiredFields as $field) {
             if (empty($formData[$field])) {
                 $this->sendResponse('Missing required field: ' . $field, 400);
                 return;
@@ -74,25 +72,25 @@ class EmployeeController extends BaseController {
         }
 
         try {
-        if (!empty($mediaFiles)) {
-            $mediaLinks = $this->mediaHandler->handleMediaFiles($mediaFiles);
+            if (!empty($mediaFiles)) {
+                $mediaLinks = $this->mediaHandler->handleMediaFiles($mediaFiles);
 
-            if ($mediaLinks === false) {
-                $this->sendResponse('Error uploading media files', 500);
+                if ($mediaLinks === false) {
+                    $this->sendResponse('Error uploading media files', 500);
+                }
+
             }
 
-        }
+            $result = $this->employee->registerEmployee($formData, $mediaLinks);
 
-        $result = $this->employee->registerEmployee($formData, $mediaLinks);
-
-        if ($result) {
-            $this->sendResponse('Employee added successfully', 201, ['item_id' => $result]);
-        } }
-        catch (\Exception $e) {
+            if ($result) {
+                $this->sendResponse('Employee added successfully', 201, ['item_id' => $result]);
+            }
+        } catch (\Exception $e) {
             error_log($e->getMessage());
             $this->sendResponse('Error creating employee: ' . $e->getMessage(), 500);
         }
-        
+
 
     }
 
@@ -107,20 +105,21 @@ class EmployeeController extends BaseController {
         $this->sendResponse('success', 200, $employee);
     }
 
-public function delete($id) {
+    public function delete($id)
+    {
 
-    $this->authorizeRequest();
-    $employee = $this->employee->deleteEmployee($id);
-    if (!$employee) {
-        $this->sendResponse('Error deleting this Employee', 400 );
+        $this->authorizeRequest();
+        $employee = $this->employee->deleteEmployee($id);
+        if (!$employee) {
+            $this->sendResponse('Error deleting this Employee', 400);
 
-    } else {
+        } else {
 
-        $this->sendResponse('Employee has been deleted', 201);
+            $this->sendResponse('Employee has been deleted', 201);
+        }
+
+
     }
-    
-
-}
 
 
 

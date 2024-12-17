@@ -12,6 +12,14 @@ INSERT INTO roles (name) VALUES
 ('Finance'),
 ('Customer Service');
 
+INSERT INTO permissions (name, description) VALUES
+('sales', 'View and manage sales orders'),
+('procurement', 'View and manage purchase orders'),
+('hr', 'View and manage HR data'),
+('accounting', 'View and manage accounting data'),
+('admin', 'Full access to all features'),
+('inventory', 'View and manage inventory data');
+
 -- Seed data for departments
 INSERT INTO base_pay_types (name, description)
 VALUES 
@@ -27,6 +35,15 @@ VALUES
 ('Kitchen', 'fixed', NULL, NULL, 2200.00, 'Department for kitchenware and utensils'),
 ('Chef', 'fixed', NULL, NULL, 3000.00, 'Department for chefs and kitchen staff'),
 ('Sales Representatives', 'base', 1, 20.00, NULL, 'Department for sales staff, paid hourly');
+
+-- Seed data for payment_terms
+INSERT INTO no_of_working_days (name, description)
+VALUES
+('5-Day Workweek', 'Standard Monday to Friday workweek'),
+('6-Day Workweek', 'Monday to Saturday workweek'),
+('4-Day Workweek', 'Compressed workweek with 4 working days'),
+('Flexible Workweek', 'Varied workdays based on company policy'),
+('Weekend Work', 'Work schedule includes weekends');
 
 -- Seed data for users
 INSERT INTO users (
@@ -59,6 +76,14 @@ INSERT INTO users (
  '1989-07-15', '123 Birch St, Greenfield', 'Samantha Brown', '2016-03-20', 3900.00, 
  '{"bank_name": "Bank MNO", "account_number": "2233445566"}', '2023-02-28', 'MN7890123I', 'G7890123', 2);
 
+INSERT INTO user_permissions (user_id, permission_id) VALUES
+(1, 5),
+(2, 1),
+(3, 2),
+(4, 3),
+(5, 4),
+(6, 6),
+(7, 6);
 
 -- Seed data for user_leaves
 INSERT INTO user_leaves (user_id, leave_type, start_date, end_date, status, notes)

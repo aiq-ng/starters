@@ -3,19 +3,16 @@
 namespace Controllers;
 
 use Models\Inventory;
-use Services\MediaHandler;
 
 class InventoryController extends BaseController
 {
     private $inventory;
-    private $mediaHandler;
 
 
     public function __construct()
     {
         parent::__construct();
         $this->inventory = new Inventory();
-        $this->mediaHandler = new MediaHandler();
     }
 
 

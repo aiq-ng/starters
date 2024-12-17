@@ -4,6 +4,12 @@ CREATE TABLE roles (
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
+CREATE TABLE permissions (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT
+);
+
 -- Currencies
 CREATE TABLE currencies (
     id SERIAL PRIMARY KEY,
@@ -61,6 +67,14 @@ CREATE TABLE units (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE no_of_working_days (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE,
@@ -75,14 +89,21 @@ CREATE TABLE users (
     date_of_employment DATE,
     department_id INT REFERENCES departments(id) ON DELETE SET NULL,
     role_id INT REFERENCES roles(id) ON DELETE SET NULL,
+    no_of_working_days_id INT REFERENCES no_of_working_days(id) ON DELETE SET NULL,
     salary DECIMAL(10, 2),
-    bank_details JSONB,
+    bank_details JSONB, -- {bank_name, account_number}
     leave DATE, 
-    nin VARCHAR(20),
+    nin VARCHAR(255),
     passport VARCHAR(255),
     status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP    
+);
+
+CREATE TABLE user_permissions (
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    permission_id INT REFERENCES permissions(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, permission_id)
 );
 
 CREATE TABLE user_leaves (

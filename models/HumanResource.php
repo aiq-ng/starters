@@ -49,6 +49,42 @@ class HumanResource
         return $this->db->lastInsertId();
     }
 
+    public function addEmployee($data, $mediaLinks)
+    {
+        $stmt = $this->db->prepare(
+            'INSERT INTO users 
+        (email, firstname, lastname, date_of_birth, address, next_of_kin,
+        date_of_employment, department_id, role_id, no_of_working_days_id, 
+        salary, bank_details, nin, passport, avatar_url) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        );
+
+        $bankDetails = [
+            'account_number' => $data['account_number'] ?? null,
+            'bank_name' => $data['bank_name'] ?? null,
+        ];
+
+        $stmt->execute([
+            $data['email'] ?? null,
+            $data['firstname'] ?? null,
+            $data['lastname'] ?? null,
+            $data['date_of_birth'] ?? null,
+            $data['address'] ?? null,
+            $data['next_of_kin'] ?? null,
+            $data['date_of_employment'] ?? null,
+            $data['department_id'] ?? null,
+            $data['role_id'] ?? null,
+            $data['no_of_working_days_id'] ?? null,
+            $data['salary'] ?? null,
+            json_encode($bankDetails),
+            $mediaLinks['nin'][0] ?? null,
+            $mediaLinks['passport'][0] ?? null,
+            $mediaLinks['avatar_url'][0] ?? null,
+        ]);
+
+        return $this->db->lastInsertId();
+    }
+
     public function getAdmins()
     {
         $stmt = $this->db->prepare(

@@ -7,91 +7,62 @@ use Database\Database;
 class Admin
 {
     private $db;
-    private $table = 'admins';
 
     public function __construct()
     {
         $this->db = Database::getInstance()->getConnection();
     }
 
-
-    //Register new admins
-
-    // Validate permissions value
-    private function isValidPermission($permission)
+    public function addAdminAccess($userId, $data)
     {
-        $validPermissions = ['Accountant', 'HR', 'Inventory Manager', 'Sales'];
-        return in_array($permission, $validPermissions);
-    }
-    public function registerAdmins($data)
-    {
-
-        if (!$this->isValidPermission($data['permissions'])) {
-            throw new \InvalidArgumentException("Invalid permissions value");
-        }
-        $role = isset($data['role']) ? $data['role'] : 1;
-        $query = "
-            INSERT INTO " . $this->table . " 
-            (username, password, role_id, permissions) VALUES (:username, :password, :role_id, :permissions)";
-        $stmt = $this->db->prepare($query);
+        $stmt = $this->db->prepare(
+            'UPDATE users 
+        SET password = ? 
+        WHERE email = ?'
+        );
 
         $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
 
-        $stmt->bindParam(':username', $data['username']);
-        $stmt->bindParam(':password', $hashedPassword);
-        $stmt->bindParam(':role_id', $data['role']) ?? 1;
-        $stmt->bindParam(':permissions', $data['permissions']);
+        $stmt->execute([
+            $hashedPassword,
+            $data['email']
+        ]);
 
-
-        if ($stmt->execute()) {
-            return $this->db->lastInsertId();
-      
-        } else {
-            throw new \Exception("Error inserting admin");
+        if (!empty($data['permissions']) && is_array($data['permissions'])) {
+            $this->insertPermissions($userId, $data['permissions']);
         }
+
+        return $userId;
     }
 
-
-    //Get Admin by username 
-
-    public function getAdmin($identifier)
+    public function insertPermissions($userId, $permissions)
     {
-
-          // Ensure identifier is not empty
-        if (empty($identifier)) {
-            throw new \InvalidArgumentException("Invalid identifier provided");
-            }
-
-            $query = "SELECT * FROM " . $this->table . " WHERE username = :identifier LIMIT 1";
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(':identifier', $identifier, \PDO::PARAM_STR);
-       
-        $stmt->execute();
-
-        if ($stmt->rowCount() > 0) {
-            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-            return $row;
+        foreach ($permissions as $permissionId) {
+            $stmt = $this->db->prepare(
+                'INSERT INTO user_permissions (user_id, permission_id) 
+            VALUES (?, ?)'
+            );
+            $stmt->execute([$userId, $permissionId]);
         }
-
-        return null;
     }
 
+    public function getPermissionByUserCount()
+    {
+        $stmt = $this->db->prepare(
+            'SELECT p.name AS permission_name, COUNT(up.user_id) AS total_users
+            FROM user_permissions up
+            JOIN permissions p ON up.permission_id = p.id
+            GROUP BY p.name'
+        );
 
-    // Get number of Admins by permissions
-    public function getNumberOfAdmins()
-    {   
-            $query = "SELECT permissions, COUNT(*) AS admin_count FROM " . $this->table . "GROUP BY permissions";
-            $stmt = $this->db->prepare($query);
+        $stmt->execute();
+        $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-            try {
-                $stmt->execute();
-                $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-                return $result;
-            }
-            catch (\PDOException $e) {
-                error_log($e->getMessage());
-                throw new \Exception("Error fetching admin data");
-                // return [];
-            }
+        $overview = [];
+        foreach ($results as $row) {
+            $overview[$row['permission_name']] = $row['total_users'];
+        }
+
+        return $overview;
     }
 }

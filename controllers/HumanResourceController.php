@@ -46,6 +46,47 @@ class HumanResourceController extends BaseController
         $this->sendResponse('Department created successfully', 201);
     }
 
+    public function createEmployee()
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+
+        $formData = $data['form_data'];
+        $mediaFiles = $data['files'] ?? [];
+
+        if (!$this->validateFields(
+            $formData['email'],
+            $formData['firstname'],
+            $formData['lastname'],
+            $formData['department_id'],
+            $formData['role_id'],
+            $formData['no_of_working_days_id'],
+        )) {
+            $this->sendResponse('Invalid input data', 400);
+        }
+
+        $mediaLinks = [];
+        $mediaTypes = ['nin', 'passport', 'avatar_url'];
+
+        foreach ($mediaTypes as $mediaType) {
+            if (!empty($mediaFiles[$mediaType])) {
+                $mediaLink = $this->mediaHandler->handleMediaFiles([$mediaFiles[$mediaType]]);
+
+                if ($mediaLink === false) {
+                    error_log("Error uploading {$mediaType} file");
+                }
+
+                $mediaLinks[$mediaType] = $mediaLink;
+
+            }
+        }
+
+        $this->humanResource->addEmployee($formData, $mediaLinks);
+
+        $this->sendResponse('Employee created successfully', 201);
+    }
+
     public function getAdmins()
     {
         $this->authorizeRequest();

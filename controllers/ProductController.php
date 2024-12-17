@@ -3,18 +3,15 @@
 namespace Controllers;
 
 use Models\Product;
-use Services\MediaHandler;
 
 class ProductController extends BaseController
 {
     private $product;
-    private $mediaHandler;
 
     public function __construct()
     {
         parent::__construct();
         $this->product = new Product();
-        $this->mediaHandler = new MediaHandler();
     }
 
     public function index()

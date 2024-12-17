@@ -24,6 +24,7 @@ class MediaHandler
         try {
             if (!is_array($files)) {
                 $files = [$files];
+
             }
 
             foreach ($files as $file) {

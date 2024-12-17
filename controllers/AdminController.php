@@ -4,9 +4,8 @@ namespace Controllers;
 
 use Models\Admin;
 
-class AdminController extends BaseController 
+class AdminController extends BaseController
 {
-
     private $admin;
 
     public function __construct()
@@ -15,43 +14,38 @@ class AdminController extends BaseController
         $this->admin = new Admin();
     }
 
-    public function registerAdmin()
+    public function overview()
     {
+        $this->authorizeRequest();
+
+        $data = $this->admin->getPermissionByUserCount();
+
+        if ($data) {
+            $this->sendResponse('success', 200, $data);
+        } else {
+            $this->sendResponse('Overview not found', 404);
+        }
+    }
+
+    public function createAdmin()
+    {
+        $this->authorizeRequest();
+
         $data = $this->getRequestData();
 
-        if (!$this->validateFields($data['username'], $data['password'])) {
-            $this->sendResponse('Incomplete data provided', 400);
-            return;
+        $user = $this->getUserByEmail($data['email']);
+
+        if (!$this->validateFields(
+            $data['email'],
+            $data['password'],
+            $data['permissions']
+        )) {
+            $this->sendResponse('Invalid input data', 400);
         }
 
-        if ($this->admin->getAdmin($data['username'])) {
-            $this->sendResponse('Username already exists', 400);
-            return;
-        }
+        $userId = $this->admin->addAdminAccess($user['id'], $data);
 
-        $result = $this->admin->registerAdmins($data);
-
-        if ($result) {
-            $this->sendResponse('success', 201, ['admins_id' => $result]);
-        } else {
-            $this->sendResponse('Error registering admin', 500);
-        }
+        $this->sendResponse('Admin access added successfully', 201, ['user_id' => $userId]);
     }
-
-
-    public function numberOfAdmins()
-    {
-        $number = $this->admin->getNumberOfAdmins();
-        $this->sendResponse('success', 200, $number);
-
-    }
-
-
-
-
-
-
-
-
 
 }

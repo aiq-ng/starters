@@ -6,6 +6,7 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Database\Database;
 use Exception;
+use Services\MediaHandler;
 
 class BaseController
 {
@@ -13,6 +14,7 @@ class BaseController
     protected $secret_key;
     protected $algorithm;
     protected $exp_time;
+    protected $mediaHandler;
 
     public function __construct()
     {
@@ -20,6 +22,7 @@ class BaseController
         $this->secret_key = getenv('SECRET_KEY');
         $this->algorithm = getenv('ALGORITHM');
         $this->exp_time = getenv('ACCESS_TOKEN_EXPIRE_MINUTES');
+        $this->mediaHandler = new MediaHandler();
     }
 
     protected function getRequestData()
@@ -129,7 +132,41 @@ class BaseController
         $columnsList = implode(', ', $columns);
         $query = "SELECT $columnsList FROM $table";
         $stmt = $this->db->query($query);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        if (empty($result)) {
+            throw new \Exception("No records found in the table '$table'.");
+        }
+
+        return $result;
+    }
+
+    protected function findRecord(string $table, int $id)
+    {
+        $stmt = $this->db->prepare("SELECT * FROM $table WHERE id = :id");
+        $stmt->bindParam(':id', $id, \PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$result) {
+            throw new \Exception("Record with ID '$id' not found in the table '$table'.");
+        }
+
+        return $result;
+    }
+
+    protected function getUserByEmail(string $email)
+    {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = :email");
+        $stmt->bindParam(':email', $email, \PDO::PARAM_STR);
+        $stmt->execute();
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$result) {
+            throw new \Exception("User with email '$email' not found.");
+        }
+
+        return $result;
     }
 
     public function getRoles()
@@ -206,5 +243,15 @@ class BaseController
     public function getUsers()
     {
         return $this->sendResponse('success', 200, $this->fetchData('users', ['id', 'name', 'email', 'role_id']));
+    }
+
+    public function getNoOfWorkingDays()
+    {
+        return $this->sendResponse('success', 200, $this->fetchData('no_of_working_days'));
+    }
+
+    public function getPermissions()
+    {
+        return $this->sendResponse('success', 200, $this->fetchData('permissions'));
     }
 }
