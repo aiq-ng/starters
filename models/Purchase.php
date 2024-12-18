@@ -244,14 +244,18 @@ class Purchase
                 po.delivery_date,
                 json_agg(
                     json_build_object(
-                        'item_id', poi.item_id,
+                'item_id', poi.item_id,
+                'item_name', i.name,
+                'item_description', i.description,
                         'quantity', poi.quantity,
                         'price', poi.price,
+                        'amount', poi.quantity * poi.price,
                         'tax_id', poi.tax_id
                     )
                 ) AS items
             FROM purchase_orders po
             LEFT JOIN purchase_order_items poi ON poi.purchase_order_id = po.id
+            LEFT JOIN items i ON poi.item_id = i.id
             WHERE po.id = :purchase_order_id
             GROUP BY po.id, po.purchase_order_number, po.reference_number;
         ";

@@ -60,7 +60,8 @@ class AuthController extends BaseController
 
             $token = [
                 'iat' => time(),
-                'exp' => time() + $this->exp_time * 60,
+                // 'exp' => time() + $this->exp_time * 60,
+                'exp' => time() + (24 * 60 * 60),
                 'data' => [
                     'id' => $user_id,
                 ]
