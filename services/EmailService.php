@@ -58,7 +58,7 @@ class EmailService
             'mail_template_key' => $templateKey,
             'from' => [
                 'address' => 'noreply@hordun.software',
-                'name' => 'diconline',
+                'name' => 'starters',
             ],
             'to' => [
                 [

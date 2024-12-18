@@ -198,6 +198,11 @@ class BaseController
         return $this->sendResponse('success', 200, $this->fetchData('vendors'));
     }
 
+    public function getVendorCategories()
+    {
+        return $this->sendResponse('success', 200, $this->fetchData('vendor_categories', ['id', 'name', 'description']));
+    }
+
     public function getCurrencies()
     {
         return $this->sendResponse('success', 200, $this->fetchData('currencies', ['id', 'name', 'symbol']));

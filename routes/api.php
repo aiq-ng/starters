@@ -44,6 +44,7 @@ $routes = [
         '/branches' => [$productController, 'getBranches'],
         '/base-pay-types' => [$productController, 'getBasePayTypes'],
         '/vendors' => [$vendorController, 'index'],
+        '/vendor_categories' => [$vendorController, 'getVendorCategories'],
         '/users' => [$adminController, 'getUsers'],
         '/admins' => [$humanResourceController, 'getAdmins'],
         '/admin/overview' => [$adminController, 'overview'],
