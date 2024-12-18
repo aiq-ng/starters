@@ -157,7 +157,7 @@ class TradeController extends BaseController
     {
         $this->authorizeRequest();
 
-        $invoice = $this->purchase->getInvoiceDetails($salesId);
+        $invoice = $this->sale->getInvoiceDetails($salesId);
 
         if ($invoice) {
             $this->sendResponse('success', 200, $invoice);

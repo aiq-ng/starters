@@ -123,7 +123,8 @@ class Sale
         $page = $filters['page'] ?? 1;
         $pageSize = $filters['page_size'] ?? 10;
         $query = "
-            SELECT 
+            SELECT
+                so.id, 
                 so.order_id, 
                 so.order_title, 
                 COALESCE(SUM(soi.quantity), 0) AS quantity, 
@@ -342,23 +343,26 @@ class Sale
                 so.invoice_number,
                 so.order_title,
                 so.order_type,
-                c.name AS customer_name,
+                c.display_name AS customer_name,
                 so.discount,
                 so.delivery_charge,
                 so.total,
                 json_agg(
                     json_build_object(
-                        'item_id', soi.item_id,
+                    'item_id', soi.item_id,
+                    'item_name', i.name,
+                    'item_description', i.description,
                         'quantity', soi.quantity,
                         'price', soi.price,
-                        'total', soi.total
+                        'ammount', soi.quantity * soi.price
                     )
                 ) AS items
             FROM sales_orders so
             LEFT JOIN customers c ON so.customer_id = c.id
             LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
+            LEFT JOIN items i ON soi.item_id = i.id
             WHERE so.id = :sales_order_id
-            GROUP BY so.id, c.name, so.invoice_number, so.order_title, so.order_type, 
+            GROUP BY so.id, c.display_name, so.invoice_number, so.order_title, so.order_type, 
                      so.discount, so.delivery_charge, so.total;
         ";
 

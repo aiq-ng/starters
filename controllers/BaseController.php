@@ -7,6 +7,7 @@ use Firebase\JWT\Key;
 use Database\Database;
 use Exception;
 use Services\MediaHandler;
+use Services\EmailService;
 
 class BaseController
 {
@@ -15,6 +16,7 @@ class BaseController
     protected $algorithm;
     protected $exp_time;
     protected $mediaHandler;
+    protected $emailService;
 
     public function __construct()
     {
@@ -23,6 +25,7 @@ class BaseController
         $this->algorithm = getenv('ALGORITHM');
         $this->exp_time = getenv('ACCESS_TOKEN_EXPIRE_MINUTES');
         $this->mediaHandler = new MediaHandler();
+        $this->emailService = new EmailService();
     }
 
     protected function getRequestData()
