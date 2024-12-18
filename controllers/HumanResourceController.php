@@ -52,6 +52,8 @@ class HumanResourceController extends BaseController
 
         $data = $this->getRequestData();
 
+        error_log(json_encode($data));
+
         $formData = $data['form_data'];
         $mediaFiles = $data['files'] ?? [];
 

@@ -33,8 +33,8 @@ CREATE TABLE departments (
     name VARCHAR(100) UNIQUE NOT NULL,
     salary_type VARCHAR(50) CHECK (salary_type IN ('fixed', 'base')),
     base_type_id INT REFERENCES base_pay_types(id) ON DELETE SET NULL,
-    base_rate DECIMAL(5, 2), -- rate per hour or delivery
-    base_salary DECIMAL(10, 2), -- for fixed salary
+    base_rate DECIMAL(20, 2), -- rate per hour or delivery
+    base_salary DECIMAL(20, 2), -- for fixed salary
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -90,7 +90,7 @@ CREATE TABLE users (
     department_id INT REFERENCES departments(id) ON DELETE SET NULL,
     role_id INT REFERENCES roles(id) ON DELETE SET NULL,
     no_of_working_days_id INT REFERENCES no_of_working_days(id) ON DELETE SET NULL,
-    salary DECIMAL(10, 2),
+    salary DECIMAL(20, 2),
     bank_details JSONB, -- {bank_name, account_number}
     leave DATE, 
     nin VARCHAR(255),
@@ -130,7 +130,7 @@ CREATE TABLE price_lists (
     item_category_id INT REFERENCES item_categories(id) ON DELETE SET NULL,
     unit_id INT REFERENCES units(id) ON DELETE SET NULL,
     item_details VARCHAR(100) NOT NULL UNIQUE,
-    unit_price DECIMAL(10, 2) NOT NULL,
+    unit_price DECIMAL(20, 2) NOT NULL,
     minimum_order INT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -201,7 +201,7 @@ CREATE TABLE vendors (
     payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
     currency_id INT REFERENCES currencies(id) ON DELETE SET NULL,
     category_id INT REFERENCES vendor_categories(id) ON DELETE SET NULL,
-    balance DECIMAL(10, 2) DEFAULT 0,
+    balance DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) GENERATED ALWAYS AS (
         CASE
             WHEN balance > 0 THEN 'owing'
@@ -218,7 +218,7 @@ CREATE TABLE vendor_transactions (
     vendor_id INT REFERENCES vendors(id) ON DELETE SET NULL,
     transaction_type VARCHAR(50) 
         CHECK (transaction_type IN ('credit', 'debit')),
-    amount DECIMAL(10, 2) NOT NULL,
+    amount DECIMAL(20, 2) NOT NULL,
     reference_number VARCHAR(50) GENERATED ALWAYS AS (
         'REF' || LPAD(id::TEXT, 10, '0')
     ) STORED,
@@ -237,7 +237,7 @@ CREATE TABLE items (
     ) STORED,
     unit_id INT REFERENCES units(id) ON DELETE SET NULL,
     category_id INT REFERENCES item_categories(id) ON DELETE SET NULL,
-    price DECIMAL(10, 2),
+    price DECIMAL(20, 2),
     opening_stock INT DEFAULT 0,
     threshold_value INT DEFAULT 0,
     availability VARCHAR(50), 
@@ -335,7 +335,7 @@ CREATE TABLE customers (
     social_media JSONB,
     payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
     currency_id INT REFERENCES currencies(id) ON DELETE SET NULL,
-    balance DECIMAL(10, 2) DEFAULT 0,
+    balance DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) GENERATED ALWAYS AS (
         CASE
             WHEN balance > 0 THEN 'owing'
@@ -352,7 +352,7 @@ CREATE TABLE customer_transactions (
     customer_id INT REFERENCES customers(id) ON DELETE SET NULL,
     transaction_type VARCHAR(50) 
         CHECK (transaction_type IN ('credit', 'debit')),
-    amount DECIMAL(10, 2) NOT NULL,
+    amount DECIMAL(20, 2) NOT NULL,
     reference_number VARCHAR(50) GENERATED ALWAYS AS (
         'REF' || LPAD(id::TEXT, 10, '0')
     ) STORED,
@@ -380,9 +380,9 @@ CREATE TABLE purchase_orders (
     subject TEXT,
     notes TEXT,
     terms_and_conditions TEXT,
-    discount DECIMAL(10, 2) DEFAULT 0,
-    shipping_charge DECIMAL(10, 2) DEFAULT 0,
-    total DECIMAL(10, 2) DEFAULT 0,
+    discount DECIMAL(20, 2) DEFAULT 0,
+    shipping_charge DECIMAL(20, 2) DEFAULT 0,
+    total DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'issued' 
         CHECK (status IN ('draft', 'sent', 'received', 'paid', 'overdue', 'cancelled', 'issued')),
     processed_by INT REFERENCES users(id) ON DELETE SET NULL,
@@ -396,9 +396,9 @@ CREATE TABLE purchase_order_items (
     purchase_order_id INT REFERENCES purchase_orders(id) ON DELETE CASCADE,
     item_id INT REFERENCES items(id) ON DELETE SET NULL,
     quantity INT NOT NULL,
-    price DECIMAL(10, 2) NOT NULL,
+    price DECIMAL(20, 2) NOT NULL,
     tax_id INT REFERENCES taxes(id) ON DELETE SET NULL,
-    total DECIMAL(10, 2) GENERATED ALWAYS AS (quantity * price) STORED,
+    total DECIMAL(20, 2) GENERATED ALWAYS AS (quantity * price) STORED,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -427,9 +427,9 @@ CREATE TABLE sales_orders (
     delivery_date DATE NOT NULL,
     additional_note TEXT,
     customer_note TEXT,
-    discount DECIMAL(10, 2) DEFAULT 0,
-    delivery_charge DECIMAL(10, 2) DEFAULT 0,
-    total DECIMAL(10, 2) DEFAULT 0,
+    discount DECIMAL(20, 2) DEFAULT 0,
+    delivery_charge DECIMAL(20, 2) DEFAULT 0,
+    total DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'pending' 
         CHECK (status IN ('upcoming', 'pending', 'sent', 'completed', 'cancelled')),
     processed_by INT REFERENCES users(id) ON DELETE SET NULL,
@@ -443,8 +443,8 @@ CREATE TABLE sales_order_items (
     sales_order_id INT REFERENCES sales_orders(id) ON DELETE CASCADE,
     item_id INT REFERENCES items(id) ON DELETE SET NULL,
     quantity INT NOT NULL,
-    price DECIMAL(10, 2) NOT NULL,
-    total DECIMAL(10, 2) GENERATED ALWAYS AS (quantity * price) STORED,
+    price DECIMAL(20, 2) NOT NULL,
+    total DECIMAL(20, 2) GENERATED ALWAYS AS (quantity * price) STORED,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
