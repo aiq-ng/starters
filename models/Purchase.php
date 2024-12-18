@@ -192,17 +192,17 @@ class Purchase
 
         $stmt = $this->db->prepare($query);
         $stmt->execute([
-            ':delivery_date' => $data['delivery_date'],
-            ':vendor_id' => $data['vendor_id'],
-            ':branch_id' => $data['branch_id'],
-            ':payment_term_id' => $data['payment_term_id'],
-            ':subject' => $data['subject'],
-            ':notes' => $data['notes'],
-            ':terms_and_conditions' => $data['terms_and_conditions'],
-            ':discount' => $data['discount'],
-            ':shipping_charge' => $data['shipping_charge'],
-            ':total' => $data['total'],
-            ':processed_by' => $data['user_id'],
+            ':delivery_date' => $data['delivery_date'] ?? null,
+            ':vendor_id' => $data['vendor_id'] ?? null,
+            ':branch_id' => $data['branch_id'] ?? null,
+            ':payment_term_id' => $data['payment_term_id'] ?? null,
+            ':subject' => $data['subject'] ?? null,
+            ':notes' => $data['notes'] ?? null,
+            ':terms_and_conditions' => $data['terms_and_conditions'] ?? null,
+            ':discount' => $data['discount'] ?? null,
+            ':shipping_charge' => $data['shipping_charge'] ?? null,
+            ':total' => $data['total'] ?? null,
+            ':processed_by' => $data['user_id'] ?? null,
         ]);
 
         return $stmt->fetchColumn();

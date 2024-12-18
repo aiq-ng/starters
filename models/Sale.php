@@ -175,7 +175,7 @@ class Sale
         $query .= "
             GROUP BY 
                 so.order_id, so.order_title, c.salutation, c.first_name, 
-                c.last_name, so.created_at, so.order_type, so.total, so.status
+                c.last_name, so.created_at, so.order_type, so.total, so.status, so.id
             ORDER BY 
                 so.created_at DESC 
             LIMIT :limit OFFSET :offset
@@ -296,19 +296,19 @@ class Sale
             $stmt = $this->db->prepare($query);
 
             $stmt->execute([
-                'order_type' => $data['order_type'],
-                'order_title' => $data['order_title'],
-                'payment_term_id' => $data['payment_term_id'],
-                'payment_method_id' => $data['payment_method_id'],
-                'customer_id' => $data['customer_id'] ?? null,
-                'delivery_option' => $data['delivery_option'],
-                'assigned_driver_id' => $data['assigned_driver_id'],
-                'delivery_date' => $data['delivery_date'],
-                'additional_note' => $data['additional_note'],
-                'customer_note' => $data['customer_note'],
-                'discount' => $data['discount'],
-                'delivery_charge' => $data['delivery_charge'],
-                'total' => $data['total']
+                ':order_type' => $data['order_type'] ?? null,
+                ':order_title' => $data['order_title'] ?? null,
+                ':payment_term_id' => $data['payment_term_id'] ?? null,
+                ':customer_id' => $data['customer_id'] ?? null,
+                ':payment_method_id' => $data['payment_method_id'] ?? null,
+                ':delivery_option' => $data['delivery_option'] ?? null,
+                ':assigned_driver_id' => $data['assigned_driver_id'] ?? null,
+                ':delivery_date' => $data['delivery_date'] ?? null,
+                ':additional_note' => $data['additional_note'] ?? null,
+                ':customer_note' => $data['customer_note'] ?? null,
+                ':discount' => $data['discount'] ?? null,
+                ':delivery_charge' => $data['delivery_charge'] ?? null,
+                ':total' => $data['total'] ?? null
             ]);
 
             return $stmt->fetchColumn();
