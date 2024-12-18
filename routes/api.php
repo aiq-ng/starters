@@ -91,10 +91,9 @@ $routes = [
         '/sales/orders' => [$tradeController, 'createSale'],
         '/sales/price-list' => [$tradeController, 'createPriceList'],
         '/human-resources/employees/leave/apply' => [$humanResourceController, 'applyLeave'],
-
+        '/human-resources/employees/(\d+)/suspend' => [$humanResourceController, 'suspendEmployee'],
         '/purchases/orders/received/(\d+)' => [$tradeController, 'markPurchaseAsReceived'],
         '/human-resources/employees/leave/(\d+)/approve' => [$humanResourceController, 'approveLeave'],
-        '/human-resources/employees/(d+)/suspend' => [$humanResourceController, 'suspendEmployee'],
         '/inventory/items/(\d+)' => [$inventoryController, 'updateItem'],
         '/inventory/items/stocks/(\d+)' => [$inventoryController, 'adjustStock'],
     ],

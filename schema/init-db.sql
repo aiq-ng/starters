@@ -124,18 +124,6 @@ CREATE TABLE user_leaves (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- Price Lists
-CREATE TABLE price_lists (
-    id SERIAL PRIMARY KEY,
-    item_category_id INT REFERENCES item_categories(id) ON DELETE SET NULL,
-    unit_id INT REFERENCES units(id) ON DELETE SET NULL,
-    item_details VARCHAR(100) NOT NULL UNIQUE,
-    unit_price DECIMAL(20, 2) NOT NULL,
-    minimum_order INT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Vendor Categories
 CREATE TABLE vendor_categories (
     id SERIAL PRIMARY KEY,
@@ -403,6 +391,18 @@ CREATE TABLE purchase_order_items (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Price Lists
+CREATE TABLE price_lists (
+    id SERIAL PRIMARY KEY,
+    item_category_id INT REFERENCES item_categories(id) ON DELETE SET NULL,
+    unit_id INT REFERENCES units(id) ON DELETE SET NULL,
+    item_details VARCHAR(100) NOT NULL UNIQUE,
+    unit_price DECIMAL(20, 2) NOT NULL,
+    minimum_order INT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Sales Orders
 CREATE TABLE sales_orders (
     id SERIAL PRIMARY KEY,
@@ -441,7 +441,7 @@ CREATE TABLE sales_orders (
 CREATE TABLE sales_order_items (
     id SERIAL PRIMARY KEY,
     sales_order_id INT REFERENCES sales_orders(id) ON DELETE CASCADE,
-    item_id INT REFERENCES items(id) ON DELETE SET NULL,
+    item_id INT REFERENCES price_lists(id) ON DELETE SET NULL,
     quantity INT NOT NULL,
     price DECIMAL(20, 2) NOT NULL,
     total DECIMAL(20, 2) GENERATED ALWAYS AS (quantity * price) STORED,
