@@ -134,35 +134,68 @@ class Sale
         return false;
     }
 
-    public function getPriceList()
+    public function getPriceList($filters = [])
     {
+        $page = $filters['page'] ?? 1;
+        $pageSize = $filters['page_size'] ?? 10;
+
         $query = "
-            SELECT 
-                pl.id, 
-                ic.name AS item_category, 
-                pl.item_details, 
-                pl.unit_price, 
-                pl.minimum_order, 
-                u.abbreviation AS unit
-            FROM 
-                price_lists pl
-            LEFT JOIN 
-                item_categories ic 
-                ON pl.item_category_id = ic.id
-            LEFT JOIN 
-                units u 
-                ON pl.unit_id = u.id
-            ORDER BY 
-                pl.created_at DESC
-        ";
+        SELECT 
+            pl.id, 
+            ic.name AS item_category, 
+            pl.item_details, 
+            pl.unit_price, 
+            pl.minimum_order, 
+            u.abbreviation AS unit
+        FROM 
+            price_lists pl
+        LEFT JOIN 
+            item_categories ic 
+            ON pl.item_category_id = ic.id
+        LEFT JOIN 
+            units u 
+            ON pl.unit_id = u.id
+        ORDER BY 
+            pl.created_at DESC
+        LIMIT :limit OFFSET :offset
+    ";
+
+        $params = [
+            'limit' => $pageSize,
+            'offset' => ($page - 1) * $pageSize,
+        ];
+
+        $stmt = $this->db->prepare($query);
+
+        $stmt->bindValue('limit', $params['limit'], \PDO::PARAM_INT);
+        $stmt->bindValue('offset', $params['offset'], \PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $total = $this->getPriceListCount();
+
+        $meta = [
+            'current_page' => (int) $page,
+            'next_page' => (int) $page + 1,
+            'page_size' => (int) $pageSize,
+            'total_data' => $total,
+            'total_pages' => ceil($total / $pageSize),
+        ];
+
+        return ['data' => $data, 'meta' => $meta];
+    }
+
+    public function getPriceListCount()
+    {
+        $query = "SELECT COUNT(*) AS total FROM price_lists";
 
         $stmt = $this->db->prepare($query);
         $stmt->execute();
 
-        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-        return $data;
+        return (int) $stmt->fetchColumn();
     }
+
 
     public function getAPriceList($id)
     {
@@ -367,6 +400,43 @@ class Sale
 
         return ['data' => $data, 'meta' => $meta];
     }
+
+    public function getSalesOrder($orderId)
+    {
+        $query = "
+        SELECT
+            so.id, 
+            so.order_id, 
+            so.order_title, 
+            COALESCE(SUM(soi.quantity), 0) AS quantity, 
+            CONCAT_WS(' ', c.salutation, c.first_name, c.last_name) AS customer_name, 
+            so.created_at::DATE AS date, 
+            so.order_type, 
+            so.total AS amount, 
+            so.status
+        FROM 
+            sales_orders so
+        LEFT JOIN 
+            sales_order_items soi 
+            ON so.id = soi.sales_order_id
+        LEFT JOIN 
+            customers c 
+            ON so.customer_id = c.id
+        WHERE 
+            so.id = :order_id
+        GROUP BY 
+            so.order_id, so.order_title, c.salutation, c.first_name, 
+            c.last_name, so.created_at, so.order_type, so.total, so.status, so.id
+    ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bindValue('order_id', $orderId, \PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
+
 
     private function getServiceOrdersCount()
     {

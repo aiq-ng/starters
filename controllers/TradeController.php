@@ -242,10 +242,15 @@ class TradeController extends BaseController
     {
         $this->authorizeRequest();
 
-        $priceList = $this->sale->getPriceList();
+        $filters = [
+            'page' => isset($_GET['page']) ? $_GET['page'] : 1,
+            'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
+        ];
+
+        $priceList = $this->sale->getPriceList($filters);
 
         if ($priceList) {
-            $this->sendResponse('success', 200, $priceList);
+            $this->sendResponse('success', 200, $priceList['data'], $priceList['meta']);
         } else {
             $this->sendResponse('Price list not found', 404);
         }
