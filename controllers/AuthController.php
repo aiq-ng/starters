@@ -55,6 +55,9 @@ class AuthController extends BaseController
 
         $identifier = $data['username'] ?? $data['email'];
         $user = $this->getUserByUsernameOrEmail($identifier);
+
+        error_log(json_encode($user));
+
         $user_id = $user['id'] ?? null;
         $adminAccess = $identifier === "starters@admin.com";
 

@@ -66,6 +66,8 @@ class HumanResource
             'account_number' => $data['account_number'] ?? null,
             'bank_name' => $data['bank_name'] ?? null,
         ];
+        $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+
 
         $stmt->execute([
             $data['email'] ?? null,
@@ -84,7 +86,7 @@ class HumanResource
             $mediaLinks['passport'][0] ?? null,
             $mediaLinks['avatar_url'][0] ?? null,
             $data['username'] ?? null,
-            $data['password'] ?? null,
+            $hashedPassword,
         ]);
 
         return $this->db->lastInsertId();
