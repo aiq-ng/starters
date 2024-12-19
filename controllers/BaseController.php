@@ -262,4 +262,9 @@ class BaseController
     {
         return $this->sendResponse('success', 200, $this->fetchData('permissions'));
     }
+
+    public function getExpensesCategories()
+    {
+        return $this->sendResponse('success', 200, $this->fetchData('expenses_categories'));
+    }
 }

@@ -322,12 +322,12 @@ class Purchase
 
         $updateQuery = "
             UPDATE purchase_orders
-            SET status = 'received'
+            SET status = 'received',
+                date_received = NOW()
             WHERE id = :purchase_order_id
         ";
 
         $updateStmt = $this->db->prepare($updateQuery);
-
         $updateStmt->execute([':purchase_order_id' => $purchaseOrderId]);
 
         $rowCount = $updateStmt->rowCount();

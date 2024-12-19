@@ -374,6 +374,7 @@ CREATE TABLE purchase_orders (
     status VARCHAR(50) DEFAULT 'issued' 
         CHECK (status IN ('draft', 'sent', 'received', 'paid', 'overdue', 'cancelled', 'issued')),
     processed_by INT REFERENCES users(id) ON DELETE SET NULL,
+    date_received DATE DEFAULT CURRENT_DATE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -449,6 +450,34 @@ CREATE TABLE sales_order_items (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE expenses_categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE expenses (
+    id SERIAL PRIMARY KEY,
+    expense_title VARCHAR(255),
+    expense_category INT REFERENCES expenses_categories(id) ON DELETE SET NULL, 
+    expense_id VARCHAR(255) GENERATED ALWAYS AS (
+        'EXP-' || LPAD(id::TEXT, 5, '0')
+    ) STORED,
+    payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,
+    payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
+    department_id INT REFERENCES departments(id) ON DELETE SET NULL,
+    amount DECIMAL(20, 2) NOT NULL,
+    bank_charges DECIMAL(20, 2) DEFAULT 0,
+    date_of_expense DATE DEFAULT CURRENT_DATE,
+    notes TEXT,
+    status VARCHAR(50) DEFAULT 'pending' 
+        CHECK (status IN ('paid', 'cancelled')),
+    processed_by INT REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE OR REPLACE FUNCTION update_item_availability()
 RETURNS TRIGGER AS $$

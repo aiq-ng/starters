@@ -1,27 +1,25 @@
 <?php
 
 use Controllers\AuthController;
-use Controllers\ProductController;
 use Controllers\CustomerController;
 use Controllers\TradeController;
 use Controllers\InventoryController;
 use Controllers\VendorController;
 use Controllers\DashboardController;
 use Controllers\AdminController;
-use Controllers\EmployeeController;
 use Controllers\HumanResourceController;
+use Controllers\AccountingController;
 
 // Create instances of the controllers
 $authController = new AuthController();
-$productController = new ProductController();
 $customerController = new CustomerController();
 $vendorController = new VendorController();
 $tradeController = new TradeController();
 $inventoryController = new InventoryController();
 $dashboardController = new DashboardController();
 $adminController = new AdminController();
-$employeeController = new EmployeeController();
 $humanResourceController = new HumanResourceController();
+$accountingController = new AccountingController();
 
 // Define routes
 $routes = [
@@ -33,25 +31,26 @@ $routes = [
         '/auth/logout' => [$authController, 'logout'],
         '/roles' => [$authController, 'getRoles'],
         '/permissions' => [$authController, 'getPermissions'],
-        '/currencies' => [$productController, 'getCurrencies'],
-        '/payment_methods' => [$productController, 'getPaymentMethods'],
-        '.payment_terms' => [$productController, 'getPaymentTerms'],
-        '/departments' => [$productController, 'getDepartments'],
-        '/item_categories' => [$productController, 'getItemCategories'],
-        '/item_manufacturers' => [$productController, 'getItemManufacturers'],
-        '/units' => [$productController, 'getUnits'],
-        '/no_of_working_days' => [$productController, 'getNoOfWorkingDays'],
-        '/branches' => [$productController, 'getBranches'],
-        '/base-pay-types' => [$productController, 'getBasePayTypes'],
+        '/currencies' => [$adminController, 'getCurrencies'],
+        '/payment_methods' => [$adminController, 'getPaymentMethods'],
+        '.payment_terms' => [$adminController, 'getPaymentTerms'],
+        '/departments' => [$adminController, 'getDepartments'],
+        '/item_categories' => [$adminController, 'getItemCategories'],
+        '/expenses_categories' => [$adminController, 'getExpensesCategories'],
+        '/item_manufacturers' => [$adminController, 'getItemManufacturers'],
+        '/units' => [$adminController, 'getUnits'],
+        '/no_of_working_days' => [$adminController, 'getNoOfWorkingDays'],
+        '/branches' => [$adminController, 'getBranches'],
+        '/base-pay-types' => [$adminController, 'getBasePayTypes'],
         '/vendors' => [$vendorController, 'index'],
         '/vendor_categories' => [$vendorController, 'getVendorCategories'],
         '/users' => [$adminController, 'getUsers'],
         '/admins' => [$humanResourceController, 'getAdmins'],
         '/admin/overview' => [$adminController, 'overview'],
-        '/taxes' => [$productController, 'getTaxes'],
+        '/taxes' => [$adminController, 'getTaxes'],
         '/customers' => [$customerController, 'index'],
         '/dashboard/business' => [$dashboardController, 'businessOverview'],
-        '/dashboard/metrics' => [$productController, 'getDashboardMetrics'],
+        '/dashboard/metrics' => [$adminController, 'getDashboardMetrics'],
         '/dashboard/overview' => [$dashboardController, 'overview'],
         '/dashboard/products/lowstock' => [$dashboardController, 'lowQuantityStock'],
         '/dashboard/products/mostpurchased' => [$dashboardController, 'mostPurchased'],
@@ -63,10 +62,12 @@ $routes = [
         '/purchases/orders' => [$tradeController, 'purchaseIndex'],
         '/sales/orders' => [$tradeController, 'saleIndex'],
         '/sales/price-list' => [$tradeController, 'getpriceList'],
+        '/accounting/expenses' => [$accountingController, 'getExpenses'],
+        '/accounting/bills' => [$accountingController, 'getBills'],
         '/inventory' => [$inventoryController, 'index'],
         '/vendors/(\d+)' => [$vendorController, 'show'],
         '/customers/(\d+)' => [$customerController, 'show'],
-        '/products/(\d+)' => [$productController, 'show'],
+        '/products/(\d+)' => [$adminController, 'show'],
         '/human-resources/employees/(\d+)' => [$humanResourceController, 'showEmployee'],
         '/purchases/orders/(\d+)' => [$tradeController, 'showPurchase'],
         '/inventory/history/(\d+)' => [$inventoryController, 'inventoryHistory'],
@@ -77,7 +78,7 @@ $routes = [
     'POST' => [
         '/auth/register' => [$authController, 'register'],
         '/auth/login' => [$authController, 'login'],
-        '/products' => [$productController, 'create'],
+        '/products' => [$adminController, 'create'],
         '/customers' => [$customerController, 'create'],
         '/vendors' => [$vendorController, 'create'],
         '/admin/create' => [$adminController, 'createAdmin'],
@@ -87,9 +88,10 @@ $routes = [
         '/inventory/items' => [$inventoryController, 'createItem'],
         '/inventory/completed' => [$inventoryController, 'completeInventory'],
         '/admin/register' => [$adminController, 'registerAdmin'],
-        '/employees/register' => [$employeeController, 'create'],
+        '/employees/register' => [$humanResourceController, 'create'],
         '/sales/orders' => [$tradeController, 'createSale'],
         '/sales/price-list' => [$tradeController, 'createPriceList'],
+        '/accounting/expenses' => [$accountingController, 'createExpense'],
         '/human-resources/employees/leave/apply' => [$humanResourceController, 'applyLeave'],
         '/human-resources/employees/(\d+)/suspend' => [$humanResourceController, 'suspendEmployee'],
         '/purchases/orders/received/(\d+)' => [$tradeController, 'markPurchaseAsReceived'],
@@ -98,17 +100,17 @@ $routes = [
         '/inventory/items/stocks/(\d+)' => [$inventoryController, 'adjustStock'],
     ],
     'PUT' => [
-        '/products/quantity/(\d+)' => [$productController, 'updateQuantity'],
+        '/products/quantity/(\d+)' => [$adminController, 'updateQuantity'],
         '/sales/price-list/(\d+)' => [$tradeController, 'updatePriceList'],
-        '/products/(\d+)' => [$productController, 'update'],
+        '/products/(\d+)' => [$adminController, 'update'],
         '/customers/(\d+)' => [$customerController, 'update'],
         '/vendors/(\d+)' => [$vendorController, 'update'],
     ],
     'DELETE' => [
         '/sales/price-list/(\d+)' => [$tradeController, 'deletePriceList'],
         '/human-resources/employees/(\d+)' => [$humanResourceController, 'deleteEmployee'],
-        '/products/(\d+)' => [$productController, 'delete'],
-        '/employees/(\d+)' => [$employeeController, 'delete'],
+        '/products/(\d+)' => [$adminController, 'delete'],
+        '/employees/(\d+)' => [$humanResourceController, 'delete'],
         '/customers/(\d+)' => [$customerController, 'delete'],
         '/vendors/(\d+)' => [$vendorController, 'delete'],
     ],

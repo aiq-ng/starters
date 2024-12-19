@@ -372,27 +372,27 @@ VALUES
 INSERT INTO purchase_orders (
     vendor_id, branch_id, delivery_date, 
     payment_term_id, subject, notes, terms_and_conditions, 
-    discount, shipping_charge, total, status, processed_by
+    discount, shipping_charge, total, status, processed_by, date_received
 )
 VALUES
 (1, 1, '2024-12-20', 3, 
     'Bulk Purchase of Food Items', 'Ensure quality items', 
-    'Goods must be delivered in good condition', 100, 5000, 150000, 'draft', 1),
+    'Goods must be delivered in good condition', 100, 5000, 150000, 'overdue', 1, '2024-11-11'),
 (2, 2, '2024-12-15', 4, 
     'Monthly Grocery Restock', 'Deliver to Abuja branch warehouse', 
-    'Invoice must include all taxes', 200, 2500, 200000, 'sent', 1),
+    'Invoice must include all taxes', 200, 2500, 200000, 'sent', 1, NULL),
 (3, 3, '2024-11-10', 3, 
     'Catering Supplies', 'Urgent delivery required', 
-    'Late delivery will incur penalties', 150, 1000, 1120000, 'received', 1),
+    'Late delivery will incur penalties', 150, 1000, 1120000, 'received', 1, NOW()),
 (3, 3, '2024-10-11', 2, 
     'Bulk Purchase of Food Items', 'Ensure quality items', 
-    'Goods must be delivered in good condition', 100, 5000, 150000, 'paid', 1),
+    'Goods must be delivered in good condition', 100, 5000, 150000, 'paid', 1, NOW()),
 (4, 1, '2024-11-25', 3, 
     'Monthly Meat Supplies', 'Deliver to Lagos branch warehouse', 
-    'Invoice must include all taxes', 200, 2500, 200000, 'overdue', 1), 
+    'Invoice must include all taxes', 200, 2500, 200000, 'overdue', 1, NOW()),
 (5, 2, '2024-11-30', 3, 
     'Bulk Purchase of Food Items', 'Ensure quality items', 
-    'Goods must be delivered in good condition', 100, 5000, 150000, 'issued', 1);
+    'Goods must be delivered in good condition', 100, 5000, 150000, 'issued', 1, NULL);
 
 -- Insert into purchase_order_items
 INSERT INTO purchase_order_items (
@@ -472,4 +472,32 @@ VALUES
 (2, NULL, 7, 'item_stock_adjustment', 'Eggs are always good.', '2024-01-24'),
 (3, NULL, 8, 'item_stock_adjustment', 'Cheese was fresh.', '2024-01-25'),
 (1, NULL, 9, 'item_stock_adjustment', 'Milk was great!', '2024-01-26');
+
+INSERT INTO expenses_categories (name, description)
+VALUES
+('Travel', 'Expenses related to business travel'),
+('Office Supplies', 'Expenses for office supplies and stationery'),
+('Utilities', 'Payments for electricity, water, and internet bills'),
+('Meals', 'Expenses for meals and entertainment'),
+('Maintenance', 'Expenses related to equipment maintenance');
+
+INSERT INTO expenses (expense_title, expense_category, payment_method_id, 
+ payment_term_id, department_id, amount, bank_charges, date_of_expense, 
+ notes, status, processed_by
+)
+VALUES
+('Flight to Client Meeting', 1, 1, 1, 2, 1500.00, 15.00, '2024-04-01', 
+ 'Flight to meet client for project discussion', 'paid', 3),
+ 
+('Office Stationery Purchase', 2, 2, 1, 1, 250.00, 5.00, '2024-03-15', 
+ 'Purchase of pens, paper, and files', 'paid', 4),
+
+('March Internet Bill', 3, 3, 2, 3, 120.00, 2.50, '2024-03-20', 
+ 'Payment for monthly internet service', 'paid', 2),
+
+('Team Lunch', 4, 1, 1, 2, 300.00, 10.00, '2024-04-05', 
+ 'Lunch with the team after project completion', 'paid', 5),
+
+('Printer Maintenance', 5, 2, 2, 1, 500.00, 0.00, '2024-02-28', 
+ 'Scheduled maintenance for office printer', 'cancelled', 4);
 
