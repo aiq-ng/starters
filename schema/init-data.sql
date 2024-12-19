@@ -427,7 +427,22 @@ VALUES
     2000, 0, 300000, 'sent', 1),
  ('order', 'Chicken Jumbo Pack', 1, 1, 1, 'delivery', 1, 
     '2024-10-01', 'Deliver before noon', 'Please call on arrival', 
-    1000, 2000, 520000, 'completed', 1);
+    1000, 2000, 520000, 'completed', 1),
+ ('service', 'Event Catering Service', 1, 1, 1, 'delivery', 1, 
+    '2024-11-05', 'Deliver on time and set up quickly', 'Call on arrival', 
+    5000, 10000, 250000, 'pending', 2),
+('service', 'Birthday Party Package', 2, 2, 2, 'pickup', NULL, 
+    '2024-11-12', 'Pack everything carefully', 'Include extra napkins', 
+    3000, 0, 180000, 'upcoming', 1),
+('service', 'Corporate Lunch Service', 3, 1, 3, 'delivery', 2, 
+    '2024-11-15', 'Serve between 12-1 PM', 'Contact HR upon arrival', 
+    7000, 15000, 300000, 'sent', 2),
+('service', 'Wedding Reception Catering', 4, 3, 1, 'delivery', 1, 
+    '2024-11-20', 'Coordinate with wedding planner', 'Set up before guests arrive', 
+    10000, 20000, 500000, 'completed', 3),
+('service', 'Private Chef Service', 5, 2, 2, 'pickup', NULL, 
+    '2024-11-25', 'Prepare meals for 5 guests', 'Include dessert options', 
+    4000, 0, 150000, 'pending', 1);
 
 -- Insert into sales_order_items
 INSERT INTO sales_order_items (sales_order_id, item_id, quantity, price)

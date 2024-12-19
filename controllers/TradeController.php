@@ -155,13 +155,32 @@ class TradeController extends BaseController
         }
     }
 
+    public function upcomingEvents()
+    {
+        $this->authorizeRequest();
+
+        $filter = [
+            'page' => $_GET['page'] ?? 1,
+            'page_size' => $_GET['page_size'] ?? 10,
+        ];
+
+        $result = $this->sale->getServiceOrders($filter);
+
+        if (!empty($result['data'])) {
+            $this->sendResponse('success', 200, $result['data'], $result['meta']);
+        } else {
+            $this->sendResponse('No service orders found', 404);
+        }
+    }
+
+
     public function createSale()
     {
         $this->authorizeRequest();
 
         $data = $this->getRequestData();
 
-        if (!$this->validateFields($data['delivery_option'], $data['order_type'])) {
+        if (!$this->validateFields($data['order_type'])) {
             $this->sendResponse('Invalid fields', 400);
         }
 

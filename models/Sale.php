@@ -295,6 +295,68 @@ class Sale
         return ['data' => $data, 'meta' => $meta];
     }
 
+    public function getServiceOrders($filters = [])
+    {
+        $page = $filters['page'] ?? 1;
+        $pageSize = $filters['page_size'] ?? 10;
+
+        $query = "
+            SELECT
+                so.order_title AS title,
+                so.additional_note AS description,
+                so.created_at,
+                so.delivery_date
+            FROM 
+                sales_orders so
+            WHERE 
+                so.order_type = 'service'
+            ORDER BY 
+                so.delivery_date ASC
+            LIMIT :limit OFFSET :offset
+        ";
+
+        $params = [
+            'limit' => $pageSize,
+            'offset' => ($page - 1) * $pageSize,
+        ];
+
+        $stmt = $this->db->prepare($query);
+
+        foreach ($params as $key => $value) {
+            $type = is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR;
+            $stmt->bindValue($key, $value, $type);
+        }
+
+        $stmt->execute();
+
+        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $total = $this->getServiceOrdersCount();
+
+        $meta = [
+            'current_page' => (int) $page,
+            'next_page' => (int) $page + 1,
+            'page_size' => (int) $pageSize,
+            'total_data' => $total,
+            'total_pages' => ceil($total / $pageSize),
+        ];
+
+        return ['data' => $data, 'meta' => $meta];
+    }
+
+    private function getServiceOrdersCount()
+    {
+        $query = "
+        SELECT COUNT(*) AS total
+        FROM sales_orders
+        WHERE order_type = 'service'
+    ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
+    }
+
     public function createSale($data)
     {
 
