@@ -111,6 +111,24 @@ class TradeController extends BaseController
         }
     }
 
+    public function topSellingStocks()
+    {
+        $this->authorizeRequest();
+
+        $filter = [
+            'page' => isset($_GET['page']) ? $_GET['page'] : 1,
+            'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
+        ];
+
+        $topSelling = $this->sale->getTopSellingStock($filter);
+
+        if ($topSelling) {
+            $this->sendResponse('success', 200, $topSelling['data'], $topSelling['meta']);
+        } else {
+            $this->sendResponse('Top selling stock not found', 404);
+        }
+    }
+
     public function saleIndex()
     {
         $this->authorizeRequest();

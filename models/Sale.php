@@ -471,4 +471,48 @@ class Sale
         }
     }
 
+    public function getTopSellingStock($filter)
+    {
+        $page = isset($filter['page']) && is_numeric($filter['page']) ? (int)$filter['page'] : 1;
+        $pageSize = isset($filter['page_size']) && is_numeric($filter['page_size']) ? (int)$filter['page_size'] : 10;
+        $offset = ($page - 1) * $pageSize;
+
+        $query = "
+            SELECT 
+                pl.item_details AS name,
+                SUM(soi.quantity) AS total_quantity,
+                pl.unit_price AS price,
+                (SUM(soi.quantity) * pl.unit_price) AS total_amount
+            FROM sales_order_items soi
+            JOIN price_lists pl ON soi.item_id = pl.id
+            GROUP BY pl.id, pl.item_details, pl.unit_price
+            ORDER BY total_quantity DESC
+            LIMIT ? OFFSET ?
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$pageSize, $offset]);
+        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $countQuery = "
+            SELECT COUNT(DISTINCT pl.id) AS total
+            FROM sales_order_items soi
+            JOIN price_lists pl ON soi.item_id = pl.id
+        ";
+
+        $countStmt = $this->db->prepare($countQuery);
+        $countStmt->execute();
+        $totalCount = $countStmt->fetch(\PDO::FETCH_ASSOC)['total'];
+
+        return [
+            'data' => $data,
+            'meta' => [
+                'current_page' => $page,
+                'page_size' => $pageSize,
+                'total_records' => $totalCount,
+                'total_pages' => ceil($totalCount / $pageSize),
+            ],
+        ];
+    }
+
 }
