@@ -491,12 +491,15 @@ class Sale
         $query = "
             SELECT so.id,
                 so.invoice_number,
+                so.reference_number,
                 so.order_title,
                 so.order_type,
                 c.display_name AS customer_name,
                 so.discount,
                 so.delivery_charge,
                 so.total,
+                so.created_at AS invoice_date,
+                so.delivery_date,
                 json_agg(
                     json_build_object(
                     'item_id', soi.item_id,

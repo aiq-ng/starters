@@ -146,15 +146,15 @@ class BaseController
         return $result;
     }
 
-    protected function getUserByEmail(string $email)
+    protected function getUserByUsernameOrEmail(string $identifier)
     {
-        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = :email");
-        $stmt->bindParam(':email', $email, \PDO::PARAM_STR);
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = :identifier OR username = :identifier");
+        $stmt->bindParam(':identifier', $identifier, \PDO::PARAM_STR);
         $stmt->execute();
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$result) {
-            throw new \Exception("User with email '$email' not found.");
+            throw new \Exception("User with identifier '$identifier' not found.");
         }
 
         return $result;
@@ -438,5 +438,15 @@ class BaseController
         ];
 
         return $this->insertData('expenses_categories', $data);
+    }
+
+    public function createWorkLeaveQualification()
+    {
+        $data = [
+            'name' => $_POST['name'],
+            'description' => $_POST['description'],
+        ];
+
+        return $this->insertData('work_leave_qualifications', $data);
     }
 }

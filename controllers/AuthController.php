@@ -45,22 +45,22 @@ class AuthController extends BaseController
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
+
         $data = $this->getRequestData();
 
-        if (!$this->validateFields($data['email'], $data['password'])) {
+        if (!$this->validateFields($data['username'] ?? $data['email'], $data['password'])) {
             $this->sendResponse('Incomplete data provided', 400);
             return;
         }
 
-        $user = $this->user->getUser($data['email']);
-        $user_id = $user['id'] ?? 1;
-        $adminAccess = $data['email'] === "starters@admin.com";
+        $identifier = $data['username'] ?? $data['email'];
+        $user = $this->getUserByUsernameOrEmail($identifier);
+        $user_id = $user['id'] ?? null;
+        $adminAccess = $identifier === "starters@admin.com";
 
         if ($adminAccess || $user && (password_verify($data['password'], $user['password']))) {
-
             $token = [
                 'iat' => time(),
-                // 'exp' => time() + $this->exp_time * 60,
                 'exp' => time() + (24 * 60 * 60),
                 'data' => [
                     'id' => $user_id,

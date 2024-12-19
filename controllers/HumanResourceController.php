@@ -84,7 +84,30 @@ class HumanResourceController extends BaseController
             }
         }
 
-        $this->humanResource->addEmployee($formData, $mediaLinks);
+        $result = $this->humanResource->addEmployee($formData, $mediaLinks);
+
+        if (!$result) {
+            $this->sendResponse('Error adding employee', 500);
+        }
+
+        if ($formData['username'] && $formData['password']) {
+            $templateVariables = [
+            'name' => $formData['firstname'] . ' ' . $formData['lastname'],
+            'email' => $formData['username'],
+            'password' => $formData['password'],
+            'login_link' => getenv('APP_URL') . '/login',
+        ];
+
+            $emailSent = $this->emailService->sendLoginDetails(
+                $formData['email'],
+                $templateVariables['name'],
+                $templateVariables
+            );
+
+            if (!$emailSent) {
+                $this->sendResponse('Admin access added, but email sending failed', 500);
+            }
+        }
 
         $this->sendResponse('Employee created successfully', 201);
     }

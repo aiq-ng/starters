@@ -26,15 +26,22 @@ VALUES
 ('hourly', 'Base salary calculated based on hourly rates'),
 ('delivery', 'Base salary calculated based on delivery rates');
 
+-- Insert default qualification periods
+INSERT INTO work_leave_qualifications (name) VALUES
+('3 months'),
+('6 months'),
+('annually');
+
 -- Seed departments
-INSERT INTO departments (name, salary_type, base_type_id, base_rate, base_salary, description)
+INSERT INTO departments (name, salary_type, base_type_id, base_rate, base_salary, description,
+work_leave_qualification)
 VALUES
-('Snacks', 'fixed', NULL, NULL, 2500.00, 'Department for local and imported snacks'),
-('Beverages', 'fixed', NULL, NULL, 2000.00, 'Department for drinks, tea, coffee, and juices'),
-('Dispatch Riders', 'base', 2, 15.00, NULL, 'Department for dispatch riders'),
-('Kitchen', 'fixed', NULL, NULL, 2200.00, 'Department for kitchenware and utensils'),
-('Chef', 'fixed', NULL, NULL, 3000.00, 'Department for chefs and kitchen staff'),
-('Sales Representatives', 'base', 1, 20.00, NULL, 'Department for sales staff, paid hourly');
+('Snacks', 'fixed', NULL, NULL, 2500.00, 'Department for local and imported snacks', 1),
+('Beverages', 'fixed', NULL, NULL, 2000.00, 'Department for drinks, tea, coffee, and juices', 2),
+('Dispatch Riders', 'base', 2, 15.00, NULL, 'Department for dispatch riders', 3),
+('Kitchen', 'fixed', NULL, NULL, 2200.00, 'Department for kitchenware and utensils', 1),
+('Chef', 'fixed', NULL, NULL, 3000.00, 'Department for chefs and kitchen staff', 2),
+('Sales Representatives', 'base', 1, 20.00, NULL, 'Department for sales staff, paid hourly', 3);
 
 -- Seed data for payment_terms
 INSERT INTO no_of_working_days (name, description)

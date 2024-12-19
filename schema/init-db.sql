@@ -27,6 +27,12 @@ CREATE TABLE base_pay_types (
     description TEXT
 );
 
+-- Create work_leave_qualifications table
+CREATE TABLE work_leave_qualifications (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50)
+);
+
 -- Departments
 CREATE TABLE departments (
     id SERIAL PRIMARY KEY,
@@ -35,6 +41,8 @@ CREATE TABLE departments (
     base_type_id INT REFERENCES base_pay_types(id) ON DELETE SET NULL,
     base_rate DECIMAL(20, 2), -- rate per hour or delivery
     base_salary DECIMAL(20, 2), -- for fixed salary
+    work_leave_qualification INT REFERENCES work_leave_qualifications(id) ON DELETE SET NULL,
+    work_leave_period VARCHAR(50),
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -78,6 +86,7 @@ CREATE TABLE no_of_working_days (
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE,
+    username VARCHAR(100) UNIQUE,
     password VARCHAR(255),
     firstname VARCHAR(100),
     lastname VARCHAR(100),
@@ -418,6 +427,9 @@ CREATE TABLE sales_orders (
     ) STORED,
     invoice_number VARCHAR(50) GENERATED ALWAYS AS (
         'INV-' || LPAD(id::TEXT, 5, '0')
+    ) STORED,
+    reference_number VARCHAR(50) GENERATED ALWAYS AS (
+        'REF' || LPAD(id::TEXT, 5, '0')
     ) STORED,
     customer_id INT REFERENCES customers(id) ON DELETE SET NULL,
     payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,

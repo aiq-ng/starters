@@ -33,8 +33,9 @@ class HumanResource
     {
         $stmt = $this->db->prepare(
             'INSERT INTO departments 
-        (name, salary_type, base_type_id, base_rate, base_salary, description) 
-        VALUES (?, ?, ?, ?, ?, ?)'
+        (name, salary_type, base_type_id, base_rate, base_salary, 
+        work_leave_qualification, work_leave_period, description) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         );
 
         $stmt->execute([
@@ -43,6 +44,8 @@ class HumanResource
             $data['base_type_id'] ?? null,
             $data['base_rate'] ?? null,
             $data['base_salary'] ?? null,
+            $data['work_leave_qualification'] ?? null,
+            $data['work_leave_period'] ?? null,
             $data['description'] ?? null,
         ]);
 
@@ -55,8 +58,8 @@ class HumanResource
             'INSERT INTO users 
         (email, firstname, lastname, date_of_birth, address, next_of_kin,
         date_of_employment, department_id, role_id, no_of_working_days_id, 
-        salary, bank_details, nin, passport, avatar_url) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        salary, bank_details, nin, passport, avatar_url, username, password) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
 
         $bankDetails = [
@@ -80,6 +83,8 @@ class HumanResource
             $mediaLinks['nin'][0] ?? null,
             $mediaLinks['passport'][0] ?? null,
             $mediaLinks['avatar_url'][0] ?? null,
+            $data['username'] ?? null,
+            $data['password'] ?? null,
         ]);
 
         return $this->db->lastInsertId();

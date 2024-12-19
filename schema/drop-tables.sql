@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS expenses_categories CASCADE;
 DROP TABLE IF EXISTS expenses CASCADE;
+DROP TABLE IF EXISTS expenses_categories CASCADE;
 
 -- Sales Orders and Items
 DROP TABLE IF EXISTS sales_order_items CASCADE;
@@ -42,6 +42,7 @@ DROP TABLE IF EXISTS user_leaves CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
 DROP TABLE IF EXISTS permissions CASCADE;
+DROP TABLE IF EXISTS work_leave_qualifications CASCADE;
 
 -- Branches and Departments
 DROP TABLE IF EXISTS branches CASCADE;

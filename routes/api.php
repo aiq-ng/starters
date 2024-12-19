@@ -49,6 +49,7 @@ $routes = [
         '/admin/overview' => [$adminController, 'overview'],
         '/taxes' => [$adminController, 'getTaxes'],
         '/customers' => [$customerController, 'index'],
+        '/work_leave_qualifications' => [$humanResourceController, 'getWorkLeaveQualifications'],
         '/dashboard/business' => [$dashboardController, 'businessOverview'],
         '/dashboard/metrics' => [$adminController, 'getDashboardMetrics'],
         '/dashboard/overview' => [$dashboardController, 'overview'],
