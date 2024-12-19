@@ -130,20 +130,6 @@ class BaseController
         exit;
     }
 
-    protected function fetchData(string $table, array $columns = ['*'])
-    {
-        $columnsList = implode(', ', $columns);
-        $query = "SELECT $columnsList FROM $table";
-        $stmt = $this->db->query($query);
-        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-        if (empty($result)) {
-            throw new \Exception("No records found in the table '$table'.");
-        }
-
-        return $result;
-    }
-
     protected function findRecord(string $table, int $id)
     {
         $stmt = $this->db->prepare("SELECT * FROM $table WHERE id = :id");
@@ -172,12 +158,6 @@ class BaseController
         return $result;
     }
 
-    public function getRoles()
-    {
-        return $this->sendResponse('success', 200, $this->fetchData('roles'));
-
-    }
-
     public function isAdmin()
     {
         $stmt = $this->db->prepare("SELECT role_id FROM users WHERE id = :id");
@@ -188,9 +168,67 @@ class BaseController
         return $result['role_id'] == 1;
     }
 
+    protected function fetchData(string $table, array $columns = ['*'])
+    {
+        $columnsList = implode(', ', $columns);
+        $query = "SELECT $columnsList FROM $table";
+        $stmt = $this->db->query($query);
+        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        if (empty($result)) {
+            throw new \Exception("No records found in the table '$table'.");
+        }
+
+        return $result;
+    }
+
+    protected function insertData(string $table, array $data)
+    {
+        $columns = implode(', ', array_keys($data));
+        $placeholders = ':' . implode(', :', array_keys($data));
+
+        $query = "INSERT INTO $table ($columns) VALUES ($placeholders)";
+        $stmt = $this->db->prepare($query);
+
+        foreach ($data as $key => $value) {
+            $stmt->bindValue(":$key", $value);
+        }
+
+        if ($stmt->execute()) {
+            return $this->sendResponse('success', 201, 'Record successfully inserted');
+        } else {
+            throw new \Exception("Failed to insert record into '$table'.");
+        }
+    }
+
+    public function getRoles()
+    {
+        return $this->sendResponse('success', 200, $this->fetchData('roles'));
+
+    }
+
+    public function createRole()
+    {
+        $data = [
+            'name' => $_POST['name'],
+        ];
+
+        return $this->insertData('roles', $data);
+    }
+
     public function getUnits()
     {
         return $this->sendResponse('success', 200, $this->fetchData('units', ['id', 'name', 'abbreviation']));
+    }
+
+    public function createUnit()
+    {
+        $data = [
+            'name' => $_POST['name'],
+            'abbreviation' => $_POST['abbreviation'],
+        ];
+
+        return $this->insertData('units', $data);
     }
 
     public function getVendors()
@@ -203,9 +241,30 @@ class BaseController
         return $this->sendResponse('success', 200, $this->fetchData('vendor_categories', ['id', 'name', 'description']));
     }
 
+    public function createVendorCategory()
+    {
+        $data = [
+            'name' => $_POST['name'],
+            'description' => $_POST['description'],
+        ];
+
+        return $this->insertData('vendor_categories', $data);
+    }
+
     public function getCurrencies()
     {
         return $this->sendResponse('success', 200, $this->fetchData('currencies', ['id', 'name', 'symbol']));
+    }
+
+    public function createCurrency()
+    {
+        $data = [
+            'name' => $_POST['name'],
+            'symbol' => $_POST['symbol'],
+            'code' => $_POST['code'],
+        ];
+
+        return $this->insertData('currencies', $data);
     }
 
     public function getPaymentMethods()
@@ -213,9 +272,29 @@ class BaseController
         return $this->sendResponse('success', 200, $this->fetchData('payment_methods', ['id', 'name', 'description']));
     }
 
+    public function createPaymentMethod()
+    {
+        $data = [
+            'name' => $_POST['name'],
+            'description' => $_POST['description'],
+        ];
+
+        return $this->insertData('payment_methods', $data);
+    }
+
     public function getPaymentTerms()
     {
         return $this->sendResponse('success', 200, $this->fetchData('payment_terms', ['id', 'name', 'description']));
+    }
+
+    public function createPaymentTerm()
+    {
+        $data = [
+            'name' => $_POST['name'],
+            'description' => $_POST['description'],
+        ];
+
+        return $this->insertData('payment_terms', $data);
     }
 
     public function getTaxes()
@@ -223,9 +302,30 @@ class BaseController
         return $this->sendResponse('success', 200, $this->fetchData('taxes', ['id', 'name', 'rate',  'description']));
     }
 
+    public function createTax()
+    {
+        $data = [
+            'name' => $_POST['name'],
+            'rate' => $_POST['rate'],
+            'description' => $_POST['description'],
+        ];
+
+        return $this->insertData('taxes', $data);
+    }
+
     public function getDepartments()
     {
         return $this->sendResponse('success', 200, $this->fetchData('departments', ['id', 'name', 'description']));
+    }
+
+    public function createDepartment()
+    {
+        $data = [
+            'name' => $_POST['name'],
+            'description' => $_POST['description'],
+        ];
+
+        return $this->insertData('departments', $data);
     }
 
     public function getBranches()
@@ -233,9 +333,29 @@ class BaseController
         return $this->sendResponse('success', 200, $this->fetchData('branches', ['id', 'name']));
     }
 
+    public function createBranch()
+    {
+        $data = [
+            'name' => $_POST['name'],
+            'description' => $_POST['description'],
+        ];
+
+        return $this->insertData('branches', $data);
+    }
+
     public function getItemCategories()
     {
         return $this->sendResponse('success', 200, $this->fetchData('item_categories', ['id', 'name', 'description']));
+    }
+
+    public function createItemCategory()
+    {
+        $data = [
+            'name' => $_POST['name'],
+            'description' => $_POST['description'],
+        ];
+
+        return $this->insertData('item_categories', $data);
     }
 
     public function getItemManufacturers()
@@ -243,9 +363,29 @@ class BaseController
         return $this->sendResponse('success', 200, $this->fetchData('item_manufacturers', ['id', 'name', 'website']));
     }
 
+    public function createItemManufacturer()
+    {
+        $data = [
+            'name' => $_POST['name'],
+            'website' => $_POST['website'],
+        ];
+
+        return $this->insertData('item_manufacturers', $data);
+    }
+
     public function getBasePayTypes()
     {
         return $this->sendResponse('success', 200, $this->fetchData('base_pay_types'));
+    }
+
+    public function createBasePayType()
+    {
+        $data = [
+            'name' => $_POST['name'],
+            'description' => $_POST['description'],
+        ];
+
+        return $this->insertData('base_pay_types', $data);
     }
 
     public function getUsers()
@@ -258,13 +398,43 @@ class BaseController
         return $this->sendResponse('success', 200, $this->fetchData('no_of_working_days'));
     }
 
+    public function createNoOfWorkingDays()
+    {
+        $data = [
+            'name' => $_POST['name'],
+            'description' => $_POST['description'],
+        ];
+
+        return $this->insertData('no_of_working_days', $data);
+    }
+
     public function getPermissions()
     {
         return $this->sendResponse('success', 200, $this->fetchData('permissions'));
     }
 
+    public function createPermission()
+    {
+        $data = [
+            'name' => $_POST['name'],
+            'description' => $_POST['description'],
+        ];
+
+        return $this->insertData('permissions', $data);
+    }
+
     public function getExpensesCategories()
     {
         return $this->sendResponse('success', 200, $this->fetchData('expenses_categories'));
+    }
+
+    public function createExpensesCategory()
+    {
+        $data = [
+            'name' => $_POST['name'],
+            'description' => $_POST['description'],
+        ];
+
+        return $this->insertData('expenses_categories', $data);
     }
 }
