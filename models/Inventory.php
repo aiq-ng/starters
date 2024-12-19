@@ -641,7 +641,7 @@ class Inventory
 
         $filteredData = Utils::filterOutNull($data);
 
-        return $filteredData;
+        return $filteredData ?? [];
     }
 
 }

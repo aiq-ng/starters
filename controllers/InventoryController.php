@@ -160,7 +160,7 @@ class InventoryController extends BaseController
         $history = $this->inventory->getAdjustmentHistory($id);
 
         if (empty($history)) {
-            $this->sendResponse('History not found', 404, []);
+            $this->sendResponse('History not found', 200, []);
         }
         $this->sendResponse('success', 200, $history);
     }
