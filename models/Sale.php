@@ -140,40 +140,65 @@ class Sale
         $pageSize = $filters['page_size'] ?? 10;
 
         $query = "
-        SELECT 
-            pl.id, 
-            ic.name AS item_category, 
-            pl.item_details, 
-            pl.unit_price, 
-            pl.minimum_order, 
-            u.abbreviation AS unit
-        FROM 
-            price_lists pl
-        LEFT JOIN 
-            item_categories ic 
-            ON pl.item_category_id = ic.id
-        LEFT JOIN 
-            units u 
-            ON pl.unit_id = u.id
-        ORDER BY 
-            pl.created_at DESC
-        LIMIT :limit OFFSET :offset
-    ";
+            SELECT 
+                pl.id, 
+                ic.name AS item_category, 
+                pl.item_details, 
+                pl.unit_price, 
+                pl.minimum_order, 
+                u.abbreviation AS unit
+            FROM 
+                price_lists pl
+            LEFT JOIN 
+                item_categories ic 
+                ON pl.item_category_id = ic.id
+            LEFT JOIN 
+                units u 
+                ON pl.unit_id = u.id
+        ";
 
-        $params = [
-            'limit' => $pageSize,
-            'offset' => ($page - 1) * $pageSize,
-        ];
+        $conditions = [];
+        $params = [];
+
+        if (!empty($filters['item_category'])) {
+            $conditions[] = "ic.name = :item_category";
+            $params['item_category'] = $filters['item_category'];
+        }
+
+        if (!empty($filters['min_price'])) {
+            $conditions[] = "pl.unit_price >= :min_price";
+            $params['min_price'] = $filters['min_price'];
+        }
+
+        if (!empty($filters['max_price'])) {
+            $conditions[] = "pl.unit_price <= :max_price";
+            $params['max_price'] = $filters['max_price'];
+        }
+
+        if ($conditions) {
+            $query .= " WHERE " . implode(' AND ', $conditions);
+        }
+
+        $query .= "
+            ORDER BY 
+                pl.created_at DESC 
+            LIMIT :limit OFFSET :offset
+        ";
+
+        $params['limit'] = $pageSize;
+        $params['offset'] = ($page - 1) * $pageSize;
 
         $stmt = $this->db->prepare($query);
 
-        $stmt->bindValue('limit', $params['limit'], \PDO::PARAM_INT);
-        $stmt->bindValue('offset', $params['offset'], \PDO::PARAM_INT);
+        foreach ($params as $key => $value) {
+            $type = is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR;
+            $stmt->bindValue($key, $value, $type);
+        }
 
         $stmt->execute();
 
         $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        $total = $this->getPriceListCount();
+        $total = $this->getPriceListCount($filters);
 
         $meta = [
             'current_page' => (int) $page,
@@ -186,11 +211,47 @@ class Sale
         return ['data' => $data, 'meta' => $meta];
     }
 
-    public function getPriceListCount()
+    public function getPriceListCount($filters = [])
     {
-        $query = "SELECT COUNT(*) AS total FROM price_lists";
+        $query = "
+            SELECT 
+                COUNT(*) AS total
+            FROM 
+                price_lists pl
+            LEFT JOIN 
+                item_categories ic 
+                ON pl.item_category_id = ic.id
+        ";
+
+        $conditions = [];
+        $params = [];
+
+        if (!empty($filters['item_category'])) {
+            $conditions[] = "ic.name = :item_category";
+            $params['item_category'] = $filters['item_category'];
+        }
+
+        if (!empty($filters['min_price'])) {
+            $conditions[] = "pl.unit_price >= :min_price";
+            $params['min_price'] = $filters['min_price'];
+        }
+
+        if (!empty($filters['max_price'])) {
+            $conditions[] = "pl.unit_price <= :max_price";
+            $params['max_price'] = $filters['max_price'];
+        }
+
+        if ($conditions) {
+            $query .= " WHERE " . implode(' AND ', $conditions);
+        }
 
         $stmt = $this->db->prepare($query);
+
+        foreach ($params as $key => $value) {
+            $type = is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR;
+            $stmt->bindValue($key, $value, $type);
+        }
+
         $stmt->execute();
 
         return (int) $stmt->fetchColumn();

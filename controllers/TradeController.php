@@ -245,6 +245,9 @@ class TradeController extends BaseController
         $filters = [
             'page' => isset($_GET['page']) ? $_GET['page'] : 1,
             'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
+            'item_category' => isset($_GET['item_category']) ? $_GET['item_category'] : null,
+            'min_price' => isset($_GET['min_price']) ? $_GET['min_price'] : null,
+            'max_price' => isset($_GET['max_price']) ? $_GET['max_price'] : null,
         ];
 
         $priceList = $this->sale->getPriceList($filters);
