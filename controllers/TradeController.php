@@ -251,6 +251,19 @@ class TradeController extends BaseController
         }
     }
 
+    public function getApriceList($priceListId)
+    {
+        $this->authorizeRequest();
+
+        $priceList = $this->sale->getAPriceList($priceListId);
+
+        if ($priceList) {
+            $this->sendResponse('success', 200, $priceList);
+        } else {
+            $this->sendResponse('Price list not found', 404);
+        }
+    }
+
     public function updatePriceList($priceListId)
     {
         $this->authorizeRequest();

@@ -164,6 +164,31 @@ class Sale
         return $data;
     }
 
+    public function getAPriceList($id)
+    {
+        $query = "
+            SELECT 
+                pl.id, 
+                pl.item_category_id, 
+                pl.item_details, 
+                pl.unit_price, 
+                pl.minimum_order, 
+                pl.unit_id
+            FROM 
+                price_lists pl
+            WHERE 
+                pl.id = :id
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute(['id' => $id]);
+
+        $data = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        return $data;
+
+    }
+
     public function updatePriceList($data)
     {
         $query = "
