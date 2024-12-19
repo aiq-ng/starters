@@ -62,6 +62,7 @@ $routes = [
         '/purchases/orders' => [$tradeController, 'purchaseIndex'],
         '/sales/orders' => [$tradeController, 'saleIndex'],
         '/sales/price-list' => [$tradeController, 'getpriceList'],
+        '/sales/overview' => [$tradeController, 'salesOverview'],
         '/accounting/expenses' => [$accountingController, 'getExpenses'],
         '/accounting/bills' => [$accountingController, 'getBills'],
         '/inventory' => [$inventoryController, 'index'],

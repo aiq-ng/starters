@@ -94,6 +94,23 @@ class TradeController extends BaseController
         }
     }
 
+    public function salesOverview()
+    {
+        $this->authorizeRequest();
+
+        $filter = [
+            'when' => isset($_GET['when']) && !empty($_GET['when']) ? $_GET['when'] : 'yesterday'
+        ];
+
+        $overview = $this->sale->getSalesOverview($filter);
+
+        if ($overview) {
+            $this->sendResponse('success', 200, $overview);
+        } else {
+            $this->sendResponse('Sales overview not found', 404);
+        }
+    }
+
     public function saleIndex()
     {
         $this->authorizeRequest();

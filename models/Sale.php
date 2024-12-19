@@ -13,6 +13,94 @@ class Sale
         $this->db = Database::getInstance()->getConnection();
     }
 
+    public function getSalesOverview($filter = ['when' => 'yesterday'])
+    {
+        $dateRanges = [
+            'yesterday' => 'CURRENT_DATE - INTERVAL \'1 day\'',
+            'lastweek' => 'CURRENT_DATE - INTERVAL \'7 days\'',
+            'lastmonth' => 'CURRENT_DATE - INTERVAL \'1 month\'',
+            'lastyear' => 'CURRENT_DATE - INTERVAL \'1 year\'',
+        ];
+
+        $when = $filter['when'] ?? 'yesterday';
+        error_log($when);
+
+        if (!isset($dateRanges[$when])) {
+            throw new \InvalidArgumentException('Invalid filter provided.');
+        }
+
+        $comparisonDate = $dateRanges[$when];
+
+        $query = "
+        WITH current_data AS (
+            SELECT
+                COALESCE(SUM(so.total), 0) AS total_revenue,
+                COUNT(DISTINCT so.id) AS total_orders,
+                COALESCE(SUM(soi.quantity), 0) AS products_sold,
+                COUNT(DISTINCT so.customer_id) AS total_customers
+            FROM sales_orders so
+            LEFT JOIN sales_order_items soi ON so.id = soi.sales_order_id
+            WHERE so.created_at >= CURRENT_DATE
+        ),
+        previous_data AS (
+            SELECT
+                COALESCE(SUM(so.total), 0) AS total_revenue,
+                COUNT(DISTINCT so.id) AS total_orders,
+                COALESCE(SUM(soi.quantity), 0) AS products_sold,
+                COUNT(DISTINCT so.customer_id) AS total_customers
+            FROM sales_orders so
+            LEFT JOIN sales_order_items soi ON so.id = soi.sales_order_id
+            WHERE so.created_at BETWEEN $comparisonDate AND CURRENT_DATE - INTERVAL '1 day'
+        )
+        SELECT
+            cd.total_revenue,
+            pd.total_revenue AS previous_total_revenue,
+            cd.total_orders,
+            pd.total_orders AS previous_total_orders,
+            cd.products_sold,
+            pd.products_sold AS previous_products_sold,
+            cd.total_customers,
+            pd.total_customers AS previous_total_customers
+        FROM current_data cd, previous_data pd
+    ";
+
+        $stmt = $this->db->query($query);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        return [
+            'total_revenue' => (float) $result['total_revenue'],
+            'total_revenue_percentage' => $this->calculatePercentageIncrease(
+                $result['total_revenue'],
+                $result['previous_total_revenue']
+            ),
+            'total_orders' => (int) $result['total_orders'],
+            'total_orders_percentage' => $this->calculatePercentageIncrease(
+                $result['total_orders'],
+                $result['previous_total_orders']
+            ),
+            'products_sold' => (int) $result['products_sold'],
+            'products_sold_percentage' => $this->calculatePercentageIncrease(
+                $result['products_sold'],
+                $result['previous_products_sold']
+            ),
+            'total_customers' => (int) $result['total_customers'],
+            'total_customers_percentage' => $this->calculatePercentageIncrease(
+                $result['total_customers'],
+                $result['previous_total_customers']
+            ),
+        ];
+    }
+
+    private function calculatePercentageIncrease($current, $previous)
+    {
+        if ($previous == 0) {
+            return $current > 0 ? 100 : 0;
+        }
+
+        return round((($current - $previous) / $previous) * 100, 2);
+    }
+
+
     public function createPriceList($data)
     {
         $query = "
