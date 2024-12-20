@@ -18,25 +18,27 @@ class Accounting
         $query = "
             SELECT 
                 (
-                    SELECT COUNT(*)
+                    SELECT COALESCE(SUM(total), 0)
+                    FROM sales_orders
+                ) AS total_revenue,
+                (
+                    SELECT COALESCE(SUM(total), 0)
+                    FROM purchase_orders
+                ) AS total_purchases,
+                (
+                    SELECT COALESCE(SUM(total), 0)
+                    FROM sales_orders
+                ) - COALESCE((
+                    SELECT SUM(total)
+                    FROM purchase_orders
+                ), 0) - COALESCE((
+                    SELECT SUM(amount)
                     FROM expenses
-                ) AS total_expenses,
+                ), 0) AS Net_Profit,
                 (
-                    SELECT COUNT(*)
-                    FROM purchase_orders
-                ) AS total_bills,
-                (
-                    SELECT COUNT(*)
-                    FROM sales_orders
-                ) AS total_sales_orders,
-                (
-                    SELECT SUM(total)
-                    FROM sales_orders
-                ) AS total_sales,
-                (
-                    SELECT SUM(total)
-                    FROM purchase_orders
-                ) AS total_purchases
+                    SELECT COALESCE(SUM(amount), 0)
+                    FROM expenses
+                ) AS outgoing,
         ";
 
         $stmt = $this->db->query($query);

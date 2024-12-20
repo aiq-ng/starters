@@ -215,6 +215,8 @@ CREATE TABLE vendor_transactions (
     vendor_id INT REFERENCES vendors(id) ON DELETE SET NULL,
     transaction_type VARCHAR(50) 
         CHECK (transaction_type IN ('credit', 'debit')),
+    payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,
+    cash_account_id INT REFERENCES cash_accounts(id) ON DELETE SET NULL,
     amount DECIMAL(20, 2) NOT NULL,
     reference_number VARCHAR(50) GENERATED ALWAYS AS (
         'REF' || LPAD(id::TEXT, 10, '0')
@@ -349,6 +351,8 @@ CREATE TABLE customer_transactions (
     customer_id INT REFERENCES customers(id) ON DELETE SET NULL,
     transaction_type VARCHAR(50) 
         CHECK (transaction_type IN ('credit', 'debit')),
+    payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,
+    cash_account_id INT REFERENCES cash_accounts(id) ON DELETE SET NULL,
     amount DECIMAL(20, 2) NOT NULL,
     reference_number VARCHAR(50) GENERATED ALWAYS AS (
         'REF' || LPAD(id::TEXT, 10, '0')
@@ -487,6 +491,15 @@ CREATE TABLE expenses (
     status VARCHAR(50) DEFAULT 'pending' 
         CHECK (status IN ('paid', 'cancelled')),
     processed_by INT REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE cash_accounts (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    balance DECIMAL(20, 2) DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
