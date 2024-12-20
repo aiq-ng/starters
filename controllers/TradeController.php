@@ -304,4 +304,19 @@ class TradeController extends BaseController
         }
     }
 
+    public function salesGraph()
+    {
+        $this->authorizeRequest();
+
+        $period = isset($_GET['period']) ? $_GET['period'] : 'week';
+
+        $graph = $this->sale->getRevenue($period);
+
+        if ($graph) {
+            $this->sendResponse('success', 200, $graph['data'], $graph['meta']);
+        } else {
+            $this->sendResponse('Graph not found', 404);
+        }
+    }
+
 }

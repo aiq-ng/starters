@@ -13,6 +13,185 @@ class Sale
         $this->db = Database::getInstance()->getConnection();
     }
 
+    public function getRevenue($period = 'week')
+    {
+        $query = "
+        WITH period_series AS (
+            SELECT
+                ps.period
+            FROM
+                (SELECT CASE
+                    WHEN :period = 'today' THEN 1
+                    WHEN :period = 'week' THEN 2
+                    WHEN :period = 'month' THEN 3
+                    WHEN :period = 'year' THEN 4
+                END AS period) AS p
+            CROSS JOIN LATERAL (
+                SELECT generate_series(
+                    CASE
+                        WHEN :period = 'today' THEN 0
+                        WHEN :period = 'week' THEN 1
+                        WHEN :period = 'month' THEN 1
+                        WHEN :period = 'year' THEN 1
+                    END,
+                    CASE
+                        WHEN :period = 'today' THEN 23
+                        WHEN :period = 'week' THEN 5
+                        WHEN :period = 'month' THEN 4
+                        WHEN :period = 'year' THEN 12
+                    END
+                )
+            ) AS ps(period)
+        ),
+        revenue_data AS (
+            SELECT
+                CASE
+                    WHEN :period = 'today' THEN EXTRACT(HOUR FROM so.created_at)
+                    WHEN :period = 'week' THEN EXTRACT(DOW FROM so.created_at)
+                    WHEN :period = 'month' THEN EXTRACT(WEEK FROM so.created_at) - EXTRACT(WEEK FROM DATE_TRUNC('month', CURRENT_DATE)) + 1
+                    WHEN :period = 'year' THEN EXTRACT(MONTH FROM so.created_at)
+                END AS period,
+                SUM(so.total) AS revenue
+            FROM sales_orders so
+            WHERE so.created_at >= 
+                CASE
+                    WHEN :period = 'today' THEN CURRENT_DATE
+                    WHEN :period = 'week' THEN DATE_TRUNC('week', CURRENT_DATE)
+                    WHEN :period = 'month' THEN DATE_TRUNC('month', CURRENT_DATE)
+                    WHEN :period = 'year' THEN DATE_TRUNC('year', CURRENT_DATE)
+                END
+            AND so.created_at < 
+                CASE
+                    WHEN :period = 'today' THEN CURRENT_DATE + INTERVAL '1 day'
+                    WHEN :period = 'week' THEN DATE_TRUNC('week', CURRENT_DATE) + INTERVAL '1 week'
+                    WHEN :period = 'month' THEN DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
+                    WHEN :period = 'year' THEN DATE_TRUNC('year', CURRENT_DATE) + INTERVAL '1 year'
+                END
+            GROUP BY period
+        ),
+        previous_revenue_data AS (
+            SELECT
+                CASE
+                    WHEN :period = 'today' THEN EXTRACT(HOUR FROM so.created_at)
+                    WHEN :period = 'week' THEN EXTRACT(DOW FROM so.created_at)
+                    WHEN :period = 'month' THEN EXTRACT(WEEK FROM so.created_at) - EXTRACT(WEEK FROM DATE_TRUNC('month', CURRENT_DATE)) + 1
+                    WHEN :period = 'year' THEN EXTRACT(MONTH FROM so.created_at)
+                END AS period,
+                SUM(so.total) AS previous_revenue
+            FROM sales_orders so
+            WHERE so.created_at >= 
+                CASE
+                    WHEN :period = 'today' THEN CURRENT_DATE - INTERVAL '1 day'
+                    WHEN :period = 'week' THEN DATE_TRUNC('week', CURRENT_DATE) - INTERVAL '1 week'
+                    WHEN :period = 'month' THEN DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month'
+                    WHEN :period = 'year' THEN DATE_TRUNC('year', CURRENT_DATE) - INTERVAL '1 year'
+                END
+            AND so.created_at < 
+                CASE
+                    WHEN :period = 'today' THEN CURRENT_DATE
+                    WHEN :period = 'week' THEN DATE_TRUNC('week', CURRENT_DATE)
+                    WHEN :period = 'month' THEN DATE_TRUNC('month', CURRENT_DATE)
+                    WHEN :period = 'year' THEN DATE_TRUNC('year', CURRENT_DATE)
+                END
+            GROUP BY period
+        )
+        SELECT
+            ps.period,
+            COALESCE(rd.revenue, 0) AS revenue,
+            COALESCE(prd.previous_revenue, 0) AS previous_revenue,
+            CASE
+                WHEN COALESCE(prd.previous_revenue, 0) = 0 THEN 0
+                ELSE ROUND(((COALESCE(rd.revenue, 0) - COALESCE(prd.previous_revenue, 0)) / COALESCE(prd.previous_revenue, 0)) * 100, 2)
+            END AS percentage_diff,
+            CASE
+                WHEN ps.period = 
+                    CASE
+                        WHEN :period = 'today' THEN EXTRACT(HOUR FROM CURRENT_TIMESTAMP)
+                        WHEN :period = 'week' THEN EXTRACT(DOW FROM CURRENT_TIMESTAMP)
+                        WHEN :period = 'month' THEN EXTRACT(WEEK FROM CURRENT_TIMESTAMP) - EXTRACT(WEEK FROM DATE_TRUNC('month', CURRENT_DATE)) + 1
+                        WHEN :period = 'year' THEN EXTRACT(MONTH FROM CURRENT_TIMESTAMP)
+                    END THEN true
+                ELSE false
+            END AS current
+        FROM period_series ps
+        LEFT JOIN revenue_data rd ON ps.period = rd.period
+        LEFT JOIN previous_revenue_data prd ON ps.period = prd.period
+        ORDER BY ps.period;
+        ";
+
+        // Fetch revenue data
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':period', $period, \PDO::PARAM_STR);
+
+        try {
+            $stmt->execute();
+            $revenueData = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            error_log($e->getMessage());
+            $revenueData = [];
+        }
+
+        // Fetch min and max revenue data
+        $minMaxRevenue = $this->getMinMaxRevenue($period);
+
+        // Return merged data with meta
+        return [
+            'data' => $revenueData,
+            'meta' => $minMaxRevenue
+        ];
+    }
+
+    public function getMinMaxRevenue($period = 'week')
+    {
+        $query = "
+        WITH revenue_data AS (
+            SELECT
+                CASE
+                    WHEN :period = 'today' THEN EXTRACT(HOUR FROM so.created_at)
+                    WHEN :period = 'week' THEN EXTRACT(DOW FROM so.created_at)
+                    WHEN :period = 'month' THEN EXTRACT(WEEK FROM so.created_at) - EXTRACT(WEEK FROM DATE_TRUNC('month', CURRENT_DATE)) + 1
+                    WHEN :period = 'year' THEN EXTRACT(MONTH FROM so.created_at)
+                END AS period,
+                SUM(so.total) AS revenue
+            FROM sales_orders so
+            WHERE so.created_at >= 
+                CASE
+                    WHEN :period = 'today' THEN CURRENT_DATE
+                    WHEN :period = 'week' THEN DATE_TRUNC('week', CURRENT_DATE)
+                    WHEN :period = 'month' THEN DATE_TRUNC('month', CURRENT_DATE)
+                    WHEN :period = 'year' THEN DATE_TRUNC('year', CURRENT_DATE)
+                END
+            AND so.created_at < 
+                CASE
+                    WHEN :period = 'today' THEN CURRENT_DATE + INTERVAL '1 day'
+                    WHEN :period = 'week' THEN DATE_TRUNC('week', CURRENT_DATE) + INTERVAL '1 week'
+                    WHEN :period = 'month' THEN DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
+                    WHEN :period = 'year' THEN DATE_TRUNC('year', CURRENT_DATE) + INTERVAL '1 year'
+                END
+            GROUP BY period
+        )
+        SELECT 
+            MIN(rd.revenue) AS min_revenue,
+            MAX(rd.revenue) AS max_revenue
+        FROM revenue_data rd;
+        ";
+
+        // Fetch min and max revenue data
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':period', $period, \PDO::PARAM_STR);
+
+        try {
+            $stmt->execute();
+            $minMaxRevenue = $stmt->fetch(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            error_log($e->getMessage());
+            $minMaxRevenue = ['min_revenue' => 0, 'max_revenue' => 0];
+        }
+
+        return $minMaxRevenue;
+    }
+
+
     public function getSalesOverview($filter = ['when' => 'yesterday'])
     {
         $dateRanges = [
@@ -90,6 +269,49 @@ class Sale
             ),
         ];
     }
+
+    public function getTotalSales($period = 'today')
+    {
+        $now = new \DateTime();
+
+        switch ($period) {
+            case 'today':
+                $startOfDay = $now->setTime(0, 0, 0)->format('Y-m-d H:i:s');
+                $endOfDay = $now->setTime(23, 59, 59)->format('Y-m-d H:i:s');
+                break;
+            case 'week':
+                $startOfWeek = $now->modify('this week')->setTime(0, 0, 0)->format('Y-m-d H:i:s');
+                $endOfWeek = $now->modify('this week +6 days')->setTime(23, 59, 59)->format('Y-m-d H:i:s');
+                break;
+            case 'month':
+                $startOfMonth = $now->modify('first day of this month')->setTime(0, 0, 0)->format('Y-m-d H:i:s');
+                $endOfMonth = $now->modify('last day of this month')->setTime(23, 59, 59)->format('Y-m-d H:i:s');
+                break;
+            default:
+                throw new \InvalidArgumentException("Invalid period: $period");
+        }
+
+        $query = "
+        SELECT SUM(total) AS total_sales
+        FROM sales_orders
+        WHERE created_at BETWEEN :start_date AND :end_date
+        AND status = 'paid'
+    ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':start_date', $$period === 'today' ? $startOfDay : ($period === 'week' ? $startOfWeek : $startOfMonth));
+        $stmt->bindParam(':end_date', $$period === 'today' ? $endOfDay : ($period === 'week' ? $endOfWeek : $endOfMonth));
+
+        try {
+            $stmt->execute();
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            return $result['total_sales'] ?? 0;
+        } catch (\PDOException $e) {
+            error_log($e->getMessage());
+            return 0;
+        }
+    }
+
 
     private function calculatePercentageIncrease($current, $previous)
     {

@@ -74,4 +74,24 @@ class DashboardController extends BaseController
             $this->sendResponse('Items not found', 404);
         }
     }
+
+    public function cashFlow()
+    {
+        $year = isset($_GET['year']) ? $_GET['year'] : date('Y');
+
+        $year = (int)$year;
+
+        if ($year <= 0 || strlen((string)$year) != 4) {
+            // Fallback to the current year if the validation fails
+            $year = (int)date('Y');
+        }
+
+        $cashFlow = $this->dashboard->getCashFlowByYear($year);
+
+        if ($cashFlow) {
+            $this->sendResponse('success', 200, $cashFlow);
+        } else {
+            $this->sendResponse('Cash flow not found', 404);
+        }
+    }
 }

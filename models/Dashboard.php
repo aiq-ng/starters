@@ -41,6 +41,91 @@ class Dashboard
         }
     }
 
+    public function getCashFlowByYear($year)
+    {
+        $query = "
+        WITH months AS (
+            SELECT generate_series(1, 12) AS month
+        ),
+
+        sales_inflow AS (
+            SELECT 
+                EXTRACT(MONTH FROM so.delivery_date) AS month,
+                SUM(so.total) AS total_sales
+            FROM sales_orders so
+            WHERE EXTRACT(YEAR FROM so.delivery_date) = :year
+            AND so.status = 'paid'
+            GROUP BY EXTRACT(MONTH FROM so.delivery_date)
+        ),
+
+        purchase_outflow AS (
+            SELECT 
+                EXTRACT(MONTH FROM po.delivery_date) AS month,
+                SUM(po.total) AS total_purchase
+            FROM purchase_orders po
+            WHERE EXTRACT(YEAR FROM po.delivery_date) = :year
+            AND po.status = 'paid'
+            GROUP BY EXTRACT(MONTH FROM po.delivery_date)
+        ),
+
+        expenses_outflow AS (
+            SELECT 
+                EXTRACT(MONTH FROM e.date_of_expense) AS month,
+                SUM(e.amount + COALESCE(e.bank_charges, 0)) AS total_expenses
+            FROM expenses e
+            WHERE EXTRACT(YEAR FROM e.date_of_expense) = :year
+            AND e.status = 'paid'
+            GROUP BY EXTRACT(MONTH FROM e.date_of_expense)
+        ),
+
+        cash_flows AS (
+            SELECT 
+                m.month,
+                COALESCE(s.total_sales, 0) AS total_sales,
+                COALESCE(p.total_purchase, 0) AS total_purchase,
+                COALESCE(e.total_expenses, 0) AS total_expenses,
+                (COALESCE(s.total_sales, 0) - (COALESCE(p.total_purchase, 0) + COALESCE(e.total_expenses, 0))) AS cash_flow,
+                ROUND(
+                    CASE 
+                        WHEN COALESCE(s.total_sales, 0) + COALESCE(p.total_purchase, 0) + COALESCE(e.total_expenses, 0) = 0 THEN 0
+                        ELSE ((COALESCE(s.total_sales, 0) - (COALESCE(p.total_purchase, 0) + COALESCE(e.total_expenses, 0))) * 100.0) / 
+                            (COALESCE(s.total_sales, 0) + COALESCE(p.total_purchase, 0) + COALESCE(e.total_expenses, 0))
+                    END, 2) AS percentage_diff
+            FROM months m
+            LEFT JOIN sales_inflow s ON m.month = s.month
+            LEFT JOIN purchase_outflow p ON m.month = p.month
+            LEFT JOIN expenses_outflow e ON m.month = e.month
+        )
+        SELECT 
+            cf.*,
+            CASE 
+                WHEN cf.month = EXTRACT(MONTH FROM CURRENT_DATE) THEN TRUE
+                ELSE FALSE
+            END AS current_month,
+            CASE
+                WHEN cf.month > EXTRACT(MONTH FROM CURRENT_DATE) THEN 
+                    -- Estimate future cash flows based on average cash flow from past months
+                    (SELECT AVG(cash_flow) FROM cash_flows WHERE month <= EXTRACT(MONTH FROM CURRENT_DATE)) 
+                ELSE cf.cash_flow
+            END AS estimated_cash_flow
+        FROM cash_flows cf
+        ORDER BY cf.month;
+        ";
+
+        // Prepare and execute the query
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':year', $year, \PDO::PARAM_INT);
+
+        try {
+            $stmt->execute();
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            return $result;
+        } catch (\PDOException $e) {
+            error_log($e->getMessage());
+            return [];
+        }
+    }
+
     public function getBusinessOverview($filters = [])
     {
         $month = $filters['month'] ?? date('n');
