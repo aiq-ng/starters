@@ -94,4 +94,30 @@ class AccountingController extends BaseController
             $this->sendResponse('Order not found', 404);
         }
     }
+
+    public function comfirmSalesOrderPayment($orderId)
+    {
+        $this->authorizeRequest();
+
+        try {
+            $this->accounting->confirmSalesOrderPayment($orderId);
+        } catch (\Exception $e) {
+            $this->sendResponse($e->getMessage(), 400);
+        }
+
+        $this->sendResponse('Order payment confirmed', 200);
+    }
+
+    public function overview()
+    {
+        $this->authorizeRequest();
+
+        $overview = $this->accounting->getAccountingOverview();
+
+        if ($overview) {
+            $this->sendResponse('success', 200, $overview);
+        } else {
+            $this->sendResponse('Sales overview not found', 404);
+        }
+    }
 }

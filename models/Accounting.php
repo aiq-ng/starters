@@ -13,6 +13,37 @@ class Accounting
         $this->db = Database::getInstance()->getConnection();
     }
 
+    public function getAccountingOverview()
+    {
+        $query = "
+            SELECT 
+                (
+                    SELECT COUNT(*)
+                    FROM expenses
+                ) AS total_expenses,
+                (
+                    SELECT COUNT(*)
+                    FROM purchase_orders
+                ) AS total_bills,
+                (
+                    SELECT COUNT(*)
+                    FROM sales_orders
+                ) AS total_sales_orders,
+                (
+                    SELECT SUM(total)
+                    FROM sales_orders
+                ) AS total_sales,
+                (
+                    SELECT SUM(total)
+                    FROM purchase_orders
+                ) AS total_purchases
+        ";
+
+        $stmt = $this->db->query($query);
+
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
+
     public function insertExpense($data)
     {
         $sql = "INSERT INTO expenses (
@@ -324,6 +355,20 @@ class Accounting
         }
 
         return $result;
+    }
+
+    public function confirmSalesOrderPayment($orderId)
+    {
+        $query = "
+            UPDATE sales_orders
+            SET status = 'paid'
+            WHERE id = :order_id
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bindValue('order_id', $orderId, \PDO::PARAM_INT);
+
+        $stmt->execute();
     }
 
 }
