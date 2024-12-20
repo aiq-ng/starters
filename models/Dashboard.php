@@ -227,11 +227,12 @@ class Dashboard
         $totalItems = $this->getTotalItemCount('purchase_order_items', $filters);
 
         $meta = [
-            'current_page' => (int) $page,
-            'next_page' => (int) $page + 1,
-            'page_size' => (int) $pageSize,
             'total_data' => (int) $totalItems,
             'total_pages' => ceil($totalItems / $pageSize),
+            'page_size' => (int) $pageSize,
+            'previous_page' => $page > 1 ? (int) $page - 1 : null,
+            'current_page' => (int) $page,
+            'next_page' => (int) $page + 1,
         ];
 
         return [
@@ -297,11 +298,12 @@ class Dashboard
         $totalItems = $this->getTotalItemCount('sales_order_items', $filters);
 
         $meta = [
-            'current_page' => (int) $page,
-            'next_page' => (int) $page + 1,
-            'page_size' => (int) $pageSize,
             'total_data' => (int) $totalItems,
             'total_pages' => ceil($totalItems / $pageSize),
+            'page_size' => (int) $pageSize,
+            'previous_page' => $page > 1 ? (int) $page - 1 : null,
+            'current_page' => (int) $page,
+            'next_page' => (int) $page + 1,
         ];
 
         return [

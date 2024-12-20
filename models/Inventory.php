@@ -92,12 +92,15 @@ class Inventory
             $item['media'] = !empty($item['media']) ? json_decode($item['media'], true) : null;
         }
 
-        $total = $this->countInventory($filter);
+        $totalItems = $this->countInventory($filter);
 
         $meta = [
-            'current_page' => $page,
-            'last_page' => ceil($total / $pageSize),
-            'total' => $total
+            'total_data' => (int) $totalItems,
+            'total_pages' => ceil($totalItems / $pageSize),
+            'page_size' => (int) $pageSize,
+            'previous_page' => $page > 1 ? (int) $page - 1 : null,
+            'current_page' => (int) $page,
+            'next_page' => (int) $page + 1,
         ];
 
         return [

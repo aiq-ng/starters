@@ -81,4 +81,17 @@ class AccountingController extends BaseController
             $this->sendResponse('Bills not found', 404);
         }
     }
+
+    public function getSalesOrder($orderId)
+    {
+        $this->authorizeRequest();
+
+        $order = $this->accounting->getSalesOrder($orderId);
+
+        if ($order) {
+            $this->sendResponse('success', 200, $order);
+        } else {
+            $this->sendResponse('Order not found', 404);
+        }
+    }
 }

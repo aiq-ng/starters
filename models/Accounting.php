@@ -70,7 +70,7 @@ class Accounting
             $params['end_date'] = $filter['end_date'];
         }
 
-        $total = $this->countExpenses($conditions, $params);
+        $totalItems = $this->countExpenses($conditions, $params);
 
         $sql = "SELECT 
                 e.expense_id, 
@@ -108,9 +108,12 @@ class Accounting
             $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
             $meta = [
-                'current_page' => $page,
-                'last_page' => ceil($total / $pageSize),
-                'total' => $total
+                'total_data' => (int) $totalItems,
+                'total_pages' => ceil($totalItems / $pageSize),
+                'page_size' => (int) $pageSize,
+                'previous_page' => $page > 1 ? (int) $page - 1 : null,
+                'current_page' => (int) $page,
+                'next_page' => (int) $page + 1,
             ];
 
             return ['data' => $data, 'meta' => $meta];
@@ -172,7 +175,7 @@ class Accounting
             $params['end_date'] = $filter['end_date'];
         }
 
-        $total = $this->countBills($conditions, $params);
+        $totalItems = $this->countBills($conditions, $params);
 
         // Base query
         $sql = "SELECT 
@@ -221,9 +224,12 @@ class Accounting
             $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
             $meta = [
-                'current_page' => $page,
-                'last_page' => ceil($total / $pageSize),
-                'total' => $total
+                'total_data' => (int) $totalItems,
+                'total_pages' => ceil($totalItems / $pageSize),
+                'page_size' => (int) $pageSize,
+                'previous_page' => $page > 1 ? (int) $page - 1 : null,
+                'current_page' => (int) $page,
+                'next_page' => (int) $page + 1,
             ];
 
             return ['data' => $data, 'meta' => $meta];
@@ -258,6 +264,66 @@ class Accounting
             error_log('Count purchase orders failed: ' . $e->getMessage());
             throw new \Exception('Failed to count purchase orders.');
         }
+    }
+
+    public function getSalesOrder($orderId)
+    {
+        $query = "
+            SELECT
+                so.id,
+                so.order_id,
+                so.order_title,
+                so.invoice_number,
+                pr.name AS recorded_by,
+                so.order_type AS order_category,
+                so.delivery_option,
+                dl.name AS assigned_driver,
+                COALESCE(SUM(soi.quantity), 0) AS quantity,
+                CONCAT_WS(' ', c.salutation, c.first_name, c.last_name) AS customer_name,
+                c.work_phone AS customer_work_phone,
+                c.mobile_phone AS customer_mobile_phone,
+                so.created_at::DATE AS date,
+                so.total AS amount,
+                so.status,
+                (
+                    SELECT JSON_AGG(
+                        JSON_BUILD_OBJECT(
+                            'name', pl.item_details,
+                            'quantity', soi.quantity,
+                            'price', soi.price,
+                            'discount', so.discount,
+                            'total', soi.total
+                        )
+                    )
+                    FROM sales_order_items soi
+                    LEFT JOIN price_lists pl ON soi.item_id = pl.id
+                    WHERE soi.sales_order_id = so.id
+                ) AS product_order
+            FROM sales_orders so
+            LEFT JOIN sales_order_items soi ON so.id = soi.sales_order_id
+            LEFT JOIN customers c ON so.customer_id = c.id
+            LEFT JOIN users pr ON so.processed_by = pr.id
+            LEFT JOIN users dl ON so.assigned_driver_id = dl.id
+            WHERE so.id = :order_id
+            GROUP BY 
+                so.id, so.order_id, so.order_title, so.invoice_number, pr.name,
+                so.order_type, so.delivery_option, dl.name, c.salutation, 
+                c.first_name, c.last_name, c.work_phone, c.mobile_phone,
+                so.created_at, so.total, so.status
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bindValue('order_id', $orderId, \PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if ($result && isset($result['product_order'])) {
+            $result['product_order'] = json_decode($result['product_order'], true);
+        }
+
+        return $result;
     }
 
 }

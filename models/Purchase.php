@@ -75,14 +75,15 @@ class Purchase
         $stmt->execute();
 
         $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        $total = $this->getPurchaseOrdersCount($filters);
+        $totalItems = $this->getPurchaseOrdersCount($filters);
 
         $meta = [
+            'total_data' => (int) $totalItems,
+            'total_pages' => ceil($totalItems / $pageSize),
+            'page_size' => (int) $pageSize,
+            'previous_page' => $page > 1 ? (int) $page - 1 : null,
             'current_page' => (int) $page,
             'next_page' => (int) $page + 1,
-            'page_size' => $pageSize,
-            'total_data' => $total,
-            'total_pages' => ceil($total / $pageSize),
         ];
 
         return ['data' => $data, 'meta' => $meta];

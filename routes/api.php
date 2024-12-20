@@ -73,6 +73,7 @@ $routes = [
         '/customers/(\d+)' => [$customerController, 'show'],
         '/products/(\d+)' => [$adminController, 'show'],
         '/sales/price-list/(\d+)' => [$tradeController, 'getAPriceList'],
+        '/accounting/sales-orders/(\d+)' => [$accountingController, 'getSalesOrder'],
         '/human-resources/employees/(\d+)' => [$humanResourceController, 'showEmployee'],
         '/purchases/orders/(\d+)' => [$tradeController, 'showPurchase'],
         '/inventory/history/(\d+)' => [$inventoryController, 'inventoryHistory'],

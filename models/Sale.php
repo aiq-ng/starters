@@ -198,14 +198,15 @@ class Sale
         $stmt->execute();
 
         $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        $total = $this->getPriceListCount($filters);
+        $totalItems = $this->getPriceListCount($filters);
 
         $meta = [
+            'total_data' => (int) $totalItems,
+            'total_pages' => ceil($totalItems / $pageSize),
+            'page_size' => (int) $pageSize,
+            'previous_page' => $page > 1 ? (int) $page - 1 : null,
             'current_page' => (int) $page,
             'next_page' => (int) $page + 1,
-            'page_size' => (int) $pageSize,
-            'total_data' => $total,
-            'total_pages' => ceil($total / $pageSize),
         ];
 
         return ['data' => $data, 'meta' => $meta];
@@ -401,14 +402,15 @@ class Sale
         $stmt->execute();
 
         $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        $total = $this->getSalesOrdersCount($filters);
+        $totalItems = $this->getSalesOrdersCount($filters);
 
         $meta = [
+            'total_data' => (int) $totalItems,
+            'total_pages' => ceil($totalItems / $pageSize),
+            'page_size' => (int) $pageSize,
+            'previous_page' => $page > 1 ? (int) $page - 1 : null,
             'current_page' => (int) $page,
             'next_page' => (int) $page + 1,
-            'page_size' => (int) $pageSize,
-            'total_data' => $total,
-            'total_pages' => ceil($total / $pageSize),
         ];
 
         return ['data' => $data, 'meta' => $meta];
@@ -449,55 +451,19 @@ class Sale
         $stmt->execute();
 
         $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        $total = $this->getServiceOrdersCount();
+        $totalItems = $this->getServiceOrdersCount();
 
         $meta = [
+            'total_data' => (int) $totalItems,
+            'total_pages' => ceil($totalItems / $pageSize),
+            'page_size' => (int) $pageSize,
+            'previous_page' => $page > 1 ? (int) $page - 1 : null,
             'current_page' => (int) $page,
             'next_page' => (int) $page + 1,
-            'page_size' => (int) $pageSize,
-            'total_data' => $total,
-            'total_pages' => ceil($total / $pageSize),
         ];
 
         return ['data' => $data, 'meta' => $meta];
     }
-
-    public function getSalesOrder($orderId)
-    {
-        $query = "
-        SELECT
-            so.id, 
-            so.order_id, 
-            so.order_title, 
-            COALESCE(SUM(soi.quantity), 0) AS quantity, 
-            CONCAT_WS(' ', c.salutation, c.first_name, c.last_name) AS customer_name, 
-            so.created_at::DATE AS date, 
-            so.order_type, 
-            so.total AS amount, 
-            so.status
-        FROM 
-            sales_orders so
-        LEFT JOIN 
-            sales_order_items soi 
-            ON so.id = soi.sales_order_id
-        LEFT JOIN 
-            customers c 
-            ON so.customer_id = c.id
-        WHERE 
-            so.id = :order_id
-        GROUP BY 
-            so.order_id, so.order_title, c.salutation, c.first_name, 
-            c.last_name, so.created_at, so.order_type, so.total, so.status, so.id
-    ";
-
-        $stmt = $this->db->prepare($query);
-        $stmt->bindValue('order_id', $orderId, \PDO::PARAM_INT);
-
-        $stmt->execute();
-
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
-    }
-
 
     private function getServiceOrdersCount()
     {
@@ -723,17 +689,19 @@ class Sale
 
         $countStmt = $this->db->prepare($countQuery);
         $countStmt->execute();
-        $totalCount = $countStmt->fetch(\PDO::FETCH_ASSOC)['total'];
+        $totalItems = $countStmt->fetch(\PDO::FETCH_ASSOC)['total'];
 
         return [
             'data' => $data,
             'meta' => [
-                'current_page' => $page,
-                'page_size' => $pageSize,
-                'total_records' => $totalCount,
-                'total_pages' => ceil($totalCount / $pageSize),
+                'total_data' => (int) $totalItems,
+                'total_pages' => ceil($totalItems / $pageSize),
+                'page_size' => (int) $pageSize,
+                'previous_page' => $page > 1 ? (int) $page - 1 : null,
+                'current_page' => (int) $page,
+                'next_page' => (int) $page + 1,
+
             ],
         ];
     }
-
 }
