@@ -806,6 +806,7 @@ class Sale
                 so.order_title,
                 so.order_type,
                 c.display_name AS customer_name,
+                c.email AS customer_email,
                 so.discount,
                 so.delivery_charge,
                 so.total,
@@ -827,7 +828,7 @@ class Sale
             LEFT JOIN items i ON soi.item_id = i.id
             WHERE so.id = :sales_order_id
             GROUP BY so.id, c.display_name, so.invoice_number, so.order_title, so.order_type, 
-                     so.discount, so.delivery_charge, so.total;
+                     so.discount, so.delivery_charge, so.total, c.email, so.created_at, so.delivery_date;
         ";
 
         $stmt = $this->db->prepare($query);

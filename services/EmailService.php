@@ -19,6 +19,7 @@ class EmailService
             'userVerification' => getenv('EMAIL_VERIFICATION_TEMPLATE_ID'),
             'resetPassword' => getenv('RESET_PASSWORD_TEMPLATE_ID'),
             'loginDetails' => getenv('LOGIN_DETAILS_TEMPLATE_ID'),
+            'invoice' => getenv('INVOICE_TEMPLATE_ID'),
         ];
     }
 
@@ -52,9 +53,45 @@ class EmailService
         );
     }
 
-    private function sendEmail($templateKey, $recipientEmail, $recipientName, $mergeInfo)
+    public function sendInvoice($recipientEmail, $recipientName, $templateVariables, $attachment = null)
     {
-        $payload = json_encode([
+        $processedAttachment = $attachment ? $this->processAttachment($attachment) : null;
+
+        return $this->sendEmail(
+            $this->templates->invoice,
+            $recipientEmail,
+            $recipientName,
+            $templateVariables,
+            $processedAttachment
+        );
+    }
+
+    private function processAttachment($attachment)
+    {
+        if (empty($attachment['tmp_name']) || empty($attachment['name']) || empty($attachment['type'])) {
+            throw new \Exception('Invalid attachment details.');
+        }
+
+        $fileData = file_get_contents($attachment['tmp_name']);
+        if ($fileData === false) {
+            throw new \Exception('Failed to read file content.');
+        }
+
+        return [
+            'file_name' => $attachment['name'],
+            'content' => base64_encode($fileData),
+            'content_type' => $attachment['type'],
+        ];
+    }
+
+    private function sendEmail(
+        $templateKey,
+        $recipientEmail,
+        $recipientName = '',
+        $mergeInfo = [],
+        $attachment = null
+    ) {
+        $payload = [
             'mail_template_key' => $templateKey,
             'from' => [
                 'address' => 'noreply@hordun.software',
@@ -69,7 +106,13 @@ class EmailService
                 ]
             ],
             'merge_info' => $mergeInfo,
-        ]);
+        ];
+
+        if ($attachment) {
+            $payload['attachments'] = [$attachment];
+        }
+
+        $payload = json_encode($payload);
 
         $headers = [
             'Accept: application/json',

@@ -124,6 +124,9 @@ $routes = [
         '/human-resources/employees/leave/(\d+)/approve' => [$humanResourceController, 'approveLeave'],
         '/inventory/items/(\d+)' => [$inventoryController, 'updateItem'],
         '/inventory/items/stocks/(\d+)' => [$inventoryController, 'adjustStock'],
+        '/sales/orders/invoice/(\d+)' => [$tradeController, 'sendSaleInvoice'],
+        '/purchases/orders/invoice/(\d+)' => [$tradeController, 'sendPurchaseInvoice'],
+
     ],
     'PUT' => [
         '/products/quantity/(\d+)' => [$adminController, 'updateQuantity'],

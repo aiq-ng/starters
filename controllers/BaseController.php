@@ -8,6 +8,8 @@ use Database\Database;
 use Exception;
 use Services\MediaHandler;
 use Services\EmailService;
+use Models\Purchase;
+use Models\Sale;
 
 class BaseController
 {
@@ -31,7 +33,9 @@ class BaseController
     protected function getRequestData()
     {
         // Check if the request is JSON
-        if (strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
+        if (isset($_SERVER['CONTENT_TYPE']) &&
+        strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
+
             $json = file_get_contents('php://input');
             $data = json_decode($json, true);
 
@@ -168,6 +172,43 @@ class BaseController
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         return $result['role_id'] == 1;
+    }
+
+    public function sendInvoiceEmail($id, $type, $attachment)
+    {
+        if ($type === 'sales_orders') {
+            $salesInvoice = (new Sale())->getInvoiceDetails($id);
+            $name = $salesInvoice['customer_name'];
+            $email = $salesInvoice['customer_email'];
+
+        } elseif ($type === 'purchase_orders') {
+            $purchaseInvoice = (new Purchase())->getInvoiceDetails($id);
+            $name = $purchaseInvoice['vendor_name'];
+            $email = $purchaseInvoice['vendor_email'];
+
+        } else {
+            throw new \Exception("Invalid record type '$type'.");
+        }
+
+        $templateVariables = [
+                'name' => $name,
+                'email' => $email,
+                'invoice_link' => getenv('APP_URL') . '/login',
+            ];
+
+        try {
+            $this->emailService->sendInvoice(
+                $email,
+                $templateVariables['name'],
+                $templateVariables,
+                $attachment
+            );
+
+        } catch (\Exception $e) {
+            error_log("Error sending email: " . $e->getMessage());
+            $this->sendResponse('Failed to send Invoice', 500);
+        }
+        $this->sendResponse('Invoice sent successfully', 200);
     }
 
     protected function fetchData(string $table, array $columns = ['*'])

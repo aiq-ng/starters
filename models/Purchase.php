@@ -235,6 +235,8 @@ class Purchase
         $query = "
             SELECT po.id,
                 po.subject,
+                v.display_name AS vendor_name,
+                v.email AS vendor_email,
                 po.invoice_number,
                 po.purchase_order_number, 
                 po.reference_number,
@@ -255,10 +257,12 @@ class Purchase
                     )
                 ) AS items
             FROM purchase_orders po
+            LEFT JOIN vendors v ON po.vendor_id = v.id
             LEFT JOIN purchase_order_items poi ON poi.purchase_order_id = po.id
             LEFT JOIN items i ON poi.item_id = i.id
             WHERE po.id = :purchase_order_id
-            GROUP BY po.id, po.purchase_order_number, po.reference_number;
+            GROUP BY po.id, po.purchase_order_number, po.reference_number,
+            v.display_name, v.email, i.name, i.description;
         ";
 
         $stmt = $this->db->prepare($query);

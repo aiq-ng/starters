@@ -34,7 +34,7 @@ class TradeController extends BaseController
         ];
 
 
-        $purchases = $this->purchase->getPurchaseOrders(array_filter($filters));
+        $purchases = $this->purchase->getPurchaseOrders($filters);
 
         if ($purchases) {
             $this->sendResponse('success', 200, $purchases['data'], $purchases['meta']);
@@ -207,6 +207,17 @@ class TradeController extends BaseController
         }
     }
 
+    public function sendPurchaseInvoice($purchaseId)
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+        $invoice = $data['files']['invoice'] ?? [];
+
+        $this->sendInvoiceEmail($purchaseId, 'purchase_orders', $invoice);
+
+    }
+
     public function getSalesInvoice($salesId)
     {
         $this->authorizeRequest();
@@ -219,6 +230,17 @@ class TradeController extends BaseController
             $this->sendResponse('Invoice not found', 404);
         }
     }
+
+    public function sendSaleInvoice($salesId)
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+        $invoice = $data['files']['invoice'] ?? [];
+
+        $this->sendInvoiceEmail($salesId, 'sales_orders', $invoice);
+    }
+
 
     public function createPriceList()
     {
