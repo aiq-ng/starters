@@ -71,6 +71,7 @@ $routes = [
         '/accounting/expenses' => [$accountingController, 'getExpenses'],
         '/accounting/bills' => [$accountingController, 'getBills'],
         '/accounting/overview' => [$accountingController, 'overview'],
+        '/accounting/graph' => [$accountingController, 'revenueAndExpensesGraph'],
         '/inventory' => [$inventoryController, 'index'],
         '/vendors/(\d+)' => [$vendorController, 'show'],
         '/customers/(\d+)' => [$customerController, 'show'],

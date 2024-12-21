@@ -120,4 +120,25 @@ class AccountingController extends BaseController
             $this->sendResponse('Sales overview not found', 404);
         }
     }
+
+    public function revenueAndExpensesGraph()
+    {
+        $this->authorizeRequest();
+
+        $year = isset($_GET['year']) ? $_GET['year'] : date('Y');
+
+        $year = (int)$year;
+
+        if ($year <= 0 || strlen((string)$year) != 4) {
+            $year = (int)date('Y');
+        }
+
+        $data = $this->accounting->getRevenueAndExpensesByYear($year);
+
+        if ($data) {
+            $this->sendResponse('success', 200, $data['data'], $data['meta']);
+        } else {
+            $this->sendResponse('Data not found', 404);
+        }
+    }
 }

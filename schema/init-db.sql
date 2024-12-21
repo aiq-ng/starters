@@ -88,6 +88,27 @@ CREATE TABLE payment_methods (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE loan_types (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    description TEXT
+);
+
+CREATE TABLE loans (
+    id SERIAL PRIMARY KEY,
+    lender_id INT NOT NULL,
+    lender_type VARCHAR(50) NOT NULL CHECK (lender_type IN ('user', 'vendor')),
+    amount DECIMAL(20, 2) NOT NULL,
+    interest_rate DECIMAL(5, 2) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    loan_type_id INT REFERENCES loan_types(id) ON DELETE SET NULL,
+    status VARCHAR(50) DEFAULT 'pending' CHECK (status IN 
+        ('pending', 'approved', 'disbursed', 'repaid', 'defaulted')),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Payment Terms
 CREATE TABLE payment_terms (
     id SERIAL PRIMARY KEY,
@@ -96,7 +117,6 @@ CREATE TABLE payment_terms (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
-
 
 -- Taxes
 CREATE TABLE taxes (

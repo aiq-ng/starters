@@ -32,6 +32,20 @@ INSERT INTO work_leave_qualifications (name) VALUES
 ('6 months'),
 ('annually');
 
+INSERT INTO loan_types (name, description) VALUES
+('personal', 'Personal loans for individual use'),
+('staff', 'Loans provided to staff members'),
+('business', 'Business loans for companies'),
+('education', 'Loans for educational purposes'),
+('mortgage', 'Loans for purchasing property');
+
+INSERT INTO loans (lender_id, lender_type, amount, interest_rate, start_date, end_date, loan_type_id, status, created_at, updated_at) 
+VALUES 
+(1, 'user', 10000.00, 5.00, '2024-01-01', '2025-01-01', 1, 'approved', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(2, 'user', 5000.00, 4.00, '2024-02-01', '2024-08-01', 2, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(3, 'vendor', 20000.00, 6.50, '2024-03-01', '2026-03-01', 3, 'disbursed', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+(4, 'vendor', 15000.00, 3.50, '2024-04-01', '2025-04-01', 4, 'repaid', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
 -- Seed departments
 INSERT INTO departments (name, salary_type, base_type_id, base_rate, base_salary, description,
 work_leave_qualification)
@@ -559,6 +573,9 @@ VALUES
 ('service', 'Corporate Brunch', 2, 2, 2, 'pickup', NULL, 
     '2024-01-25', 'Prepare sandwiches', 'Contact HR', 
     3000, 0, 150000, 'sent', 2, '2024-01-15'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
+    1500, 500, 70000, 'paid', 3, NOW()),
 
 -- February 2024
 ('order', 'Valentine Pack', 3, 1, 3, 'pickup', NULL, 
@@ -567,6 +584,9 @@ VALUES
 ('service', 'February Catering', 4, 2, 1, 'delivery', 1, 
     '2024-02-20', 'Coordinate with manager', 'Serve on time', 
     8000, 12000, 350000, 'pending', 2, '2024-02-05'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
+    1500, 500, 70000, 'paid', 3, NOW()),
 
 -- March 2024
 ('order', 'March Mega Pack', 5, 3, 1, 'delivery', 3, 
@@ -575,6 +595,9 @@ VALUES
 ('service', 'Event Catering', 1, 1, 2, 'pickup', NULL, 
     '2024-03-20', 'Add extra servings', 'Include desserts', 
     5000, 0, 250000, 'paid', 3, '2024-03-10'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
+    1500, 500, 70000, 'paid', 3, NOW()),
 
 -- April 2024
 ('order', 'Easter Pack', 2, 1, 1, 'delivery', 2, 
@@ -583,6 +606,9 @@ VALUES
 ('service', 'April Lunch Service', 3, 2, 3, 'pickup', NULL, 
     '2024-04-25', 'Serve warm', 'Contact event planner', 
     7000, 0, 320000, 'sent', 2, '2024-04-15'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
+    1500, 500, 70000, 'paid', 3, NOW()),
 
 -- May 2024
 ('order', 'Mothers Day Delight', 4, 1, 1, 'delivery', 1, 
@@ -591,6 +617,9 @@ VALUES
 ('service', 'Wedding Reception', 5, 3, 2, 'delivery', 3, 
     '2024-05-25', 'Coordinate with planner', 'Setup quickly', 
     15000, 30000, 600000, 'paid', 2, '2024-05-10'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
+    1500, 500, 70000, 'paid', 3, NOW()),
 
 -- June 2024
 ('order', 'Fathers Day Special', 6, 2, 1, 'pickup', NULL, 
@@ -599,6 +628,9 @@ VALUES
 ('service', 'Corporate Dinner', 1, 1, 2, 'delivery', 4, 
     '2024-06-30', 'Serve by 7 PM', 'Coordinate with HR', 
     8000, 15000, 400000, 'sent', 4, '2024-06-20'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
+    1500, 500, 70000, 'paid', 3, NOW()),
 
 -- July 2024
 ('order', 'Summer BBQ Pack', 3, 3, 1, 'pickup', NULL, 
@@ -607,6 +639,9 @@ VALUES
 ('service', 'July Banquet Service', 5, 2, 3, 'delivery', 2, 
     '2024-07-20', 'Coordinate with staff', 'Serve dessert on time', 
     12000, 20000, 550000, 'paid', 3, '2024-07-10'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
+    1500, 500, 70000, 'paid', 3, NOW()),
 
 -- August 2024
 ('order', 'August Seafood Pack', 4, 1, 2, 'delivery', 3, 
@@ -615,6 +650,9 @@ VALUES
 ('service', 'Birthday Catering', 6, 3, 1, 'pickup', NULL, 
     '2024-08-25', 'Prepare cake and food', 'Include candles', 
     7000, 0, 220000, 'sent', 2, '2024-08-10'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
+    1500, 500, 70000, 'paid', 3, NOW()),
 
 -- September 2024
 ('order', 'September Festive Pack', 2, 2, 1, 'delivery', 2, 
@@ -623,6 +661,9 @@ VALUES
 ('service', 'Corporate Buffet', 3, 1, 2, 'pickup', NULL, 
     '2024-09-25', 'Ensure enough servings', 'Include utensils', 
     5000, 0, 300000, 'paid', 3, '2024-09-15'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
+    1500, 500, 70000, 'paid', 3, NOW()),
 
 -- October 2024
 ('order', 'October Mega Deal', 4, 1, 1, 'delivery', 1, 
@@ -631,6 +672,9 @@ VALUES
 ('service', 'October Event Service', 5, 3, 3, 'delivery', 2, 
     '2024-10-25', 'Coordinate with manager', 'Setup before guests arrive', 
     15000, 20000, 500000, 'sent', 4, '2024-10-10'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
+    1500, 500, 70000, 'paid', 3, NOW()),
 
 -- November 2024
 ('order', 'November Festive Feast', 6, 1, 2, 'pickup', NULL, 
@@ -639,6 +683,9 @@ VALUES
 ('service', 'Thanksgiving Dinner', 1, 2, 1, 'delivery', 3, 
     '2024-11-25', 'Serve hot', 'Coordinate with family', 
     8000, 20000, 450000, 'pending', 2, '2024-11-10'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
+    1500, 500, 70000, 'paid', 3, NOW()),
 
 -- December 2024
 ('order', 'Christmas Special', 2, 1, 1, 'delivery', 1, 
@@ -647,6 +694,9 @@ VALUES
 ('service', 'Christmas Eve Dinner', 4, 3, 3, 'pickup', NULL, 
     '2024-12-24', 'Prepare food and drinks', 'Coordinate with team', 
     10000, 0, 300000, 'paid', 3, '2024-12-10'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
+    1500, 500, 70000, 'paid', 3, NOW()),
 
 -- January 2025
 ('order', 'New Year Delight', 3, 2, 1, 'delivery', 4, 
@@ -654,8 +704,11 @@ VALUES
     3000, 5000, 250000, 'upcoming', 1, '2024-12-20'),
 ('service', 'January Gala Service', 5, 1, 2, 'pickup', NULL, 
     '2025-01-15', 'Coordinate with manager', 'Include decorations', 
-    8000, 0, 400000, 'paid', 2, '2025-01-01');
-;
+    8000, 0, 400000, 'paid', 2, '2025-01-01'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
+    1500, 500, 70000, 'paid', 3, NOW());
+
 
 -- Insert into sales_order_items
 INSERT INTO sales_order_items (
