@@ -106,7 +106,8 @@ class Accounting
         $totalItems = $this->countExpenses($conditions, $params);
 
         $sql = "SELECT 
-                e.expense_id, 
+                e.expense_id,
+                e.expense_title,
                 e.date_of_expense, 
                 pm.name AS payment_method,
                 ec.name AS expense_category,

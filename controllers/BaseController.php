@@ -449,4 +449,9 @@ class BaseController
 
         return $this->insertData('work_leave_qualifications', $data);
     }
+
+    public function getWorkLeaveQualifications()
+    {
+        return $this->sendResponse('success', 200, $this->fetchData('work_leave_qualifications'));
+    }
 }

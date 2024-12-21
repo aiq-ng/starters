@@ -107,6 +107,7 @@ $routes = [
         '/admin/create' => [$adminController, 'createAdmin'],
         '/human-resources/departments' => [$humanResourceController, 'createDepartment'],
         '/human-resources/employees' => [$humanResourceController, 'createEmployee'],
+        '/work_leave_qualifications' => [$humanResourceController, 'createWorkLeaveQualification'],
         '/purchases/orders' => [$tradeController, 'createPurchase'],
         '/inventory/items' => [$inventoryController, 'createItem'],
         '/inventory/completed' => [$inventoryController, 'completeInventory'],
