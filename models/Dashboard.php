@@ -47,7 +47,6 @@ class Dashboard
         WITH months AS (
             SELECT generate_series(1, 12) AS month
         ),
-
         sales_inflow AS (
             SELECT 
                 EXTRACT(MONTH FROM so.delivery_date) AS month,
@@ -57,7 +56,6 @@ class Dashboard
             AND so.status = 'paid'
             GROUP BY EXTRACT(MONTH FROM so.delivery_date)
         ),
-
         purchase_outflow AS (
             SELECT 
                 EXTRACT(MONTH FROM po.delivery_date) AS month,
@@ -67,7 +65,6 @@ class Dashboard
             AND po.status = 'paid'
             GROUP BY EXTRACT(MONTH FROM po.delivery_date)
         ),
-
         expenses_outflow AS (
             SELECT 
                 EXTRACT(MONTH FROM e.date_of_expense) AS month,
@@ -77,24 +74,25 @@ class Dashboard
             AND e.status = 'paid'
             GROUP BY EXTRACT(MONTH FROM e.date_of_expense)
         ),
-
         cash_flows AS (
             SELECT 
                 m.month,
                 COALESCE(s.total_sales, 0) AS total_sales,
                 COALESCE(p.total_purchase, 0) AS total_purchase,
                 COALESCE(e.total_expenses, 0) AS total_expenses,
-                (COALESCE(s.total_sales, 0) - (COALESCE(p.total_purchase, 0) + COALESCE(e.total_expenses, 0))) AS cash_flow,
-                ROUND(
-                    CASE 
-                        WHEN COALESCE(s.total_sales, 0) + COALESCE(p.total_purchase, 0) + COALESCE(e.total_expenses, 0) = 0 THEN 0
-                        ELSE ((COALESCE(s.total_sales, 0) - (COALESCE(p.total_purchase, 0) + COALESCE(e.total_expenses, 0))) * 100.0) / 
-                            (COALESCE(s.total_sales, 0) + COALESCE(p.total_purchase, 0) + COALESCE(e.total_expenses, 0))
-                    END, 2) AS percentage_diff
+                (COALESCE(s.total_sales, 0) - 
+                    (COALESCE(p.total_purchase, 0) + 
+                    COALESCE(e.total_expenses, 0))) AS cash_flow
             FROM months m
             LEFT JOIN sales_inflow s ON m.month = s.month
             LEFT JOIN purchase_outflow p ON m.month = p.month
             LEFT JOIN expenses_outflow e ON m.month = e.month
+        ),
+        cash_flows_with_prev_month AS (
+            SELECT
+                cf.*,
+                COALESCE(LAG(cf.cash_flow) OVER (ORDER BY cf.month), 0) AS prev_month_cash_flow
+            FROM cash_flows cf
         )
         SELECT 
             cf.*,
@@ -104,26 +102,75 @@ class Dashboard
             END AS current_month,
             CASE
                 WHEN cf.month > EXTRACT(MONTH FROM CURRENT_DATE) THEN 
-                    -- Estimate future cash flows based on average cash flow from past months
-                    (SELECT AVG(cash_flow) FROM cash_flows WHERE month <= EXTRACT(MONTH FROM CURRENT_DATE)) 
+                    (SELECT AVG(cash_flow) FROM cash_flows 
+                        WHERE month <= EXTRACT(MONTH FROM CURRENT_DATE)) 
                 ELSE cf.cash_flow
-            END AS estimated_cash_flow
-        FROM cash_flows cf
+            END AS estimated_cash_flow,
+            ROUND(
+                CASE 
+                    WHEN cf.prev_month_cash_flow = 0 THEN 0
+                    ELSE ((cf.cash_flow - cf.prev_month_cash_flow) * 100.0) / cf.prev_month_cash_flow
+                END, 2) AS percentage_diff
+        FROM cash_flows_with_prev_month cf
         ORDER BY cf.month;
         ";
 
-        // Prepare and execute the query
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(':year', $year, \PDO::PARAM_INT);
 
         try {
             $stmt->execute();
             $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            return $result;
+
+            $meta = $this->calculateMeta($result);
+
+            return [
+                'data' => $result,
+                'meta' => $meta
+            ];
         } catch (\PDOException $e) {
             error_log($e->getMessage());
             return [];
         }
+    }
+
+    private function calculateMeta($data)
+    {
+        $total_sales = 0;
+        $total_purchase = 0;
+        $total_expenses = 0;
+        $total_cash_flow = 0;
+        $prev_month_cash_flow = null;
+
+        $percentage_increases = [];
+
+        foreach ($data as $row) {
+            $total_sales += $row['total_sales'];
+            $total_purchase += $row['total_purchase'];
+            $total_expenses += $row['total_expenses'];
+            $total_cash_flow += $row['cash_flow'];
+
+            if ($prev_month_cash_flow !== null) {
+                $percentage_increase = $prev_month_cash_flow == 0
+                    ? 0
+                    : (($row['cash_flow'] - $prev_month_cash_flow) * 100) / $prev_month_cash_flow;
+                $percentage_increases[] = $percentage_increase;
+            }
+
+            $prev_month_cash_flow = $row['cash_flow'];
+        }
+
+        $least_percentage_increase = $percentage_increases ? min($percentage_increases) : 0;
+        $highest_percentage_increase = $percentage_increases ? max($percentage_increases) : 0;
+
+        return [
+            'total_sales' => $total_sales,
+            'total_purchase' => $total_purchase,
+            'total_expenses' => $total_expenses,
+            'total_cash_flow' => $total_cash_flow,
+            'least_percentage_increase' => $least_percentage_increase,
+            'highest_percentage_increase' => $highest_percentage_increase
+        ];
     }
 
     public function getBusinessOverview($filters = [])
@@ -132,22 +179,28 @@ class Dashboard
         $year = $filters['year'] ?? date('Y');
 
         $query = "
-            SELECT 
-                COALESCE((SELECT SUM(total) 
-                          FROM sales_orders 
-                          WHERE status IN ('paid') 
-                          AND DATE_PART('month', created_at) = :month
-                          AND DATE_PART('year', created_at) = :year), 0) AS total_income,
-                COALESCE((SELECT SUM(total) 
-                          FROM purchase_orders 
-                          WHERE status IN ('paid') 
-                          AND DATE_PART('month', created_at) = :month
-                          AND DATE_PART('year', created_at) = :year), 0) AS total_expenses,
-                COALESCE((SELECT COUNT(*) 
-                          FROM vendors), 0) AS total_vendors,
-                COALESCE((SELECT COUNT(*) 
-                          FROM users), 0) AS total_employees
-        ";
+        SELECT 
+            COALESCE((SELECT SUM(total) 
+                      FROM sales_orders 
+                      WHERE status IN ('paid') 
+                      AND DATE_PART('month', created_at) = :month
+                      AND DATE_PART('year', created_at) = :year), 0) AS total_income,
+            COALESCE((SELECT SUM(total) 
+                      FROM purchase_orders 
+                      WHERE status IN ('paid') 
+                      AND DATE_PART('month', created_at) = :month
+                      AND DATE_PART('year', created_at) = :year), 0) 
+            +
+            COALESCE((SELECT SUM(amount) 
+                      FROM expenses 
+                      WHERE status IN ('paid') 
+                      AND DATE_PART('month', date_of_expense) = :month
+                      AND DATE_PART('year', date_of_expense) = :year), 0) AS total_expenses,
+            COALESCE((SELECT COUNT(*) 
+                      FROM vendors), 0) AS total_vendors,
+            COALESCE((SELECT COUNT(*) 
+                      FROM users), 0) AS total_employees
+    ";
 
         $stmt = $this->db->prepare($query);
         $stmt->bindValue(':month', (int) $month, \PDO::PARAM_INT);
@@ -161,18 +214,24 @@ class Dashboard
             $previousYear = ($month == 1) ? $year - 1 : $year;
 
             $queryPreviousMonth = "
-                SELECT 
-                    COALESCE((SELECT SUM(total) 
-                              FROM sales_orders 
-                              WHERE status IN ('paid') 
-                              AND DATE_PART('month', created_at) = :previousMonth
-                              AND DATE_PART('year', created_at) = :previousYear), 0) AS total_income,
-                    COALESCE((SELECT SUM(total) 
-                              FROM purchase_orders 
-                              WHERE status IN ('paid') 
-                              AND DATE_PART('month', created_at) = :previousMonth
-                              AND DATE_PART('year', created_at) = :previousYear), 0) AS total_expenses
-            ";
+            SELECT 
+                COALESCE((SELECT SUM(total) 
+                          FROM sales_orders 
+                          WHERE status IN ('paid') 
+                          AND DATE_PART('month', created_at) = :previousMonth
+                          AND DATE_PART('year', created_at) = :previousYear), 0) AS total_income,
+                COALESCE((SELECT SUM(total) 
+                          FROM purchase_orders 
+                          WHERE status IN ('paid') 
+                          AND DATE_PART('month', created_at) = :previousMonth
+                          AND DATE_PART('year', created_at) = :previousYear), 0) 
+                +
+                COALESCE((SELECT SUM(amount) 
+                          FROM expenses 
+                          WHERE status IN ('paid') 
+                          AND DATE_PART('month', date_of_expense) = :previousMonth
+                          AND DATE_PART('year', date_of_expense) = :previousYear), 0) AS total_expenses
+        ";
 
             $stmtPreviousMonth = $this->db->prepare($queryPreviousMonth);
             $stmtPreviousMonth->bindValue(':previousMonth', (int) $previousMonth, \PDO::PARAM_INT);

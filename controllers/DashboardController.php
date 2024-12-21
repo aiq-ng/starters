@@ -89,7 +89,7 @@ class DashboardController extends BaseController
         $cashFlow = $this->dashboard->getCashFlowByYear($year);
 
         if ($cashFlow) {
-            $this->sendResponse('success', 200, $cashFlow);
+            $this->sendResponse('success', 200, $cashFlow['data'], $cashFlow['meta']);
         } else {
             $this->sendResponse('Cash flow not found', 404);
         }
