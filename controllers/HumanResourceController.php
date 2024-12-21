@@ -52,8 +52,6 @@ class HumanResourceController extends BaseController
 
         $data = $this->getRequestData();
 
-        error_log(json_encode($data));
-
         $formData = $data['form_data'];
         $mediaFiles = $data['files'] ?? [];
 
@@ -80,7 +78,6 @@ class HumanResourceController extends BaseController
                 }
 
                 $mediaLinks[$mediaType] = $mediaLink;
-
             }
         }
 
@@ -92,19 +89,24 @@ class HumanResourceController extends BaseController
 
         if ($formData['username'] && $formData['password']) {
             $templateVariables = [
-            'name' => $formData['firstname'] . ' ' . $formData['lastname'],
-            'email' => $formData['username'],
-            'password' => $formData['password'],
-            'login_link' => getenv('APP_URL') . '/login',
-        ];
+                'name' => $formData['firstname'] . ' ' . $formData['lastname'],
+                'email' => $formData['username'],
+                'password' => $formData['password'],
+                'login_link' => getenv('APP_URL') . '/login',
+            ];
 
-            $emailSent = $this->emailService->sendLoginDetails(
-                $formData['email'],
-                $templateVariables['name'],
-                $templateVariables
-            );
+            try {
+                $emailSent = $this->emailService->sendLoginDetails(
+                    $formData['email'],
+                    $templateVariables['name'],
+                    $templateVariables
+                );
 
-            if (!$emailSent) {
+                if (!$emailSent) {
+                    $this->sendResponse('Admin access added, but email sending failed', 500);
+                }
+            } catch (\Exception $e) {
+                error_log("Error sending email: " . $e->getMessage());
                 $this->sendResponse('Admin access added, but email sending failed', 500);
             }
         }
