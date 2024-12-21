@@ -4,6 +4,7 @@ CREATE TABLE roles (
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
+-- Permissions
 CREATE TABLE permissions (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL,
@@ -33,21 +34,6 @@ CREATE TABLE work_leave_qualifications (
     name VARCHAR(50)
 );
 
--- Departments
-CREATE TABLE departments (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL,
-    salary_type VARCHAR(50) CHECK (salary_type IN ('fixed', 'base')),
-    base_type_id INT REFERENCES base_pay_types(id) ON DELETE SET NULL,
-    base_rate DECIMAL(20, 2), -- rate per hour or delivery
-    base_salary DECIMAL(20, 2), -- for fixed salary
-    work_leave_qualification INT REFERENCES work_leave_qualifications(id) ON DELETE SET NULL,
-    work_leave_period VARCHAR(50),
-    description TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Branches
 CREATE TABLE branches (
     id SERIAL PRIMARY KEY,
@@ -75,9 +61,82 @@ CREATE TABLE units (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Work Leave Qualifications
 CREATE TABLE no_of_working_days (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Vendor Categories
+CREATE TABLE vendor_categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Payment Methods
+CREATE TABLE payment_methods (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Payment Terms
+CREATE TABLE payment_terms (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- Taxes
+CREATE TABLE taxes (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    rate DECIMAL(5, 2) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Item Manufacturers
+CREATE TABLE item_manufacturers (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    website VARCHAR(255),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Cash Accounts
+CREATE TABLE cash_accounts (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    balance DECIMAL(20, 2) DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Departments
+CREATE TABLE departments (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    salary_type VARCHAR(50) CHECK (salary_type IN ('fixed', 'base')),
+    base_type_id INT REFERENCES base_pay_types(id) ON DELETE SET NULL,
+    base_rate DECIMAL(20, 2), -- rate per hour or delivery
+    base_salary DECIMAL(20, 2), -- for fixed salary
+    work_leave_qualification INT REFERENCES work_leave_qualifications(id) ON DELETE SET NULL,
+    work_leave_period VARCHAR(50),
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -133,49 +192,14 @@ CREATE TABLE user_leaves (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- Vendor Categories
-CREATE TABLE vendor_categories (
+-- Price Lists
+CREATE TABLE price_lists (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL,
-    description TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
--- Payment Methods
-CREATE TABLE payment_methods (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) UNIQUE NOT NULL,
-    description TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
--- Payment Terms
-CREATE TABLE payment_terms (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) UNIQUE NOT NULL,
-    description TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
-
--- Taxes
-CREATE TABLE taxes (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) UNIQUE NOT NULL,
-    rate DECIMAL(5, 2) NOT NULL,
-    description TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
--- Item Manufacturers
-CREATE TABLE item_manufacturers (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    website VARCHAR(255),
+    item_category_id INT REFERENCES item_categories(id) ON DELETE SET NULL,
+    unit_id INT REFERENCES units(id) ON DELETE SET NULL,
+    item_details VARCHAR(100) NOT NULL UNIQUE,
+    unit_price DECIMAL(20, 2) NOT NULL,
+    minimum_order INT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -213,6 +237,53 @@ CREATE TABLE vendors (
 CREATE TABLE vendor_transactions (
     id SERIAL PRIMARY KEY,
     vendor_id INT REFERENCES vendors(id) ON DELETE SET NULL,
+    transaction_type VARCHAR(50) 
+        CHECK (transaction_type IN ('credit', 'debit')),
+    payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,
+    cash_account_id INT REFERENCES cash_accounts(id) ON DELETE SET NULL,
+    amount DECIMAL(20, 2) NOT NULL,
+    reference_number VARCHAR(50) GENERATED ALWAYS AS (
+        'REF' || LPAD(id::TEXT, 10, '0')
+    ) STORED,
+    notes TEXT,
+    invoice_sent BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Customers
+CREATE TABLE customers (
+    id SERIAL PRIMARY KEY,
+    customer_type VARCHAR(50) 
+        CHECK (customer_type IN ('individual', 'business')),
+    salutation VARCHAR(10) 
+        CHECK (salutation IN ('Mr', 'Mrs', 'Miss', 'Dr', 'Prof')),
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
+    display_name VARCHAR(255),
+    company_name VARCHAR(255),
+    email VARCHAR(255),
+    work_phone VARCHAR(20),
+    mobile_phone VARCHAR(20),
+    address TEXT,
+    website VARCHAR(255),
+    social_media JSONB,
+    payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
+    currency_id INT REFERENCES currencies(id) ON DELETE SET NULL,
+    balance DECIMAL(20, 2) DEFAULT 0,
+    status VARCHAR(50) GENERATED ALWAYS AS (
+        CASE
+            WHEN balance > 0 THEN 'owing'
+            ELSE 'paid'
+        END
+    ) STORED,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Customer Transactions
+CREATE TABLE customer_transactions (
+    id SERIAL PRIMARY KEY,
+    customer_id INT REFERENCES customers(id) ON DELETE SET NULL,
     transaction_type VARCHAR(50) 
         CHECK (transaction_type IN ('credit', 'debit')),
     payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,
@@ -304,64 +375,6 @@ CREATE TABLE item_stock_adjustments (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- Comments
-CREATE TABLE comments (
-    id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(id) ON DELETE SET NULL,
-    parent_id INT REFERENCES comments(id) ON DELETE CASCADE,
-    entity_id INT NOT NULL,
-    entity_type VARCHAR(50) NOT NULL,
-    comment TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
--- Customers
-CREATE TABLE customers (
-    id SERIAL PRIMARY KEY,
-    customer_type VARCHAR(50) 
-        CHECK (customer_type IN ('individual', 'business')),
-    salutation VARCHAR(10) 
-        CHECK (salutation IN ('Mr', 'Mrs', 'Miss', 'Dr', 'Prof')),
-    first_name VARCHAR(255),
-    last_name VARCHAR(255),
-    display_name VARCHAR(255),
-    company_name VARCHAR(255),
-    email VARCHAR(255),
-    work_phone VARCHAR(20),
-    mobile_phone VARCHAR(20),
-    address TEXT,
-    website VARCHAR(255),
-    social_media JSONB,
-    payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
-    currency_id INT REFERENCES currencies(id) ON DELETE SET NULL,
-    balance DECIMAL(20, 2) DEFAULT 0,
-    status VARCHAR(50) GENERATED ALWAYS AS (
-        CASE
-            WHEN balance > 0 THEN 'owing'
-            ELSE 'paid'
-        END
-    ) STORED,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
--- Customer Transactions
-CREATE TABLE customer_transactions (
-    id SERIAL PRIMARY KEY,
-    customer_id INT REFERENCES customers(id) ON DELETE SET NULL,
-    transaction_type VARCHAR(50) 
-        CHECK (transaction_type IN ('credit', 'debit')),
-    payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,
-    cash_account_id INT REFERENCES cash_accounts(id) ON DELETE SET NULL,
-    amount DECIMAL(20, 2) NOT NULL,
-    reference_number VARCHAR(50) GENERATED ALWAYS AS (
-        'REF' || LPAD(id::TEXT, 10, '0')
-    ) STORED,
-    notes TEXT,
-    invoice_sent BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Purchase Orders
 CREATE TABLE purchase_orders (
     id SERIAL PRIMARY KEY,
@@ -401,18 +414,6 @@ CREATE TABLE purchase_order_items (
     price DECIMAL(20, 2) NOT NULL,
     tax_id INT REFERENCES taxes(id) ON DELETE SET NULL,
     total DECIMAL(20, 2) GENERATED ALWAYS AS (quantity * price) STORED,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
--- Price Lists
-CREATE TABLE price_lists (
-    id SERIAL PRIMARY KEY,
-    item_category_id INT REFERENCES item_categories(id) ON DELETE SET NULL,
-    unit_id INT REFERENCES units(id) ON DELETE SET NULL,
-    item_details VARCHAR(100) NOT NULL UNIQUE,
-    unit_price DECIMAL(20, 2) NOT NULL,
-    minimum_order INT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -495,14 +496,17 @@ CREATE TABLE expenses (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE cash_accounts (
+-- Comments
+CREATE TABLE comments (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL,
-    description TEXT,
-    balance DECIMAL(20, 2) DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    user_id INT REFERENCES users(id) ON DELETE SET NULL,
+    parent_id INT REFERENCES comments(id) ON DELETE CASCADE,
+    entity_id INT NOT NULL,
+    entity_type VARCHAR(50) NOT NULL,
+    comment TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
 
 CREATE OR REPLACE FUNCTION update_item_availability()
 RETURNS TRIGGER AS $$

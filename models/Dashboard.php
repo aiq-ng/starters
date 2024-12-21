@@ -135,7 +135,7 @@ class Dashboard
             SELECT 
                 COALESCE((SELECT SUM(total) 
                           FROM sales_orders 
-                          WHERE status IN ('completed') 
+                          WHERE status IN ('paid') 
                           AND DATE_PART('month', created_at) = :month
                           AND DATE_PART('year', created_at) = :year), 0) AS total_income,
                 COALESCE((SELECT SUM(total) 
@@ -164,12 +164,12 @@ class Dashboard
                 SELECT 
                     COALESCE((SELECT SUM(total) 
                               FROM sales_orders 
-                              WHERE status IN ('sent', 'completed') 
+                              WHERE status IN ('paid') 
                               AND DATE_PART('month', created_at) = :previousMonth
                               AND DATE_PART('year', created_at) = :previousYear), 0) AS total_income,
                     COALESCE((SELECT SUM(total) 
                               FROM purchase_orders 
-                              WHERE status IN ('processing', 'completed') 
+                              WHERE status IN ('paid') 
                               AND DATE_PART('month', created_at) = :previousMonth
                               AND DATE_PART('year', created_at) = :previousYear), 0) AS total_expenses
             ";

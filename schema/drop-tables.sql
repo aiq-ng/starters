@@ -27,6 +27,7 @@ DROP TABLE IF EXISTS customer_transactions CASCADE;
 DROP TABLE IF EXISTS vendor_transactions CASCADE;
 DROP TABLE IF EXISTS customers CASCADE;
 DROP TABLE IF EXISTS vendors CASCADE;
+DROP TABLE IF EXISTS cash_accounts CASCADE;
 
 -- Supporting Entities
 DROP TABLE IF EXISTS taxes CASCADE;
@@ -42,10 +43,10 @@ DROP TABLE IF EXISTS user_leaves CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
 DROP TABLE IF EXISTS permissions CASCADE;
-DROP TABLE IF EXISTS work_leave_qualifications CASCADE;
 
 -- Branches and Departments
 DROP TABLE IF EXISTS branches CASCADE;
 DROP TABLE IF EXISTS departments CASCADE;
 DROP TABLE IF EXISTS base_pay_types CASCADE;
 DROP TABLE IF EXISTS no_of_working_days CASCADE;
+DROP TABLE IF EXISTS work_leave_qualifications CASCADE;
