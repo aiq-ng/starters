@@ -36,7 +36,7 @@ class Sale
                     END,
                     CASE
                         WHEN :period = 'today' THEN 23
-                        WHEN :period = 'week' THEN 5
+                        WHEN :period = 'week' THEN 7
                         WHEN :period = 'month' THEN 4
                         WHEN :period = 'year' THEN 12
                     END
@@ -48,12 +48,14 @@ class Sale
                 CASE
                     WHEN :period = 'today' THEN EXTRACT(HOUR FROM so.created_at)
                     WHEN :period = 'week' THEN EXTRACT(DOW FROM so.created_at)
-                    WHEN :period = 'month' THEN EXTRACT(WEEK FROM so.created_at) - EXTRACT(WEEK FROM DATE_TRUNC('month', CURRENT_DATE)) + 1
+                    WHEN :period = 'month' THEN EXTRACT(WEEK FROM so.created_at) -
+                    EXTRACT(WEEK FROM DATE_TRUNC('month', CURRENT_DATE)) + 1
                     WHEN :period = 'year' THEN EXTRACT(MONTH FROM so.created_at)
                 END AS period,
                 SUM(so.total) AS revenue
             FROM sales_orders so
-            WHERE so.created_at >= 
+            WHERE so.status = 'paid'
+            AND so.created_at >= 
                 CASE
                     WHEN :period = 'today' THEN CURRENT_DATE
                     WHEN :period = 'week' THEN DATE_TRUNC('week', CURRENT_DATE)
@@ -68,58 +70,25 @@ class Sale
                     WHEN :period = 'year' THEN DATE_TRUNC('year', CURRENT_DATE) + INTERVAL '1 year'
                 END
             GROUP BY period
-        ),
-        previous_revenue_data AS (
-            SELECT
-                CASE
-                    WHEN :period = 'today' THEN EXTRACT(HOUR FROM so.created_at)
-                    WHEN :period = 'week' THEN EXTRACT(DOW FROM so.created_at)
-                    WHEN :period = 'month' THEN EXTRACT(WEEK FROM so.created_at) - EXTRACT(WEEK FROM DATE_TRUNC('month', CURRENT_DATE)) + 1
-                    WHEN :period = 'year' THEN EXTRACT(MONTH FROM so.created_at)
-                END AS period,
-                SUM(so.total) AS previous_revenue
-            FROM sales_orders so
-            WHERE so.created_at >= 
-                CASE
-                    WHEN :period = 'today' THEN CURRENT_DATE - INTERVAL '1 day'
-                    WHEN :period = 'week' THEN DATE_TRUNC('week', CURRENT_DATE) - INTERVAL '1 week'
-                    WHEN :period = 'month' THEN DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month'
-                    WHEN :period = 'year' THEN DATE_TRUNC('year', CURRENT_DATE) - INTERVAL '1 year'
-                END
-            AND so.created_at < 
-                CASE
-                    WHEN :period = 'today' THEN CURRENT_DATE
-                    WHEN :period = 'week' THEN DATE_TRUNC('week', CURRENT_DATE)
-                    WHEN :period = 'month' THEN DATE_TRUNC('month', CURRENT_DATE)
-                    WHEN :period = 'year' THEN DATE_TRUNC('year', CURRENT_DATE)
-                END
-            GROUP BY period
         )
         SELECT
             ps.period,
             COALESCE(rd.revenue, 0) AS revenue,
-            COALESCE(prd.previous_revenue, 0) AS previous_revenue,
             CASE
-                WHEN COALESCE(prd.previous_revenue, 0) = 0 THEN 0
-                ELSE ROUND(((COALESCE(rd.revenue, 0) - COALESCE(prd.previous_revenue, 0)) / COALESCE(prd.previous_revenue, 0)) * 100, 2)
-            END AS percentage_diff,
-            CASE
-                WHEN ps.period = 
-                    CASE
-                        WHEN :period = 'today' THEN EXTRACT(HOUR FROM CURRENT_TIMESTAMP)
-                        WHEN :period = 'week' THEN EXTRACT(DOW FROM CURRENT_TIMESTAMP)
-                        WHEN :period = 'month' THEN EXTRACT(WEEK FROM CURRENT_TIMESTAMP) - EXTRACT(WEEK FROM DATE_TRUNC('month', CURRENT_DATE)) + 1
-                        WHEN :period = 'year' THEN EXTRACT(MONTH FROM CURRENT_TIMESTAMP)
-                    END THEN true
-                ELSE false
-            END AS current
+                WHEN ps.period = CASE
+                    WHEN :period = 'today' THEN EXTRACT(HOUR FROM CURRENT_TIMESTAMP)
+                    WHEN :period = 'week' THEN EXTRACT(DOW FROM CURRENT_TIMESTAMP)
+                    WHEN :period = 'month' THEN EXTRACT(WEEK FROM CURRENT_TIMESTAMP) -
+                    EXTRACT(WEEK FROM DATE_TRUNC('month', CURRENT_DATE)) + 1
+                    WHEN :period = 'year' THEN EXTRACT(MONTH FROM CURRENT_TIMESTAMP)
+                END THEN TRUE
+                ELSE FALSE
+            END AS current_period
         FROM period_series ps
         LEFT JOIN revenue_data rd ON ps.period = rd.period
-        LEFT JOIN previous_revenue_data prd ON ps.period = prd.period
         ORDER BY ps.period;
         ";
 
-        // Fetch revenue data
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(':period', $period, \PDO::PARAM_STR);
 
@@ -131,64 +100,62 @@ class Sale
             $revenueData = [];
         }
 
-        // Fetch min and max revenue data
-        $minMaxRevenue = $this->getMinMaxRevenue($period);
+        $revenueDataWithDiffs = $this->addPreviousRevenueAndDiff($revenueData);
 
-        // Return merged data with meta
+        $minMaxRevenue = $this->calculateMinMaxRevenue($revenueDataWithDiffs);
+
         return [
-            'data' => $revenueData,
+            'data' => $revenueDataWithDiffs,
             'meta' => $minMaxRevenue
         ];
     }
 
-    public function getMinMaxRevenue($period = 'week')
+    public function addPreviousRevenueAndDiff($revenueData)
     {
-        $query = "
-        WITH revenue_data AS (
-            SELECT
-                CASE
-                    WHEN :period = 'today' THEN EXTRACT(HOUR FROM so.created_at)
-                    WHEN :period = 'week' THEN EXTRACT(DOW FROM so.created_at)
-                    WHEN :period = 'month' THEN EXTRACT(WEEK FROM so.created_at) - EXTRACT(WEEK FROM DATE_TRUNC('month', CURRENT_DATE)) + 1
-                    WHEN :period = 'year' THEN EXTRACT(MONTH FROM so.created_at)
-                END AS period,
-                SUM(so.total) AS revenue
-            FROM sales_orders so
-            WHERE so.created_at >= 
-                CASE
-                    WHEN :period = 'today' THEN CURRENT_DATE
-                    WHEN :period = 'week' THEN DATE_TRUNC('week', CURRENT_DATE)
-                    WHEN :period = 'month' THEN DATE_TRUNC('month', CURRENT_DATE)
-                    WHEN :period = 'year' THEN DATE_TRUNC('year', CURRENT_DATE)
-                END
-            AND so.created_at < 
-                CASE
-                    WHEN :period = 'today' THEN CURRENT_DATE + INTERVAL '1 day'
-                    WHEN :period = 'week' THEN DATE_TRUNC('week', CURRENT_DATE) + INTERVAL '1 week'
-                    WHEN :period = 'month' THEN DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
-                    WHEN :period = 'year' THEN DATE_TRUNC('year', CURRENT_DATE) + INTERVAL '1 year'
-                END
-            GROUP BY period
-        )
-        SELECT 
-            MIN(rd.revenue) AS min_revenue,
-            MAX(rd.revenue) AS max_revenue
-        FROM revenue_data rd;
-        ";
+        $previousRevenue = null;
+        $result = [];
 
-        // Fetch min and max revenue data
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':period', $period, \PDO::PARAM_STR);
+        foreach ($revenueData as $data) {
+            $currentRevenue = $data['revenue'];
 
-        try {
-            $stmt->execute();
-            $minMaxRevenue = $stmt->fetch(\PDO::FETCH_ASSOC);
-        } catch (\PDOException $e) {
-            error_log($e->getMessage());
-            $minMaxRevenue = ['min_revenue' => 0, 'max_revenue' => 0];
+            $percentageDiff = null;
+            if ($previousRevenue !== null && $previousRevenue != 0) {
+                $percentageDiff = ($currentRevenue - $previousRevenue) / $previousRevenue * 100;
+            } else {
+                $percentageDiff = 0;
+            }
+
+            $result[] = [
+                'period' => $data['period'],
+                'revenue' => $currentRevenue,
+                'previous_revenue' => $previousRevenue ?? 0,
+                'percentage_diff' => (string) round($percentageDiff, 2),
+                'current' => $data['current_period']
+            ];
+
+            $previousRevenue = $currentRevenue;
         }
 
-        return $minMaxRevenue;
+        return $result;
+    }
+    public function calculateMinMaxRevenue($revenueData)
+    {
+        $minRevenue = INF;
+        $maxRevenue = -INF;
+
+        foreach ($revenueData as $data) {
+            $revenue = $data['revenue'];
+            if ($revenue < $minRevenue) {
+                $minRevenue = $revenue;
+            }
+            if ($revenue > $maxRevenue) {
+                $maxRevenue = $revenue;
+            }
+        }
+        return [
+            'min_revenue' => $minRevenue === INF ? 0 : $minRevenue,
+            'max_revenue' => $maxRevenue === -INF ? 0 : $maxRevenue
+        ];
     }
 
 
