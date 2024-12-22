@@ -139,16 +139,12 @@ class Inventory
     public function getItem($itemId)
     {
         $sql = "
-            SELECT 
-                i.id AS item_id, 
-                i.name AS item_name, 
+            SELECT
+                i.*,
                 STRING_AGG(DISTINCT ic.name, ', ') AS category,
                 STRING_AGG(DISTINCT d.name, ', ') AS department,
-                i.threshold_value, 
                 MAX(its.expiry_date) AS expiry_date,
-                i.opening_stock, 
-                COALESCE(SUM(its.quantity), 0) AS remaining_stock,
-                i.media
+                COALESCE(SUM(its.quantity), 0) AS remaining_stock
             FROM item_stocks its
             JOIN items i ON its.item_id = i.id
             LEFT JOIN item_stock_departments isd ON its.id = isd.stock_id
