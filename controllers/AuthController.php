@@ -20,7 +20,7 @@ class AuthController extends BaseController
     {
         $data = $this->getRequestData();
 
-        if (!$this->validateFields($data['name'], $data['email'], $data['password'])) {
+        if (!$this->validateFields($data['firstname'], $data['lastname'], $data['email'], $data['password'])) {
             $this->sendResponse('Incomplete data provided', 400);
             return;
         }

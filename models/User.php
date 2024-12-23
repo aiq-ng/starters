@@ -20,12 +20,13 @@ class User
     {
         $query = "
             INSERT INTO " . $this->table . " 
-            (name, email, password, role_id) VALUES (:name, :email, :password, :role_id)";
+            (firstname, lastname, email, password, role_id) VALUES (:firstname, :lastname, :email, :password, :role_id)";
         $stmt = $this->db->prepare($query);
 
         $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
 
-        $stmt->bindParam(':name', $data['name']);
+        $stmt->bindParam(':firstname', $data['firstname']);
+        $stmt->bindParam(':lastname', $data['lastname']);
         $stmt->bindParam(':email', $data['email']);
         $stmt->bindParam(':password', $hashedPassword);
         $stmt->bindParam(':role_id', $data['role']) ?? 3;

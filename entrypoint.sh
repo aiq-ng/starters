@@ -6,7 +6,6 @@ run_sql_scripts() {
 	sql_files=(
 		"/workspace/starters/schema/drop-tables.sql"
 		"/workspace/starters/schema/init-db.sql"
-		"/workspace/starters/schema/init-data.sql"
 	)
 
 	for sql_file in "${sql_files[@]}"; do
