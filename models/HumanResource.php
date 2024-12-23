@@ -126,7 +126,7 @@ class HumanResource
             LEFT JOIN departments d ON u.department_id = d.id
             LEFT JOIN roles r ON u.role_id = r.id
             LEFT JOIN user_leaves ul ON u.id = ul.user_id
-            WHERE u.role_id != 1
+            WHERE u.role_id != 3
         ";
 
         if (!empty($filters['department'])) {
@@ -150,20 +150,20 @@ class HumanResource
         $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         foreach ($result as $key => $employee) {
-            $result[$key]['bank_details'] = json_decode($employee['bank_details']);
+            $result[$key]['bank_details'] = !empty($employee['bank_details'])
+                ? json_decode($employee['bank_details'], true)
+                : null;
         }
 
         $totalCount = $this->countEmployees($filters);
 
-        $totalItems = ceil($totalCount / $pageSize);
-
         $meta = [
-            'total_data' => (int) $totalItems,
-            'total_pages' => ceil($totalItems / $pageSize),
+            'total_data' => (int) $totalCount,
+            'total_pages' => ceil($totalCount / $pageSize),
             'page_size' => (int) $pageSize,
             'previous_page' => $page > 1 ? (int) $page - 1 : null,
             'current_page' => (int) $page,
-            'next_page' => (int) $page + 1,
+            'next_page' => $page < ceil($totalCount / $pageSize) ? (int) $page + 1 : null,
         ];
 
         return [

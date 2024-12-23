@@ -4,7 +4,6 @@
 run_sql_scripts() {
 	echo "Running SQL scripts in order..."
 	sql_files=(
-		"/workspace/starters/schema/drop-tables.sql"
 		"/workspace/starters/schema/init-db.sql"
 	)
 
