@@ -182,7 +182,7 @@ class Sale
             SELECT
                 COALESCE(SUM(so.total), 0) AS total_revenue,
                 COUNT(DISTINCT so.id) AS total_orders,
-                COALESCE(SUM(soi.quantity), 0) AS products_sold,
+                COUNT(DISTINCT soi.id) AS products_sold,
                 COUNT(DISTINCT so.customer_id) AS total_customers
             FROM sales_orders so
             LEFT JOIN sales_order_items soi ON so.id = soi.sales_order_id
