@@ -31,7 +31,7 @@ CREATE TABLE base_pay_types (
 -- Create work_leave_qualifications table
 CREATE TABLE work_leave_qualifications (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(50)
+    name VARCHAR(50) UNIQUE NOT NULL
 );
 
 -- Branches
@@ -98,10 +98,10 @@ CREATE TABLE loans (
     id SERIAL PRIMARY KEY,
     lender_id INT NOT NULL,
     lender_type VARCHAR(50) NOT NULL CHECK (lender_type IN ('user', 'vendor')),
-    amount DECIMAL(20, 2) NOT NULL,
-    interest_rate DECIMAL(5, 2) NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
+    amount DECIMAL(20, 2),
+    interest_rate DECIMAL(5, 2),
+    start_date DATE,
+    end_date DATE,
     loan_type_id INT REFERENCES loan_types(id) ON DELETE SET NULL,
     status VARCHAR(50) DEFAULT 'pending' CHECK (status IN 
         ('pending', 'approved', 'disbursed', 'repaid', 'defaulted')),
@@ -218,8 +218,8 @@ CREATE TABLE price_lists (
     item_category_id INT REFERENCES item_categories(id) ON DELETE SET NULL,
     unit_id INT REFERENCES units(id) ON DELETE SET NULL,
     item_details VARCHAR(100) NOT NULL UNIQUE,
-    unit_price DECIMAL(20, 2) NOT NULL,
-    minimum_order INT NOT NULL,
+    unit_price DECIMAL(20, 2),
+    minimum_order INT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -245,6 +245,7 @@ CREATE TABLE vendors (
     balance DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) GENERATED ALWAYS AS (
         CASE
+            WHEN balance = 0 THEN 'active'
             WHEN balance > 0 THEN 'owing'
             ELSE 'paid'
         END
@@ -261,7 +262,7 @@ CREATE TABLE vendor_transactions (
         CHECK (transaction_type IN ('credit', 'debit')),
     payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,
     cash_account_id INT REFERENCES cash_accounts(id) ON DELETE SET NULL,
-    amount DECIMAL(20, 2) NOT NULL,
+    amount DECIMAL(20, 2),
     reference_number VARCHAR(50) GENERATED ALWAYS AS (
         'REF' || LPAD(id::TEXT, 10, '0')
     ) STORED,
@@ -292,6 +293,7 @@ CREATE TABLE customers (
     balance DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) GENERATED ALWAYS AS (
         CASE
+            WHEN balance = 0 THEN 'active'
             WHEN balance > 0 THEN 'owing'
             ELSE 'paid'
         END
@@ -308,7 +310,7 @@ CREATE TABLE customer_transactions (
         CHECK (transaction_type IN ('credit', 'debit')),
     payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,
     cash_account_id INT REFERENCES cash_accounts(id) ON DELETE SET NULL,
-    amount DECIMAL(20, 2) NOT NULL,
+    amount DECIMAL(20, 2),
     reference_number VARCHAR(50) GENERATED ALWAYS AS (
         'REF' || LPAD(id::TEXT, 10, '0')
     ) STORED,
@@ -409,7 +411,7 @@ CREATE TABLE purchase_orders (
     invoice_number VARCHAR(50) GENERATED ALWAYS AS (
         'INV-' || LPAD(id::TEXT, 5, '0')
     ) STORED,
-    delivery_date DATE NOT NULL,
+    delivery_date DATE,
     payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
     subject TEXT,
     notes TEXT,
@@ -431,7 +433,7 @@ CREATE TABLE purchase_order_items (
     purchase_order_id INT REFERENCES purchase_orders(id) ON DELETE CASCADE,
     item_id INT REFERENCES items(id) ON DELETE SET NULL,
     quantity INT NOT NULL,
-    price DECIMAL(20, 2) NOT NULL,
+    price DECIMAL(20, 2),
     tax_id INT REFERENCES taxes(id) ON DELETE SET NULL,
     total DECIMAL(20, 2) GENERATED ALWAYS AS (quantity * price) STORED,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -462,7 +464,7 @@ CREATE TABLE sales_orders (
     delivery_option VARCHAR(50) 
         CHECK (delivery_option IN ('pickup', 'delivery')),
     assigned_driver_id INT REFERENCES users(id) ON DELETE SET NULL,
-    delivery_date DATE NOT NULL,
+    delivery_date DATE,
     additional_note TEXT,
     customer_note TEXT,
     discount DECIMAL(20, 2) DEFAULT 0,
@@ -505,7 +507,7 @@ CREATE TABLE expenses (
     payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,
     payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
     department_id INT REFERENCES departments(id) ON DELETE SET NULL,
-    amount DECIMAL(20, 2) NOT NULL,
+    amount DECIMAL(20, 2),
     bank_charges DECIMAL(20, 2) DEFAULT 0,
     date_of_expense DATE DEFAULT CURRENT_DATE,
     notes TEXT,

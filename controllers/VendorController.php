@@ -46,9 +46,6 @@ class VendorController extends BaseController
             $data['first_name'],
             $data['last_name'],
             $data['email'],
-            $data['category_id'],
-            $data['currency_id'],
-            $data['payment_term_id'],
         )) {
             $this->sendResponse('Invalid input data', 400);
         }

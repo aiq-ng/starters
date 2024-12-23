@@ -303,11 +303,11 @@ class Sale
 
         foreach ($data as $item) {
             $placeholders[] = "(?, ?, ?, ?, ?)";
-            $values[] = $item['item_category_id'];
-            $values[] = $item['item_details'];
-            $values[] = $item['unit_price'];
-            $values[] = $item['minimum_order'];
-            $values[] = $item['unit_id'];
+            $values[] = $item['item_category_id'] ?? null;
+            $values[] = $item['item_details'] ?? null;
+            $values[] = $item['unit_price'] ?? null;
+            $values[] = $item['minimum_order'] ?? null;
+            $values[] = $item['unit_id'] ?? null;
         }
 
         $query .= implode(", ", $placeholders);
@@ -320,7 +320,7 @@ class Sale
             return $stmt->rowCount();
         }
 
-        return false;
+        return null;
     }
 
     public function getPriceList($filters = [])
@@ -490,12 +490,12 @@ class Sale
         $stmt = $this->db->prepare($query);
 
         $result = $stmt->execute([
-            'item_category_id' => $data['item_category_id'],
-            'item_details' => $data['item_details'],
-            'unit_price' => $data['unit_price'],
-            'minimum_order' => $data['minimum_order'],
-            'unit_id' => $data['unit_id'],
-            'id' => $data['id']
+            'item_category_id' => $data['item_category_id'] ?? null,
+            'item_details' => $data['item_details'] ?? null,
+            'unit_price' => $data['unit_price'] ?? null,
+            'minimum_order' => $data['minimum_order'] ?? null,
+            'unit_id' => $data['unit_id'] ?? null,
+            'id' => $data['id'] ?? null
         ]);
 
         if ($result) {
