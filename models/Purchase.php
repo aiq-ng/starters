@@ -216,20 +216,25 @@ class Purchase
     private function insertPurchaseOrderItems($purchaseOrderId, $items)
     {
         $query = "
-            INSERT INTO purchase_order_items (purchase_order_id, item_id, 
-                quantity, price, tax_id)
-            VALUES (:purchase_order_id, :item_id, :quantity, :price, :tax_id);
+            INSERT INTO purchase_order_items (
+                purchase_order_id, item_id, quantity, price, tax_id
+            ) VALUES (
+                :purchase_order_id, :item_id, :quantity, :price, :tax_id
+            );
         ";
 
         $stmt = $this->db->prepare($query);
 
         foreach ($items as $item) {
+            // Filter out fields with empty ("") values
+            $filteredItem = array_filter($item, fn ($value) => $value !== "");
+
             $stmt->execute([
                 ':purchase_order_id' => $purchaseOrderId,
-                ':item_id' => $item['item_id'],
-                ':quantity' => $item['quantity'],
-                ':price' => $item['price'],
-                ':tax_id' => $item['tax_id'] ?? null,
+                ':item_id' => $filteredItem['item_id'] ?? null,
+                ':quantity' => $filteredItem['quantity'] ?? null,
+                ':price' => $filteredItem['price'] ?? null,
+                ':tax_id' => $filteredItem['tax_id'] ?? null,
             ]);
         }
     }

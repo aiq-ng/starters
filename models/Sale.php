@@ -788,12 +788,18 @@ class Sale
         $stmt = $this->db->prepare($query);
 
         foreach ($items as $item) {
-            $stmt->execute([
-                ':sales_order_id' => $salesOrderId,
-                ':item_id' => $item['item_id'],
-                ':quantity' => $item['quantity'],
-                ':price' => $item['price']
-            ]);
+            $item = array_filter($item, function ($value) {
+                return $value !== "" && $value !== null;
+            });
+
+            if (!empty($item['item_id']) && !empty($item['quantity']) && !empty($item['price'])) {
+                $stmt->execute([
+                    ':sales_order_id' => $salesOrderId,
+                    ':item_id' => $item['item_id'],
+                    ':quantity' => $item['quantity'],
+                    ':price' => $item['price']
+                ]);
+            }
         }
     }
 
