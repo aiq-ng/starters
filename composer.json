@@ -9,6 +9,7 @@
     },
     "require": {
         "firebase/php-jwt": "^6.10",
-        "cloudinary/cloudinary_php": "^2.14"
+        "cloudinary/cloudinary_php": "^2.14",
+        "cboden/ratchet": "^0.4.4"
     }
 }
