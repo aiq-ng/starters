@@ -136,17 +136,13 @@ class TradeController extends BaseController
             'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
             'status' => isset($_GET['status']) ? $_GET['status'] : null,
             'order_type' => isset($_GET['order_type']) ? $_GET['order_type'] : null,
-            'start_date' => isset($_GET['start_date']) && !empty($_GET['start_date'])
-            ? $_GET['start_date']
-            : date('Y-m-d'),
-            'end_date' => isset($_GET['end_date']) && !empty($_GET['end_date'])
-            ? $_GET['end_date']
-            : date('Y-m-d')
+            'start_date' => !empty($_GET['start_date']) ? $_GET['start_date'] : null,
+            'end_date' => !empty($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d'),
         ];
 
         $sales = $this->sale->getSalesOrders(array_filter($filters));
 
-        if (!empty($sales)) {
+        if (!empty($sales['data'])) {
             $this->sendResponse('success', 200, $sales['data'], $sales['meta']);
         } else {
             $this->sendResponse('Sales not found', 404);

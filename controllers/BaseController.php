@@ -32,19 +32,20 @@ class BaseController
 
     protected function getRequestData()
     {
-        // Check if the request is JSON
         if (isset($_SERVER['CONTENT_TYPE']) &&
-        strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
+            strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
 
             $json = file_get_contents('php://input');
             $data = json_decode($json, true);
 
-            // Check for JSON decoding errors
             if (json_last_error() !== JSON_ERROR_NONE) {
                 $this->sendResponse('Invalid JSON format', 400);
             }
 
-            return $data;
+            // Filter out null or empty fields
+            return array_filter($data, function ($value) {
+                return $value !== null && $value !== '';
+            });
         }
 
         // If not JSON, return $_POST and handle multiple file uploads
@@ -65,8 +66,12 @@ class BaseController
             }
         }
 
+        $formData = array_filter($_POST, function ($value) {
+            return $value !== null && $value !== '';
+        });
+
         return [
-            'form_data' => $_POST,
+            'form_data' => $formData,
             'files' => $files
         ];
     }
