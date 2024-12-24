@@ -23,6 +23,7 @@ class ComposerStaticInit95b24ff7281a468d99fcc684f470b9c3
             'Symfony\\Component\\Routing\\' => 26,
             'Symfony\\Component\\HttpFoundation\\' => 33,
             'Services\\' => 9,
+            'Server\\' => 7,
         ),
         'R' => 
         array (
@@ -90,6 +91,10 @@ class ComposerStaticInit95b24ff7281a468d99fcc684f470b9c3
         'Services\\' => 
         array (
             0 => __DIR__ . '/../..' . '/services',
+        ),
+        'Server\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/server',
         ),
         'React\\Stream\\' => 
         array (

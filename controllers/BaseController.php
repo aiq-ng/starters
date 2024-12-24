@@ -10,8 +10,9 @@ use Services\MediaHandler;
 use Services\EmailService;
 use Models\Purchase;
 use Models\Sale;
+use Server\WebSocketServer;
 
-class BaseController
+class BaseController extends WebSocketServer
 {
     protected $db;
     protected $secret_key;
@@ -116,6 +117,20 @@ class BaseController
             }
         }
         return true;
+    }
+
+    protected function sendNotificationToUser($userId, $message)
+    {
+        if (isset($this->userConnections[$userId])) {
+            $conn = $this->userConnections[$userId];
+
+            $conn->send(json_encode([
+                'type' => 'notification',
+                'message' => $message
+            ]));
+        } else {
+            echo "No active connection found for user {$userId}\n";
+        }
     }
 
     protected function sendResponse($message, $statusCode, $data = [], $meta = [])
