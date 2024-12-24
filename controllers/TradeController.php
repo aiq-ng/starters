@@ -25,9 +25,7 @@ class TradeController extends BaseController
             'page' => isset($_GET['page']) ? $_GET['page'] : 1,
             'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
             'status' => isset($_GET['status']) ? $_GET['status'] : null,
-            'start_date' => isset($_GET['start_date']) && !empty($_GET['start_date'])
-            ? $_GET['start_date']
-            : date('Y-m-d'),
+            'start_date' => isset($_GET['start_date']) && !empty($_GET['start_date']) ?? null,
             'end_date' => isset($_GET['end_date']) && !empty($_GET['end_date'])
             ? $_GET['end_date']
             : date('Y-m-d')

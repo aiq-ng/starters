@@ -17,24 +17,25 @@ class Purchase
     {
         $page = $filters['page'] ?? 1;
         $pageSize = $filters['page_size'] ?? 10;
+
         $query = "
-            SELECT
-                po.id, 
-                po.purchase_order_number,
-                po.reference_number, 
-                CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name, 
-                po.created_at::DATE AS order_date, 
-                po.delivery_date, 
-                po.total, 
-                po.status,
-                CASE
-                    WHEN po.status = 'issued' THEN 'Issued'
+        SELECT
+            po.id,
+            po.purchase_order_number,
+            po.reference_number,
+            CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name,
+            po.created_at::DATE AS order_date,
+            po.delivery_date,
+            po.total,
+            po.status,
+            CASE
+                WHEN po.status = 'issued' THEN 'Issued'
                 ELSE pt.name
-                END AS payment
-                FROM purchase_orders po
-                LEFT JOIN vendors v ON po.vendor_id = v.id
-                LEFT JOIN payment_terms pt ON po.payment_term_id = pt.id
-        ";
+            END AS payment
+        FROM purchase_orders po
+        LEFT JOIN vendors v ON po.vendor_id = v.id
+        LEFT JOIN payment_terms pt ON po.payment_term_id = pt.id
+    ";
 
         $conditions = [];
         $params = [];
@@ -73,20 +74,62 @@ class Purchase
         }
 
         $stmt->execute();
-
         $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
         $totalItems = $this->getPurchaseOrdersCount($filters);
 
         $meta = [
             'total_data' => (int) $totalItems,
             'total_pages' => ceil($totalItems / $pageSize),
             'page_size' => (int) $pageSize,
-            'previous_page' => $page > 1 ? (int) $page - 1 : null,
+            'previous_page' => $page > 1 ? $page - 1 : null,
             'current_page' => (int) $page,
-            'next_page' => (int) $page + 1,
+            'next_page' => $page * $pageSize < $totalItems ? $page + 1 : null,
         ];
 
         return ['data' => $data, 'meta' => $meta];
+    }
+
+    private function getPurchaseOrdersCount($filters = [])
+    {
+        $query = "
+        SELECT COUNT(*) AS count
+        FROM purchase_orders po
+        LEFT JOIN vendors v ON po.vendor_id = v.id
+    ";
+
+        $conditions = [];
+        $params = [];
+
+        if (!empty($filters['status'])) {
+            $conditions[] = "po.status = :status";
+            $params['status'] = $filters['status'];
+        }
+
+        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+            $conditions[] = "po.created_at::DATE BETWEEN :start_date AND :end_date";
+            $params['start_date'] = $filters['start_date'];
+            $params['end_date'] = $filters['end_date'];
+        } elseif (!empty($filters['start_date'])) {
+            $conditions[] = "po.created_at::DATE >= :start_date";
+            $params['start_date'] = $filters['start_date'];
+        } elseif (!empty($filters['end_date'])) {
+            $conditions[] = "po.created_at::DATE <= :end_date";
+            $params['end_date'] = $filters['end_date'];
+        }
+
+        if ($conditions) {
+            $query .= " WHERE " . implode(' AND ', $conditions);
+        }
+
+        $stmt = $this->db->prepare($query);
+        foreach ($params as $key => $value) {
+            $type = is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR;
+            $stmt->bindValue($key, $value, $type);
+        }
+
+        $stmt->execute();
+        return (int) $stmt->fetchColumn();
     }
 
     public function getPurchaseOrder($purchaseOrderId)
@@ -121,45 +164,6 @@ class Purchase
         }
 
         return $result;
-    }
-
-    private function getPurchaseOrdersCount($filters = [])
-    {
-        $query = "
-            SELECT COUNT(*) AS count
-            FROM purchase_orders po
-            LEFT JOIN vendors v 
-            ON po.vendor_id = v.id
-        ";
-
-        $conditions = [];
-        $params = [];
-
-        if (!empty($filters['status'])) {
-            $conditions[] = "po.status = :status";
-            $params['status'] = $filters['status'];
-        }
-
-        if (!empty($filters['date_from']) && !empty($filters['date_to'])) {
-            $conditions[] = "po.order_date BETWEEN :date_from AND :date_to";
-            $params['date_from'] = $filters['date_from'];
-            $params['date_to'] = $filters['date_to'];
-        } elseif (!empty($filters['date_from'])) {
-            $conditions[] = "po.order_date >= :date_from";
-            $params['date_from'] = $filters['date_from'];
-        } elseif (!empty($filters['date_to'])) {
-            $conditions[] = "po.order_date <= :date_to";
-            $params['date_to'] = $filters['date_to'];
-        }
-
-        if ($conditions) {
-            $query .= " WHERE " . implode(' AND ', $conditions);
-        }
-
-        $stmt = $this->db->prepare($query);
-        $stmt->execute($params);
-
-        return (int) $stmt->fetchColumn();
     }
 
     public function createPurchase($data)
