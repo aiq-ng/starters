@@ -36,6 +36,7 @@ class Inventory
         $pageSize = $filter['page_size'] ?? 10;
         $order = $filter['order'] ?? 'i.id';
         $sort = $filter['sort'] ?? 'DESC';
+        $search = $filter['search'] ?? null;
 
         $sql = "
             SELECT
@@ -53,11 +54,21 @@ class Inventory
             LEFT JOIN units u ON i.unit_id = u.id
         ";
 
+        $conditions = [];
         $params = [];
 
         if (!empty($filter['availability'])) {
-            $sql .= " WHERE i.availability = :filterAvailability";
+            $conditions[] = "i.availability = :filterAvailability";
             $params['filterAvailability'] = $filter['availability'];
+        }
+
+        if (!empty($search)) {
+            $conditions[] = "(i.name ILIKE :search OR i.description ILIKE :search OR i.sku ILIKE :search)";
+            $params['search'] = '%' . $search . '%';
+        }
+
+        if (!empty($conditions)) {
+            $sql .= " WHERE " . implode(' AND ', $conditions);
         }
 
         $sql .= "
@@ -77,11 +88,11 @@ class Inventory
         $stmt->bindValue(':offset', $params['offset'], \PDO::PARAM_INT);
 
         if (!empty($filter['availability'])) {
-            $stmt->bindValue(
-                ':filterAvailability',
-                $params['filterAvailability'],
-                \PDO::PARAM_STR
-            );
+            $stmt->bindValue(':filterAvailability', $params['filterAvailability'], \PDO::PARAM_STR);
+        }
+
+        if (!empty($search)) {
+            $stmt->bindValue(':search', $params['search'], \PDO::PARAM_STR);
         }
 
         $stmt->execute();
@@ -100,7 +111,7 @@ class Inventory
             'page_size' => (int) $pageSize,
             'previous_page' => $page > 1 ? (int) $page - 1 : null,
             'current_page' => (int) $page,
-            'next_page' => (int) $page + 1,
+            'next_page' => $page + 1 <= ceil($totalItems / $pageSize) ? (int) $page + 1 : null,
         ];
 
         return [
@@ -118,17 +129,31 @@ class Inventory
             LEFT JOIN units u ON i.unit_id = u.id
         ";
 
+        $conditions = [];
         $params = [];
 
         if (!empty($filter['availability'])) {
-            $countSql .= " WHERE i.availability = :filterAvailability";
+            $conditions[] = "i.availability = :filterAvailability";
             $params['filterAvailability'] = $filter['availability'];
+        }
+
+        if (!empty($filter['search'])) {
+            $conditions[] = "(i.name ILIKE :search OR i.description ILIKE :search OR i.sku ILIKE :search)";
+            $params['search'] = '%' . $filter['search'] . '%';
+        }
+
+        if (!empty($conditions)) {
+            $countSql .= " WHERE " . implode(' AND ', $conditions);
         }
 
         $countStmt = $this->db->prepare($countSql);
 
         if (!empty($filter['availability'])) {
             $countStmt->bindValue(':filterAvailability', $params['filterAvailability'], \PDO::PARAM_STR);
+        }
+
+        if (!empty($filter['search'])) {
+            $countStmt->bindValue(':search', $params['search'], \PDO::PARAM_STR);
         }
 
         $countStmt->execute();

@@ -155,6 +155,24 @@ class Customer
             $params['company_name'] = '%' . $filters['company_name'] . '%';
         }
 
+        if (!empty($filters['search'])) {
+            $searchTerm = '%' . $filters['search'] . '%';
+            $conditions[] = "
+                (
+                    c.first_name LIKE :search OR 
+                    c.last_name LIKE :search OR 
+                    c.company_name LIKE :search OR
+                    c.display_name LIKE :search OR
+                    c.email LIKE :search OR 
+                    c.address LIKE :search OR
+                    c.website LIKE :search OR
+                    c.social_media::TEXT LIKE :search
+
+                )
+            ";
+            $params['search'] = $searchTerm;
+        }
+
         if (!empty($conditions)) {
             $query .= " WHERE " . implode(" AND ", $conditions);
         }
@@ -227,6 +245,23 @@ class Customer
         if (!empty($filters['company_name'])) {
             $conditions[] = "c.company_name LIKE :company_name";
             $params['company_name'] = '%' . $filters['company_name'] . '%';
+        }
+
+        if (!empty($filters['search'])) {
+            $searchTerm = '%' . $filters['search'] . '%';
+            $conditions[] = "
+                (
+                    c.first_name LIKE :search OR 
+                    c.last_name LIKE :search OR 
+                    c.company_name LIKE :search OR
+                    c.display_name LIKE :search OR
+                    c.email LIKE :search OR 
+                    c.address LIKE :search OR
+                    c.website LIKE :search OR
+                    c.social_media::TEXT LIKE :search
+                )
+            ";
+            $params['search'] = $searchTerm;
         }
 
         if (!empty($conditions)) {

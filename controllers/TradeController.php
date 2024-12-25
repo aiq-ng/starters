@@ -22,6 +22,7 @@ class TradeController extends BaseController
         $this->authorizeRequest();
 
         $filters = [
+            'search' => isset($_GET['search']) ? $_GET['search'] : null,
             'page' => isset($_GET['page']) ? $_GET['page'] : 1,
             'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
             'status' => isset($_GET['status']) ? $_GET['status'] : null,
@@ -132,6 +133,7 @@ class TradeController extends BaseController
         $this->authorizeRequest();
 
         $filters = [
+            'search' => isset($_GET['search']) ? $_GET['search'] : null,
             'page' => isset($_GET['page']) ? $_GET['page'] : 1,
             'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
             'status' => isset($_GET['status']) ? $_GET['status'] : null,
@@ -156,6 +158,7 @@ class TradeController extends BaseController
         $filter = [
             'page' => $_GET['page'] ?? 1,
             'page_size' => $_GET['page_size'] ?? 10,
+            'search' => $_GET['search'] ?? null,
         ];
 
         $result = $this->sale->getServiceOrders($filter);
@@ -264,6 +267,7 @@ class TradeController extends BaseController
             'item_category' => isset($_GET['item_category']) ? $_GET['item_category'] : null,
             'min_price' => isset($_GET['min_price']) ? $_GET['min_price'] : null,
             'max_price' => isset($_GET['max_price']) ? $_GET['max_price'] : null,
+            'search' => isset($_GET['search']) ? $_GET['search'] : null,
         ];
 
         $priceList = $this->sale->getPriceList($filters);

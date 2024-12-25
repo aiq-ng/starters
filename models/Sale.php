@@ -364,6 +364,11 @@ class Sale
             $params['max_price'] = $filters['max_price'];
         }
 
+        if (!empty($filters['search'])) {
+            $conditions[] = "(pl.item_details ILIKE :search OR ic.name ILIKE :search)";
+            $params['search'] = '%' . $filters['search'] . '%';
+        }
+
         if ($conditions) {
             $query .= " WHERE " . implode(' AND ', $conditions);
         }
@@ -429,6 +434,11 @@ class Sale
         if (!empty($filters['max_price'])) {
             $conditions[] = "pl.unit_price <= :max_price";
             $params['max_price'] = $filters['max_price'];
+        }
+
+        if (!empty($filters['search'])) {
+            $conditions[] = "(pl.item_details ILIKE :search OR ic.name ILIKE :search)";
+            $params['search'] = '%' . $filters['search'] . '%';
         }
 
         if ($conditions) {
@@ -565,6 +575,17 @@ class Sale
             $params['order_type'] = $filters['order_type'];
         }
 
+        if (!empty($filters['search'])) {
+            $conditions[] = "
+            (
+                so.order_title ILIKE :search OR 
+                so.order_id::TEXT ILIKE :search OR 
+                CONCAT_WS(' ', c.salutation, c.first_name, c.last_name) ILIKE :search
+            )
+        ";
+            $params['search'] = '%' . $filters['search'] . '%';
+        }
+
         if ($conditions) {
             $query .= " WHERE " . implode(' AND ', $conditions);
         }
@@ -605,88 +626,6 @@ class Sale
         return ['data' => $data, 'meta' => $meta];
     }
 
-    public function getServiceOrders($filters = [])
-    {
-        $page = $filters['page'] ?? 1;
-        $pageSize = $filters['page_size'] ?? 10;
-
-        $query = "
-            SELECT
-                so.order_title AS title,
-                so.additional_note AS description,
-                so.created_at,
-                so.delivery_date
-            FROM 
-                sales_orders so
-            WHERE 
-                so.order_type = 'service'
-            ORDER BY 
-                so.delivery_date ASC
-            LIMIT :limit OFFSET :offset
-        ";
-
-        $params = [
-            'limit' => $pageSize,
-            'offset' => ($page - 1) * $pageSize,
-        ];
-
-        $stmt = $this->db->prepare($query);
-
-        foreach ($params as $key => $value) {
-            $type = is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR;
-            $stmt->bindValue($key, $value, $type);
-        }
-
-        $stmt->execute();
-
-        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        $totalItems = $this->getServiceOrdersCount();
-
-        $meta = [
-            'total_data' => (int) $totalItems,
-            'total_pages' => ceil($totalItems / $pageSize),
-            'page_size' => (int) $pageSize,
-            'previous_page' => $page > 1 ? (int) $page - 1 : null,
-            'current_page' => (int) $page,
-            'next_page' => (int) $page + 1,
-        ];
-
-        return ['data' => $data, 'meta' => $meta];
-    }
-
-    private function getServiceOrdersCount()
-    {
-        $query = "
-        SELECT COUNT(*) AS total
-        FROM sales_orders
-        WHERE order_type = 'service'
-    ";
-
-        $stmt = $this->db->prepare($query);
-        $stmt->execute();
-
-        return (int) $stmt->fetchColumn();
-    }
-
-    public function createSale($data)
-    {
-
-        $this->db->beginTransaction();
-
-        try {
-            $orderId = $this->insertSalesOrder($data);
-
-            $this->insertSalesOrderItem($orderId, $data['items']);
-
-            $this->db->commit();
-
-            return $orderId;
-        } catch (\Exception $e) {
-            $this->db->rollBack();
-            throw $e;
-        }
-    }
-
     private function getSalesOrdersCount($filters = [])
     {
         $query = "
@@ -723,6 +662,17 @@ class Sale
             $params['order_type'] = $filters['order_type'];
         }
 
+        if (!empty($filters['search'])) {
+            $conditions[] = "
+            (
+                so.order_title ILIKE :search OR 
+                so.order_id::TEXT ILIKE :search OR 
+                CONCAT_WS(' ', c.salutation, c.first_name, c.last_name) ILIKE :search
+            )
+        ";
+            $params['search'] = '%' . $filters['search'] . '%';
+        }
+
         if ($conditions) {
             $query .= " WHERE " . implode(' AND ', $conditions);
         }
@@ -733,6 +683,118 @@ class Sale
         return (int) $stmt->fetchColumn();
     }
 
+    public function getServiceOrders($filters = [])
+    {
+        $page = $filters['page'] ?? 1;
+        $pageSize = $filters['page_size'] ?? 10;
+
+        $query = "
+            SELECT
+                so.order_title AS title,
+                so.additional_note AS description,
+                so.created_at,
+                so.delivery_date
+            FROM 
+                sales_orders so
+            WHERE 
+                so.order_type = 'service'
+        ";
+
+        $conditions = [];
+        $params = [
+            'limit' => $pageSize,
+            'offset' => ($page - 1) * $pageSize,
+        ];
+
+        if (!empty($filters['search'])) {
+            $conditions[] = "(so.order_title ILIKE :search OR so.additional_note ILIKE :search)";
+            $params['search'] = '%' . $filters['search'] . '%';
+        }
+
+        if ($conditions) {
+            $query .= " AND " . implode(' AND ', $conditions);
+        }
+
+        $query .= "
+            ORDER BY 
+                so.delivery_date ASC
+            LIMIT :limit OFFSET :offset
+        ";
+
+        $stmt = $this->db->prepare($query);
+
+        foreach ($params as $key => $value) {
+            $type = is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR;
+            $stmt->bindValue($key, $value, $type);
+        }
+
+        $stmt->execute();
+
+        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $totalItems = $this->getServiceOrdersCount($filters);
+
+        $meta = [
+            'total_data' => (int) $totalItems,
+            'total_pages' => ceil($totalItems / $pageSize),
+            'page_size' => (int) $pageSize,
+            'previous_page' => $page > 1 ? (int) $page - 1 : null,
+            'current_page' => (int) $page,
+            'next_page' => (int) $page + 1,
+        ];
+
+        return ['data' => $data, 'meta' => $meta];
+    }
+
+    private function getServiceOrdersCount($filters = [])
+    {
+        $query = "
+            SELECT COUNT(*) AS total
+            FROM sales_orders so
+            WHERE so.order_type = 'service'
+        ";
+
+        $conditions = [];
+        $params = [];
+
+        if (!empty($filters['search'])) {
+            $conditions[] = "(so.order_title ILIKE :search OR so.additional_note ILIKE :search)";
+            $params['search'] = '%' . $filters['search'] . '%';
+        }
+
+        if ($conditions) {
+            $query .= " AND " . implode(' AND ', $conditions);
+        }
+
+        $stmt = $this->db->prepare($query);
+
+        foreach ($params as $key => $value) {
+            $type = is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR;
+            $stmt->bindValue($key, $value, $type);
+        }
+
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function createSale($data)
+    {
+
+        $this->db->beginTransaction();
+
+        try {
+            $orderId = $this->insertSalesOrder($data);
+
+            $this->insertSalesOrderItem($orderId, $data['items']);
+
+            $this->db->commit();
+
+            return $orderId;
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
 
     private function insertSalesOrder($data)
     {

@@ -158,6 +158,22 @@ class Vendor
             $params['status'] = $filters['status'];
         }
 
+        if (!empty($filters['search'])) {
+            $conditions[] = "
+            (
+                v.first_name ILIKE :search OR 
+                v.last_name ILIKE :search OR 
+                v.company_name ILIKE :search OR 
+                v.display_name ILIKE :search OR 
+                v.email ILIKE :search OR 
+                v.address ILIKE :search OR 
+                v.website ILIKE :search OR 
+                v.social_media::TEXT ILIKE :search
+            )
+        ";
+            $params['search'] = '%' . $filters['search'] . '%';
+        }
+
         if (!empty($conditions)) {
             $query .= " WHERE " . implode(" AND ", $conditions);
         }
@@ -193,7 +209,7 @@ class Vendor
             'page_size' => (int) $pageSize,
             'previous_page' => $page > 1 ? (int) $page - 1 : null,
             'current_page' => (int) $page,
-            'next_page' => (int) $page + 1,
+            'next_page' => $page < ceil($totalItems / $pageSize) ? (int) $page + 1 : null,
         ];
 
         return [
@@ -222,6 +238,22 @@ class Vendor
         if (!empty($filters['status'])) {
             $conditions[] = "v.status = :status";
             $params['status'] = $filters['status'];
+        }
+
+        if (!empty($filters['search'])) {
+            $conditions[] = "
+            (
+                v.first_name ILIKE :search OR 
+                v.last_name ILIKE :search OR 
+                v.company_name ILIKE :search OR 
+                v.display_name ILIKE :search OR 
+                v.email ILIKE :search OR 
+                v.address ILIKE :search OR 
+                v.website ILIKE :search OR 
+                v.social_media::TEXT ILIKE :search
+            )
+        ";
+            $params['search'] = '%' . $filters['search'] . '%';
         }
 
         if (!empty($conditions)) {

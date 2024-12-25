@@ -129,21 +129,38 @@ class HumanResource
             WHERE u.role_id != 3
         ";
 
+        $conditions = [];
+        $params = [];
+
         if (!empty($filters['department'])) {
-            $department = $filters['department'];
-            $sql .= " AND d.name = :department";
+            $conditions[] = "d.name = :department";
+            $params[':department'] = $filters['department'];
+        }
+
+        if (!empty($filters['search'])) {
+            $conditions[] = "(
+                u.name LIKE :search OR
+                r.name LIKE :search OR
+                d.name LIKE :search OR
+                u.bank_details::TEXT LIKE :search
+            )";
+            $params[':search'] = "%" . $filters['search'] . "%";
+        }
+
+        if ($conditions) {
+            $sql .= " AND " . implode(' AND ', $conditions);
         }
 
         $sql .= " LIMIT :pageSize OFFSET :offset";
 
         $stmt = $this->db->prepare($sql);
 
-        // Bind parameters
-        if (!empty($filters['department'])) {
-            $stmt->bindParam(':department', $department, \PDO::PARAM_STR);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, \PDO::PARAM_STR);
         }
-        $stmt->bindParam(':pageSize', $pageSize, \PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, \PDO::PARAM_INT);
+
+        $stmt->bindValue(':pageSize', $pageSize, \PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
 
         $stmt->execute();
 
@@ -183,15 +200,32 @@ class HumanResource
             WHERE u.role_id != 1
         ";
 
+        $conditions = [];
+        $params = [];
+
         if (!empty($filters['department'])) {
-            $department = $filters['department'];
-            $sql .= " AND d.name = :department";
+            $conditions[] = "d.name = :department";
+            $params[':department'] = $filters['department'];
+        }
+
+        if (!empty($filters['search'])) {
+            $conditions[] = "(
+                u.name LIKE :search OR
+                r.name LIKE :search OR
+                d.name LIKE :search OR
+                u.bank_details::TEXT LIKE :search
+            )";
+            $params[':search'] = "%" . $filters['search'] . "%";
+        }
+
+        if ($conditions) {
+            $sql .= " AND " . implode(' AND ', $conditions);
         }
 
         $stmt = $this->db->prepare($sql);
 
-        if (!empty($filters['department'])) {
-            $stmt->bindParam(':department', $department, \PDO::PARAM_STR);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, \PDO::PARAM_STR);
         }
 
         $stmt->execute();

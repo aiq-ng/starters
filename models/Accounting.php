@@ -199,8 +199,6 @@ class Accounting
         $pageSize = $filter['page_size'] ?? 10;
         $offset = ($page - 1) * $pageSize;
 
-        error_log('Params: ' . print_r($filter, true));
-
         $conditions = [];
         $params = [];
 
@@ -214,6 +212,17 @@ class Accounting
         } elseif (!empty($filter['end_date'])) {
             $conditions[] = "e.date_of_expense <= :end_date";
             $params['end_date'] = $filter['end_date'];
+        }
+
+        if (!empty($filter['search'])) {
+            $search = '%' . $filter['search'] . '%';
+            $conditions[] = "(
+                e.expense_title ILIKE :search 
+                OR ec.name ILIKE :search 
+                OR d.name ILIKE :search
+                OR pm.name ILIKE :search
+            )";
+            $params['search'] = $search;
         }
 
         $totalItems = $this->countExpenses($conditions, $params);
@@ -260,7 +269,8 @@ class Accounting
                 'page_size' => (int) $pageSize,
                 'previous_page' => $page > 1 ? (int) $page - 1 : null,
                 'current_page' => (int) $page,
-                'next_page' => (int) $page + 1,
+                'next_page' => $page < ceil($totalItems / $pageSize)
+                    ? (int) $page + 1 : null,
             ];
 
             return ['data' => $data, 'meta' => $meta];
@@ -274,7 +284,10 @@ class Accounting
     private function countExpenses($conditions, $params)
     {
         $countSql = "SELECT COUNT(*) 
-                 FROM expenses e";
+                 FROM expenses e
+                 LEFT JOIN payment_methods pm ON e.payment_method_id = pm.id
+                 LEFT JOIN expenses_categories ec ON e.expense_category = ec.id
+                 LEFT JOIN departments d ON e.department_id = d.id";
 
         if (!empty($conditions)) {
             $countSql .= " WHERE " . implode(" AND ", $conditions);
@@ -305,52 +318,62 @@ class Accounting
         $conditions = [];
         $params = [];
 
+        // Validate and add status filter
         if (!empty($filter['status'])) {
             $conditions[] = "po.status = :status";
             $params['status'] = $filter['status'];
         }
 
-        if (!empty($filter['start_date']) && !empty($filter['end_date'])) {
-            $conditions[] = "po.date_received BETWEEN :start_date AND :end_date";
-            $params['start_date'] = $filter['start_date'];
-            $params['end_date'] = $filter['end_date'];
-        } elseif (!empty($filter['start_date'])) {
+        // Validate and add date filters
+        if (!empty($filter['start_date']) && strtotime($filter['start_date'])) {
             $conditions[] = "po.date_received >= :start_date";
             $params['start_date'] = $filter['start_date'];
-        } elseif (!empty($filter['end_date'])) {
+        }
+        if (!empty($filter['end_date']) && strtotime($filter['end_date'])) {
             $conditions[] = "po.date_received <= :end_date";
             $params['end_date'] = $filter['end_date'];
+        }
+
+        // Add search filter
+        if (!empty($filter['search'])) {
+            $search = '%' . $filter['search'] . '%';
+            $conditions[] = "(
+            po.reference_number ILIKE :search 
+            OR po.purchase_order_number ILIKE :search 
+            OR v.display_name ILIKE :search
+        )";
+            $params['search'] = $search;
         }
 
         $totalItems = $this->countBills($conditions, $params);
 
         // Base query
         $sql = "SELECT 
-                po.reference_number AS ref_id,
-                po.purchase_order_number AS po_number,
-                po.created_at AS date, 
-                po.date_received + INTERVAL '30 days' AS due_date,
-                v.display_name AS vendor_name, 
-                po.total AS amount, 
-                CASE 
-                    WHEN po.status = 'overdue' THEN 
-                        CASE 
-                            WHEN CURRENT_DATE - po.date_received = 1 THEN 
-                                'overdue by 1 day'
-                            WHEN CURRENT_DATE - po.date_received = 0 THEN 
-                                'due today' 
-                            ELSE 
-                                'overdue by ' || (CURRENT_DATE - po.date_received) || ' days' 
-                        END
-                    WHEN po.status = 'received' THEN 
-                        'received'
-                END AS status
-            FROM 
-                purchase_orders po
-            LEFT JOIN 
-                vendors v ON po.vendor_id = v.id
-            WHERE 
-                po.status IN ('received', 'overdue')";
+            po.reference_number AS ref_id,
+            po.purchase_order_number AS po_number,
+            po.created_at AS date, 
+            po.date_received + INTERVAL '30 days' AS due_date,
+            v.display_name AS vendor_name, 
+            po.total AS amount, 
+            CASE 
+                WHEN po.status = 'overdue' THEN 
+                    CASE 
+                        WHEN CURRENT_DATE - po.date_received = 1 THEN 
+                            'overdue by 1 day'
+                        WHEN CURRENT_DATE - po.date_received = 0 THEN 
+                            'due today' 
+                        ELSE 
+                            'overdue by ' || (CURRENT_DATE - po.date_received) || ' days' 
+                    END
+                WHEN po.status = 'received' THEN 
+                    'received'
+            END AS status
+        FROM 
+            purchase_orders po
+        LEFT JOIN 
+            vendors v ON po.vendor_id = v.id
+        WHERE 
+            po.status IN ('received', 'overdue')";
 
         if (!empty($conditions)) {
             $sql .= " AND " . implode(" AND ", $conditions);
@@ -362,10 +385,10 @@ class Accounting
             $stmt = $this->db->prepare($sql);
 
             foreach ($params as $key => $value) {
-                $stmt->bindParam(":$key", $value);
+                $stmt->bindValue(":$key", $value);
             }
-            $stmt->bindParam(':pageSize', $pageSize, \PDO::PARAM_INT);
-            $stmt->bindParam(':offset', $offset, \PDO::PARAM_INT);
+            $stmt->bindValue(':pageSize', $pageSize, \PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
 
             $stmt->execute();
             $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -376,7 +399,8 @@ class Accounting
                 'page_size' => (int) $pageSize,
                 'previous_page' => $page > 1 ? (int) $page - 1 : null,
                 'current_page' => (int) $page,
-                'next_page' => (int) $page + 1,
+                'next_page' => $page < ceil($totalItems / $pageSize)
+                    ? (int) $page + 1 : null,
             ];
 
             return ['data' => $data, 'meta' => $meta];
@@ -391,6 +415,7 @@ class Accounting
     {
         $countSql = "SELECT COUNT(*) 
                  FROM purchase_orders po
+                 LEFT JOIN vendors v ON po.vendor_id = v.id
                  WHERE po.status IN ('received', 'overdue')";
 
         if (!empty($conditions)) {
@@ -401,7 +426,7 @@ class Accounting
             $countStmt = $this->db->prepare($countSql);
 
             foreach ($params as $key => $value) {
-                $countStmt->bindParam(":$key", $value);
+                $countStmt->bindValue(":$key", $value);
             }
 
             $countStmt->execute();

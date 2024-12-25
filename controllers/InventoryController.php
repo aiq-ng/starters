@@ -25,6 +25,7 @@ class InventoryController extends BaseController
             'page_size' => isset($_GET['page_size']) ? (int)$_GET['page_size'] : 10,
             'order' => isset($_GET['order']) ? $_GET['order'] : null,
             'sort' => isset($_GET['sort']) ? $_GET['sort'] : null,
+            'search' => isset($_GET['search']) ? $_GET['search'] : null,
         ];
 
         error_log(json_encode($params));

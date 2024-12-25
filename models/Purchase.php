@@ -19,23 +19,24 @@ class Purchase
         $pageSize = $filters['page_size'] ?? 10;
 
         $query = "
-        SELECT
-            po.id,
-            po.purchase_order_number,
-            po.reference_number,
-            CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name,
-            po.created_at::DATE AS order_date,
-            po.delivery_date,
-            po.total,
-            po.status,
-            CASE
-                WHEN po.status = 'issued' THEN 'Issued'
-                ELSE pt.name
-            END AS payment
-        FROM purchase_orders po
-        LEFT JOIN vendors v ON po.vendor_id = v.id
-        LEFT JOIN payment_terms pt ON po.payment_term_id = pt.id
-    ";
+            SELECT
+                po.id,
+                po.purchase_order_number,
+                po.reference_number,
+                po.invoice_number,
+                CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name,
+                po.created_at::DATE AS order_date,
+                po.delivery_date,
+                po.total,
+                po.status,
+                CASE
+                    WHEN po.status = 'issued' THEN 'Issued'
+                    ELSE pt.name
+                END AS payment
+            FROM purchase_orders po
+            LEFT JOIN vendors v ON po.vendor_id = v.id
+            LEFT JOIN payment_terms pt ON po.payment_term_id = pt.id
+        ";
 
         $conditions = [];
         $params = [];
@@ -55,6 +56,16 @@ class Purchase
         } elseif (!empty($filters['end_date'])) {
             $conditions[] = "po.created_at::DATE <= :end_date";
             $params['end_date'] = $filters['end_date'];
+        }
+
+        if (!empty($filters['search'])) {
+            $conditions[] = "
+                (po.purchase_order_number ILIKE :search 
+                OR po.reference_number ILIKE :search
+                OR po.invoice_number ILIKE :search 
+                OR CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) ILIKE :search)
+            ";
+            $params['search'] = '%' . $filters['search'] . '%';
         }
 
         if ($conditions) {
@@ -93,10 +104,10 @@ class Purchase
     private function getPurchaseOrdersCount($filters = [])
     {
         $query = "
-        SELECT COUNT(*) AS count
-        FROM purchase_orders po
-        LEFT JOIN vendors v ON po.vendor_id = v.id
-    ";
+                SELECT COUNT(*) AS count
+                FROM purchase_orders po
+                LEFT JOIN vendors v ON po.vendor_id = v.id
+        ";
 
         $conditions = [];
         $params = [];
@@ -116,6 +127,16 @@ class Purchase
         } elseif (!empty($filters['end_date'])) {
             $conditions[] = "po.created_at::DATE <= :end_date";
             $params['end_date'] = $filters['end_date'];
+        }
+
+        if (!empty($filters['search'])) {
+            $conditions[] = "
+                (po.purchase_order_number ILIKE :search 
+                OR po.reference_number ILIKE :search 
+                OR po.invoice_number ILIKE :search 
+                OR CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) ILIKE :search)
+            ";
+            $params['search'] = '%' . $filters['search'] . '%';
         }
 
         if ($conditions) {

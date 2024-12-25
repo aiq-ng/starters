@@ -135,6 +135,7 @@ class HumanResourceController extends BaseController
             'page' => isset($_GET['page']) ? $_GET['page'] : 1,
             'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
             'department' => isset($_GET['department']) ? $_GET['department'] : null,
+            'search' => isset($_GET['search']) ? $_GET['search'] : null,
         ];
 
 

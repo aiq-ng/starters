@@ -45,6 +45,7 @@ class AccountingController extends BaseController
         $params = [
             'page' => isset($_GET['page']) ? (int)$_GET['page'] : 1,
             'page_size' => isset($_GET['page_size']) ? (int)$_GET['page_size'] : 10,
+            'search' => isset($_GET['search']) ? $_GET['search'] : null,
         ];
 
         $expenses = $this->accounting->getExpenses($params);
@@ -61,12 +62,13 @@ class AccountingController extends BaseController
         $this->authorizeRequest();
 
         $params = [
+            'search' => isset($_GET['search']) ? $_GET['search'] : null,
             'page' => isset($_GET['page']) ? (int)$_GET['page'] : 1,
             'page_size' => isset($_GET['page_size']) ? (int)$_GET['page_size'] : 10,
             'status' => isset($_GET['status']) ? $_GET['status'] : null,
             'start_date' => isset($_GET['start_date']) && !empty($_GET['start_date'])
             ? $_GET['start_date']
-            : date('Y-m-d'),
+            : null,
             'end_date' => isset($_GET['end_date']) && !empty($_GET['end_date'])
             ? $_GET['end_date']
             : date('Y-m-d')

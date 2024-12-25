@@ -24,6 +24,7 @@ class VendorController extends BaseController
             'sort_by' => isset($_GET['sort_by']) ? $_GET['sort_by'] : null,
             'sort_order' => isset($_GET['sort_order']) ? $_GET['sort_order'] : 'desc',
             'status' => isset($_GET['status']) ? $_GET['status'] : null,
+            'search' => isset($_GET['search']) ? $_GET['search'] : null,
         ];
 
 
