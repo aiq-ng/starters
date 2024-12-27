@@ -1,11 +1,3 @@
-CREATE TABLE refresh_tokens (
-    id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL UNIQUE,
-    token TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
 -- Roles
 CREATE TABLE roles (
     id SERIAL PRIMARY KEY,
@@ -102,21 +94,6 @@ CREATE TABLE loan_types (
     description TEXT
 );
 
-CREATE TABLE loans (
-    id SERIAL PRIMARY KEY,
-    lender_id INT NOT NULL,
-    lender_type VARCHAR(50) NOT NULL CHECK (lender_type IN ('user', 'vendor')),
-    amount DECIMAL(20, 2),
-    interest_rate DECIMAL(5, 2),
-    start_date DATE,
-    end_date DATE,
-    loan_type_id INT REFERENCES loan_types(id) ON DELETE SET NULL,
-    status VARCHAR(50) DEFAULT 'pending' CHECK (status IN 
-        ('pending', 'approved', 'disbursed', 'repaid', 'defaulted')),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Payment Terms
 CREATE TABLE payment_terms (
     id SERIAL PRIMARY KEY,
@@ -171,7 +148,7 @@ CREATE TABLE departments (
 );
 
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE,
     username VARCHAR(100) UNIQUE,
     password VARCHAR(255),
@@ -196,15 +173,23 @@ CREATE TABLE users (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP    
 );
 
+CREATE TABLE refresh_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id UUID NOT NULL UNIQUE,
+    token TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE user_permissions (
-    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     permission_id INT REFERENCES permissions(id) ON DELETE CASCADE,
     PRIMARY KEY (user_id, permission_id)
 );
 
 CREATE TABLE user_leaves (
     id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     leave_type VARCHAR(50) CHECK (leave_type IN ('annual', 'sick', 'maternity', 'paternity', 'compassionate', 'study', 'unpaid')),
     start_date DATE DEFAULT CURRENT_DATE,
     end_date DATE,
@@ -216,6 +201,21 @@ CREATE TABLE user_leaves (
     ) STORED,
     status VARCHAR(50) DEFAULT 'booked' CHECK (status IN ('booked', 'on leave', 'leave taken', 'cancelled')),
     notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE loans (
+    id SERIAL PRIMARY KEY,
+    lender_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    lender_type VARCHAR(50) NOT NULL CHECK (lender_type IN ('user', 'vendor')),
+    amount DECIMAL(20, 2),
+    interest_rate DECIMAL(5, 2),
+    start_date DATE,
+    end_date DATE,
+    loan_type_id INT REFERENCES loan_types(id) ON DELETE SET NULL,
+    status VARCHAR(50) DEFAULT 'pending' CHECK (status IN 
+        ('pending', 'approved', 'disbursed', 'repaid', 'defaulted')),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -393,7 +393,7 @@ CREATE TABLE item_stock_branches (
 CREATE TABLE item_stock_adjustments (
     id SERIAL PRIMARY KEY,
     stock_id INT REFERENCES item_stocks(id) ON DELETE CASCADE,
-    manager_id INT REFERENCES users(id) ON DELETE SET NULL,
+    manager_id UUID REFERENCES users(id) ON DELETE SET NULL,
     source_type VARCHAR(10) NOT NULL 
         CHECK (source_type IN ('user', 'vendor')),
     source_id INT NOT NULL,
@@ -429,7 +429,7 @@ CREATE TABLE purchase_orders (
     total DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'issued' 
         CHECK (status IN ('draft', 'sent', 'received', 'paid', 'overdue', 'cancelled', 'issued')),
-    processed_by INT REFERENCES users(id) ON DELETE SET NULL,
+    processed_by UUID REFERENCES users(id) ON DELETE SET NULL,
     date_received DATE DEFAULT CURRENT_DATE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -471,7 +471,7 @@ CREATE TABLE sales_orders (
     payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,
     delivery_option VARCHAR(50) 
         CHECK (delivery_option IN ('pickup', 'delivery')),
-    assigned_driver_id INT REFERENCES users(id) ON DELETE SET NULL,
+    assigned_driver_id UUID REFERENCES users(id) ON DELETE SET NULL,
     delivery_date DATE,
     additional_note TEXT,
     customer_note TEXT,
@@ -480,7 +480,7 @@ CREATE TABLE sales_orders (
     total DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'pending' 
         CHECK (status IN ('upcoming', 'pending', 'sent', 'paid', 'cancelled')),
-    processed_by INT REFERENCES users(id) ON DELETE SET NULL,
+    processed_by UUID REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -521,7 +521,7 @@ CREATE TABLE expenses (
     notes TEXT,
     status VARCHAR(50) DEFAULT 'pending' 
         CHECK (status IN ('paid', 'cancelled')),
-    processed_by INT REFERENCES users(id) ON DELETE SET NULL,
+    processed_by UUID REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -529,7 +529,7 @@ CREATE TABLE expenses (
 -- Comments
 CREATE TABLE comments (
     id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(id) ON DELETE SET NULL,
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     parent_id INT REFERENCES comments(id) ON DELETE CASCADE,
     entity_id INT NOT NULL,
     entity_type VARCHAR(50) NOT NULL,
@@ -540,7 +540,7 @@ CREATE TABLE comments (
 -- Notifications
 CREATE TABLE notifications (
     id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(id) ON DELETE SET NULL,
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     entity_id INT NOT NULL,
     entity_type VARCHAR(50) NOT NULL,
     message TEXT NOT NULL,

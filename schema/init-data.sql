@@ -39,13 +39,6 @@ INSERT INTO loan_types (name, description) VALUES
 ('education', 'Loans for educational purposes'),
 ('mortgage', 'Loans for purchasing property');
 
-INSERT INTO loans (lender_id, lender_type, amount, interest_rate, start_date, end_date, loan_type_id, status, created_at, updated_at) 
-VALUES 
-(1, 'user', 10000.00, 5.00, '2024-01-01', '2025-01-01', 1, 'approved', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(2, 'user', 5000.00, 4.00, '2024-02-01', '2024-08-01', 2, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(3, 'vendor', 20000.00, 6.50, '2024-03-01', '2026-03-01', 3, 'disbursed', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-(4, 'vendor', 15000.00, 3.50, '2024-04-01', '2025-04-01', 4, 'repaid', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-
 -- Seed departments
 INSERT INTO departments (name, salary_type, base_type_id, base_rate, base_salary, description,
 work_leave_qualification)
@@ -87,7 +80,7 @@ INSERT INTO users (
 ('John', 'Doe', 'john@example.com', 'hashedpassword1', 8, 'https://i.imgur.com/0GY9tnz.jpeg', 
  '1988-12-05', '321 Elm St, Hamletville', 'Anna Doe', '2021-07-21', 4200.00, 
  '{"bank_name": "Bank DEF", "account_number": "9988776655"}', NULL, 'https://i.imgur.com/GH4567890F.jpeg', 'https://i.imgur.com/D4567890.jpeg', 4),
-('Jane', 'Smith', 'jane@example.com', 'hashedpassword1', 5, 'https://i.imgur.com/0GY9tnz.jpeg', 
+('Jane', 'Smith', 'jane@example.com', 'hashedpassword1', 4, 'https://i.imgur.com/0GY9tnz.jpeg', 
  '1994-03-25', '654 Maple St, Citytown', 'Linda Smith', '2022-06-11', 3100.00, 
  '{"bank_name": "Bank GHI", "account_number": "6677889900"}', '2023-08-01', 'https://i.imgur.com/IJ5678901G.jpeg', 'https://i.imgur.com/E5678901.jpeg', 2),
 ('Mary', 'Jones', 'mary@example.com', 'hashedpassword1', 6, 'https://i.imgur.com/0GY9tnz.jpeg', 
@@ -97,25 +90,35 @@ INSERT INTO users (
  '1989-07-15', '123 Birch St, Greenfield', 'Samantha Brown', '2016-03-20', 3900.00, 
  '{"bank_name": "Bank MNO", "account_number": "2233445566"}', '2023-02-28', 'https://i.imgur.com/MN7890123I.jpeg', 'https://i.imgur.com/G7890123.jpeg', 2);
 
+INSERT INTO loans (
+    lender_id, lender_type, amount, interest_rate, start_date, 
+    end_date, loan_type_id, status, created_at, updated_at
+) 
+VALUES
+((SELECT id FROM users WHERE email = 'starters@admin.com'), 'user', 10000.00, 5.00, '2024-01-01', '2025-01-01', 1, 'approved', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+((SELECT id FROM users WHERE email = 'nat@aiq.com'), 'user', 5000.00, 4.00, '2024-02-01', '2024-08-01', 2, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+((SELECT id FROM users WHERE email = 'sog@aiq.com'), 'user', 20000.00, 6.50, '2024-03-01', '2026-03-01', 3, 'disbursed', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+((SELECT id FROM users WHERE email = 'odun@aiq.com'), 'user', 15000.00, 3.50, '2024-04-01', '2025-04-01', 4, 'repaid', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+
 INSERT INTO user_permissions (user_id, permission_id) VALUES
-(1, 5),
-(2, 1),
-(3, 2),
-(4, 3),
-(5, 4),
-(6, 6),
-(7, 6);
+((SELECT id FROM users WHERE email = 'starters@admin.com'), 5),
+((SELECT id FROM users WHERE email = 'nat@aiq.com'), 1),
+((SELECT id FROM users WHERE email = 'sog@aiq.com'), 2),
+((SELECT id FROM users WHERE email = 'odun@aiq.com'), 3),
+((SELECT id FROM users WHERE email = 'john@example.com'), 4),
+((SELECT id FROM users WHERE email = 'jane@example.com'), 6),
+((SELECT id FROM users WHERE email = 'mary@example.com'), 6);
 
 -- Seed data for user_leaves
-INSERT INTO user_leaves (user_id, leave_type, start_date, end_date, status, notes)
-VALUES
-(1, 'annual', '2024-01-15', '2024-01-20', 'leave taken', 'Annual leave for vacation'),
-(2, 'sick', '2024-02-05', '2024-02-07', 'booked', 'Recovering from flu'),
-(3, 'maternity', '2024-03-01', '2024-05-30', 'on leave', 'Maternity leave for childbirth'),
-(4, 'paternity', '2024-03-10', '2024-03-14', 'leave taken', 'Paternity leave for newborn support'),
-(5, 'study', '2024-04-01', '2024-04-15', 'cancelled', 'Cancelled due to change in schedule'),
-(6, 'compassionate', '2024-05-10', '2024-05-12', 'booked', 'Family emergency'),
-(7, 'unpaid', '2024-06-01', '2024-06-07', 'booked', 'Personal matters');
+INSERT INTO user_leaves (user_id, leave_type, start_date, end_date, status, notes) VALUES
+((SELECT id FROM users WHERE email = 'starters@admin.com'), 'annual', '2024-01-15', '2024-01-20', 'leave taken', 'Annual leave for vacation'),
+((SELECT id FROM users WHERE email = 'nat@aiq.com'), 'sick', '2024-02-05', '2024-02-07', 'booked', 'Recovering from flu'),
+((SELECT id FROM users WHERE email = 'sog@aiq.com'), 'maternity', '2024-03-01', '2024-05-30', 'on leave', 'Maternity leave for childbirth'),
+((SELECT id FROM users WHERE email = 'odun@aiq.com'), 'paternity', '2024-03-10', '2024-03-14', 'leave taken', 'Paternity leave for newborn support'),
+((SELECT id FROM users WHERE email = 'john@example.com'), 'study', '2024-04-01', '2024-04-15', 'cancelled', 'Cancelled due to change in schedule'),
+((SELECT id FROM users WHERE email = 'jane@example.com'), 'compassionate', '2024-05-10', '2024-05-12', 'booked', 'Family emergency'),
+((SELECT id FROM users WHERE email = 'mary@example.com'), 'unpaid', '2024-06-01', '2024-06-07', 'booked', 'Personal matters');
 
 -- Seed currencies
 INSERT INTO currencies (name, symbol, code) VALUES
@@ -405,131 +408,131 @@ VALUES
 -- January 2024
 (1, 1, '2024-01-10', 3, 
     'Fresh Produce Supplies', 'Ensure items are fresh', 
-    'Delivery to main warehouse only', 150, 4000, 90000, 'paid', 2, 
+    'Delivery to main warehouse only', 150, 4000, 90000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-01-15', '2024-01-05'),
 (2, 2, '2024-01-25', 4, 
     'Monthly Stock', 'Restock Abuja branch', 
-    'Include detailed itemized invoice', 100, 3000, 85000, 'issued', 2, 
+    'Include detailed itemized invoice', 100, 3000, 85000, 'issued', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-01-30', '2024-01-18'),
 
 -- February 2024
 (3, 1, '2024-02-14', 2, 
     'Valentine Special Orders', 'Expedite delivery', 
-    'Late delivery will result in cancellation', 200, 5000, 120000, 'sent', 1, 
+    'Late delivery will result in cancellation', 200, 5000, 120000, 'sent', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-02-18', '2024-02-05'),
 (4, 3, '2024-02-20', 3, 
     'Catering Supplies', 'Urgent bulk order', 
-    'Deliver to Lagos branch', 300, 6000, 150000, 'overdue', 3, 
+    'Deliver to Lagos branch', 300, 6000, 150000, 'overdue', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-02-22', '2024-02-14'),
 
 -- March 2024
 (5, 2, '2024-03-10', 3, 
     'Spring Restock', 'Quality inspection required', 
-    'Goods must match sample', 250, 4000, 100000, 'received', 2, 
+    'Goods must match sample', 250, 4000, 100000, 'received', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-03-14', '2024-03-01'),
 (1, 1, '2024-03-30', 4, 
     'Meat Supplies', 'Deliver in refrigerated truck', 
-    'All safety measures must be followed', 200, 5000, 180000, 'paid', 1, 
+    'All safety measures must be followed', 200, 5000, 180000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-03-31', '2024-03-20'),
 
 -- April 2024
 (2, 3, '2024-04-15', 2, 
     'Fruits and Vegetables', 'Ensure freshness', 
-    'Late delivery not acceptable', 150, 2500, 95000, 'issued', 1, 
+    'Late delivery not acceptable', 150, 2500, 95000, 'issued', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-04-18', '2024-04-10'),
 (3, 1, '2024-04-28', 3, 
     'General Supplies', 'Ensure all items are complete', 
-    'Delivery location: Lagos', 100, 3000, 110000, 'sent', 2, 
+    'Delivery location: Lagos', 100, 3000, 110000, 'sent', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-04-30', '2024-04-22'),
 
 -- May 2024
 (4, 2, '2024-05-15', 4, 
     'Warehouse Stock Replenishment', 'Priority delivery', 
-    'Strict quality check required', 200, 4000, 130000, 'paid', 1, 
+    'Strict quality check required', 200, 4000, 130000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-05-20', '2024-05-10'),
 (5, 3, '2024-05-25', 3, 
     'Monthly Restock', 'Contact manager upon delivery', 
-    'Invoice to include all discounts', 100, 2500, 75000, 'received', 3, 
+    'Invoice to include all discounts', 100, 2500, 75000, 'received', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-05-28', '2024-05-18'),
 
 -- June 2024
 (1, 2, '2024-06-05', 3, 
     'Meat Supply', 'Freshly butchered meat only', 
-    'Deliver within the first week of the month', 300, 4000, 140000, 'paid', 2, 
+    'Deliver within the first week of the month', 300, 4000, 140000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-06-08', '2024-06-01'),
 (3, 3, '2024-06-15', 2, 
     'Bakery Items', 'Ensure all items are gluten-free', 
-    'Delivery time strictly between 8AM-10AM', 100, 2000, 70000, 'sent', 1, 
+    'Delivery time strictly between 8AM-10AM', 100, 2000, 70000, 'sent', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-06-17', '2024-06-10'),
 
 -- July 2024
 (2, 1, '2024-07-12', 4, 
     'Grocery Supplies', 'Ensure no damages', 
-    'Delivery time strictly between 2PM-4PM', 250, 4500, 120000, 'paid', 2, 
+    'Delivery time strictly between 2PM-4PM', 250, 4500, 120000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-07-15', '2024-07-05'),
 (4, 2, '2024-07-25', 3, 
     'Monthly Restock', 'Double-check item quality', 
-    'Delivery to main warehouse', 100, 3000, 90000, 'received', 1, 
+    'Delivery to main warehouse', 100, 3000, 90000, 'received', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-07-28', '2024-07-20'),
 
 -- August 2024
 (5, 3, '2024-08-10', 3, 
     'Catering Supplies', 'Expedite delivery', 
-    'Late delivery not acceptable', 300, 5000, 150000, 'overdue', 1, 
+    'Late delivery not acceptable', 300, 5000, 150000, 'overdue', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-08-14', '2024-08-01'),
 (1, 1, '2024-08-30', 2, 
     'Fruit and Veg Supply', 'Ensure organic produce', 
-    'All invoices to be sent within 24 hours', 200, 4500, 95000, 'sent', 3, 
+    'All invoices to be sent within 24 hours', 200, 4500, 95000, 'sent', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-08-31', '2024-08-20'),
 
 -- September 2024
 (2, 2, '2024-09-05', 3, 
     'Fresh Meat Supply', 'Refrigeration required', 
-    'Delivery must be made in refrigerated trucks', 100, 2500, 80000, 'paid', 1, 
+    'Delivery must be made in refrigerated trucks', 100, 2500, 80000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-09-07', '2024-09-01'),
 (3, 1, '2024-09-20', 4, 
     'Bulk Order - Dry Goods', 'Deliver to Abuja branch', 
-    'Late delivery charges will apply', 250, 3500, 125000, 'received', 3, 
+    'Late delivery charges will apply', 250, 3500, 125000, 'received', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-09-25', '2024-09-15'),
 
 -- October 2024
 (4, 2, '2024-10-10', 3, 
     'Beverage Stock', 'Special instructions for storage', 
-    'Ensure all items match sample', 300, 4500, 160000, 'paid', 2, 
+    'Ensure all items match sample', 300, 4500, 160000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-10-13', '2024-10-05'),
 (5, 3, '2024-10-25', 2, 
     'Monthly Restock', 'Check invoice for tax inclusion', 
-    'Delivery location: Lagos', 150, 5000, 98000, 'sent', 1, 
+    'Delivery location: Lagos', 150, 5000, 98000, 'sent', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-10-28', '2024-10-18'),
 
 -- November 2024
 (1, 1, '2024-11-12', 4, 
     'Seasonal Orders', 'Ensure proper packaging', 
-    'Deliver within specified hours', 200, 4000, 90000, 'issued', 3, 
+    'Deliver within specified hours', 200, 4000, 90000, 'issued', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-11-15', '2024-11-05'),
 (2, 2, '2024-11-28', 3, 
     'Catering Supplies', 'Deliver with invoice', 
-    'Refrigeration mandatory', 150, 2500, 70000, 'paid', 2, 
+    'Refrigeration mandatory', 150, 2500, 70000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-11-30', '2024-11-20'),
 
 -- December 2024
 (3, 1, '2024-12-05', 2, 
     'Holiday Orders', 'Expedite delivery', 
-    'Late orders will not be accepted', 300, 6000, 150000, 'paid', 1, 
+    'Late orders will not be accepted', 300, 6000, 150000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-12-07', '2024-12-01'),
 (4, 3, '2024-12-20', 4, 
     'Year-End Stock', 'Ensure items are fresh', 
-    'Deliver to Lagos branch', 200, 5000, 125000, 'paid', 2, 
+    'Deliver to Lagos branch', 200, 5000, 125000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2024-12-25', '2024-12-15'),
 
 -- January 2025
 (5, 2, '2025-01-10', 3, 
     'New Year Supplies', 'Double-check quality', 
-    'Include all taxes in the invoice', 150, 3000, 85000, 'paid', 1, 
+    'Include all taxes in the invoice', 150, 3000, 85000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2025-01-14', '2025-01-01'),
 (1, 1, '2025-01-25', 4, 
     'Monthly Restock', 'Deliver to warehouse', 
-    'Invoice must match itemized list', 200, 4000, 110000, 'received', 2, 
+    'Invoice must match itemized list', 200, 4000, 110000, 'received', (SELECT id FROM users WHERE email = 'starters@admin.com'), 
     '2025-01-28', '2025-01-18');
 ;
 
@@ -562,147 +565,147 @@ INSERT INTO sales_orders (
 )
 VALUES
 -- January 2024
-('order', 'January Breakfast Pack', 1, 1, 1, 'delivery', 2, 
+('order', 'January Breakfast Pack', 1, 1, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-01-10', 'Deliver hot', 'Knock loudly', 
-    2000, 1000, 60000, 'pending', 1, '2024-01-01'),
+    2000, 1000, 60000, 'pending', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-01-01'),
 ('service', 'Corporate Brunch', 2, 2, 2, 'pickup', NULL, 
     '2024-01-25', 'Prepare sandwiches', 'Contact HR', 
-    3000, 0, 150000, 'sent', 2, '2024-01-15'),
-('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    3000, 0, 150000, 'sent', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-01-15'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
-    1500, 500, 70000, 'paid', 3, NOW()),
+    1500, 500, 70000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 
 -- February 2024
 ('order', 'Valentine Pack', 3, 1, 3, 'pickup', NULL, 
     '2024-02-14', 'Pack with care', 'Include roses', 
-    5000, 0, 90000, 'paid', 3, '2024-02-01'),
-('service', 'February Catering', 4, 2, 1, 'delivery', 1, 
+    5000, 0, 90000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-02-01'),
+('service', 'February Catering', 4, 2, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-02-20', 'Coordinate with manager', 'Serve on time', 
-    8000, 12000, 350000, 'pending', 2, '2024-02-05'),
-('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    8000, 12000, 350000, 'pending', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-02-05'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
-    1500, 500, 70000, 'paid', 3, NOW()),
+    1500, 500, 70000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 
 -- March 2024
-('order', 'March Mega Pack', 5, 3, 1, 'delivery', 3, 
+('order', 'March Mega Pack', 5, 3, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-03-05', 'Deliver fresh', 'Check address twice', 
-    2000, 5000, 120000, 'sent', 1, '2024-03-01'),
+    2000, 5000, 120000, 'sent', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-03-01'),
 ('service', 'Event Catering', 1, 1, 2, 'pickup', NULL, 
     '2024-03-20', 'Add extra servings', 'Include desserts', 
-    5000, 0, 250000, 'paid', 3, '2024-03-10'),
-('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    5000, 0, 250000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-03-10'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
-    1500, 500, 70000, 'paid', 3, NOW()),
+    1500, 500, 70000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 
 -- April 2024
-('order', 'Easter Pack', 2, 1, 1, 'delivery', 2, 
+('order', 'Easter Pack', 2, 1, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-04-10', 'Deliver before 9 AM', 'Handle with care', 
-    4000, 2000, 85000, 'upcoming', 1, '2024-04-01'),
+    4000, 2000, 85000, 'upcoming', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-04-01'),
 ('service', 'April Lunch Service', 3, 2, 3, 'pickup', NULL, 
     '2024-04-25', 'Serve warm', 'Contact event planner', 
-    7000, 0, 320000, 'sent', 2, '2024-04-15'),
-('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    7000, 0, 320000, 'sent', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-04-15'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
-    1500, 500, 70000, 'paid', 3, NOW()),
+    1500, 500, 70000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 
 -- May 2024
-('order', 'Mothers Day Delight', 4, 1, 1, 'delivery', 1, 
+('order', 'Mothers Day Delight', 4, 1, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-05-12', 'Deliver with flowers', 'Add a card', 
-    3000, 2000, 180000, 'pending', 3, '2024-05-01'),
-('service', 'Wedding Reception', 5, 3, 2, 'delivery', 3, 
+    3000, 2000, 180000, 'pending', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-05-01'),
+('service', 'Wedding Reception', 5, 3, 2, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-05-25', 'Coordinate with planner', 'Setup quickly', 
-    15000, 30000, 600000, 'paid', 2, '2024-05-10'),
-('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    15000, 30000, 600000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-05-10'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
-    1500, 500, 70000, 'paid', 3, NOW()),
+    1500, 500, 70000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 
 -- June 2024
 ('order', 'Fathers Day Special', 6, 2, 1, 'pickup', NULL, 
     '2024-06-16', 'Pack carefully', 'Double-check the spices', 
-    2500, 0, 145000, 'upcoming', 2, '2024-06-01'),
-('service', 'Corporate Dinner', 1, 1, 2, 'delivery', 4, 
+    2500, 0, 145000, 'upcoming', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-06-01'),
+('service', 'Corporate Dinner', 1, 1, 2, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-06-30', 'Serve by 7 PM', 'Coordinate with HR', 
-    8000, 15000, 400000, 'sent', 4, '2024-06-20'),
-('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    8000, 15000, 400000, 'sent', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-06-20'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
-    1500, 500, 70000, 'paid', 3, NOW()),
+    1500, 500, 70000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 
 -- July 2024
 ('order', 'Summer BBQ Pack', 3, 3, 1, 'pickup', NULL, 
     '2024-07-10', 'Pack extra sauce', 'Include plates', 
-    5000, 0, 200000, 'pending', 1, '2024-07-01'),
-('service', 'July Banquet Service', 5, 2, 3, 'delivery', 2, 
+    5000, 0, 200000, 'pending', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-07-01'),
+('service', 'July Banquet Service', 5, 2, 3, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-07-20', 'Coordinate with staff', 'Serve dessert on time', 
-    12000, 20000, 550000, 'paid', 3, '2024-07-10'),
-('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    12000, 20000, 550000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-07-10'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
-    1500, 500, 70000, 'paid', 3, NOW()),
+    1500, 500, 70000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 
 -- August 2024
-('order', 'August Seafood Pack', 4, 1, 2, 'delivery', 3, 
+('order', 'August Seafood Pack', 4, 1, 2, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-08-15', 'Deliver with ice packs', 'Ensure freshness', 
-    2000, 1000, 250000, 'upcoming', 4, '2024-08-01'),
+    2000, 1000, 250000, 'upcoming', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-08-01'),
 ('service', 'Birthday Catering', 6, 3, 1, 'pickup', NULL, 
     '2024-08-25', 'Prepare cake and food', 'Include candles', 
-    7000, 0, 220000, 'sent', 2, '2024-08-10'),
-('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    7000, 0, 220000, 'sent', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-08-10'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
-    1500, 500, 70000, 'paid', 3, NOW()),
+    1500, 500, 70000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 
 -- September 2024
-('order', 'September Festive Pack', 2, 2, 1, 'delivery', 2, 
+('order', 'September Festive Pack', 2, 2, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-09-10', 'Deliver on time', 'Call before delivery', 
-    4000, 2000, 180000, 'pending', 1, '2024-09-01'),
+    4000, 2000, 180000, 'pending', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-09-01'),
 ('service', 'Corporate Buffet', 3, 1, 2, 'pickup', NULL, 
     '2024-09-25', 'Ensure enough servings', 'Include utensils', 
-    5000, 0, 300000, 'paid', 3, '2024-09-15'),
-('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    5000, 0, 300000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-09-15'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
-    1500, 500, 70000, 'paid', 3, NOW()),
+    1500, 500, 70000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 
 -- October 2024
-('order', 'October Mega Deal', 4, 1, 1, 'delivery', 1, 
+('order', 'October Mega Deal', 4, 1, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-10-10', 'Pack everything neatly', 'Add extra sauce', 
-    2500, 2000, 140000, 'upcoming', 2, '2024-10-01'),
-('service', 'October Event Service', 5, 3, 3, 'delivery', 2, 
+    2500, 2000, 140000, 'upcoming', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-10-01'),
+('service', 'October Event Service', 5, 3, 3, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-10-25', 'Coordinate with manager', 'Setup before guests arrive', 
-    15000, 20000, 500000, 'sent', 4, '2024-10-10'),
-('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    15000, 20000, 500000, 'sent', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-10-10'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
-    1500, 500, 70000, 'paid', 3, NOW()),
+    1500, 500, 70000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 
 -- November 2024
 ('order', 'November Festive Feast', 6, 1, 2, 'pickup', NULL, 
     '2024-11-15', 'Pack carefully', 'Include spoons', 
-    3500, 0, 190000, 'paid', 1, '2024-11-01'),
-('service', 'Thanksgiving Dinner', 1, 2, 1, 'delivery', 3, 
+    3500, 0, 190000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-11-01'),
+('service', 'Thanksgiving Dinner', 1, 2, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-11-25', 'Serve hot', 'Coordinate with family', 
-    8000, 20000, 450000, 'pending', 2, '2024-11-10'),
-('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    8000, 20000, 450000, 'pending', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-11-10'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
-    1500, 500, 70000, 'paid', 3, NOW()),
+    1500, 500, 70000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 
 -- December 2024
-('order', 'Christmas Special', 2, 1, 1, 'delivery', 1, 
+('order', 'Christmas Special', 2, 1, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-12-20', 'Deliver by 8 AM', 'Call before delivery', 
-    7000, 15000, 350000, 'paid', 4, '2024-12-01'),
+    7000, 15000, 350000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-12-01'),
 ('service', 'Christmas Eve Dinner', 4, 3, 3, 'pickup', NULL, 
     '2024-12-24', 'Prepare food and drinks', 'Coordinate with team', 
-    10000, 0, 300000, 'paid', 3, '2024-12-10'),
-('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    10000, 0, 300000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-12-10'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
-    1500, 500, 70000, 'paid', 3, NOW()),
+    1500, 500, 70000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 
 -- January 2025
-('order', 'New Year Delight', 3, 2, 1, 'delivery', 4, 
+('order', 'New Year Delight', 3, 2, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2025-01-01', 'Deliver before noon', 'Pack everything tightly', 
-    3000, 5000, 250000, 'upcoming', 1, '2024-12-20'),
+    3000, 5000, 250000, 'upcoming', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-12-20'),
 ('service', 'January Gala Service', 5, 1, 2, 'pickup', NULL, 
     '2025-01-15', 'Coordinate with manager', 'Include decorations', 
-    8000, 0, 400000, 'paid', 2, '2025-01-01'),
-('order', 'Lunch Pack', 3, 3, 1, 'delivery', 3, 
+    8000, 0, 400000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), '2025-01-01'),
+('order', 'Lunch Pack', 3, 3, 1, 'delivery', (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
-    1500, 500, 70000, 'paid', 3, NOW());
+    1500, 500, 70000, 'paid', (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW());
 
 
 -- Insert into sales_order_items
@@ -743,31 +746,45 @@ INSERT INTO item_stock_adjustments (
     quantity, adjustment_type, description, created_at
 )
 VALUES
-(1, 1, 'vendor', 1, 1, 20, 'addition', 'Restocked beef inventory', '2024-01-10'),
-(2, 1, 'vendor', 2, 1, 10, 'addition', 'Restocked chicken inventory', '2024-01-12'),
-(3, 1, 'vendor', 3, 2, 15, 'addition', 'Restocked catfish inventory', '2024-01-15'),
-(4, 1, 'user', 1, 3, 5, 'subtraction', 'Sold pork cuts', '2024-01-18'),
-(5, 1, 'vendor', 2, 1, 10, 'addition', 'Restocked lamb inventory', '2024-01-20'),
-(6, 1, 'user', 3, 2, 5, 'subtraction', 'Sold salmon fillets', '2024-01-22'),
-(7, 1, 'vendor', 1, 3, 50, 'addition', 'Restocked eggs', '2024-01-24'),
-(8, 1, 'vendor', 2, 2, 10, 'addition', 'Restocked cheese', '2024-01-25'),
-(9, 1, 'user', 3, 1, 15, 'subtraction', 'Sold milk', '2024-01-26'),
-(10, 1, 'vendor', 1, 2, 20, 'addition', 'Restocked yogurt', '2024-01-28');
+(1, (SELECT id FROM users WHERE email = 'starters@admin.com'), 'vendor', 1, 1, 20, 'addition', 'Restocked beef inventory', '2024-01-10'),
+(2, (SELECT id FROM users WHERE email = 'starters@admin.com'), 'vendor', 2, 1, 10, 'addition', 'Restocked chicken inventory', '2024-01-12'),
+(3, (SELECT id FROM users WHERE email = 'starters@admin.com'), 'vendor', 3, 2, 15, 'addition', 'Restocked catfish inventory', '2024-01-15'),
+(4, (SELECT id FROM users WHERE email = 'starters@admin.com'), 'user', 1, 3, 5, 'subtraction', 'Sold pork cuts', '2024-01-18'),
+(5, (SELECT id FROM users WHERE email = 'starters@admin.com'), 'vendor', 2, 1, 10, 'addition', 'Restocked lamb inventory', '2024-01-20'),
+(6, (SELECT id FROM users WHERE email = 'starters@admin.com'), 'user', 3, 2, 5, 'subtraction', 'Sold salmon fillets', '2024-01-22'),
+(7, (SELECT id FROM users WHERE email = 'starters@admin.com'), 'vendor', 1, 3, 50, 'addition', 'Restocked eggs', '2024-01-24'),
+(8, (SELECT id FROM users WHERE email = 'starters@admin.com'), 'vendor', 2, 2, 10, 'addition', 'Restocked cheese', '2024-01-25'),
+(9, (SELECT id FROM users WHERE email = 'starters@admin.com'), 'user', 3, 1, 15, 'subtraction', 'Sold milk', '2024-01-26'),
+(10, (SELECT id FROM users WHERE email = 'starters@admin.com'), 'vendor', 1, 2, 20, 'addition', 'Restocked yogurt', '2024-01-28');
 
 
 -- Insert into item_stock_transfers
-INSERT INTO comments (user_id, parent_id, entity_id, entity_type, comment, created_at)
+INSERT INTO comments (
+    user_id, parent_id, entity_id, entity_type, 
+    comment, created_at
+)
 VALUES
-(1, NULL, 1, 'item_stock_adjustment', 'Great quality beef!', '2024-01-10'),
-(2, NULL, 2, 'item_stock_adjustment', 'Chicken was fresh and tasty.', '2024-01-12'),
-(3, NULL, 3, 'item_stock_adjustment', 'Catfish fillets were amazing.', '2024-01-15'),
-(1, 1, 1, 'item_stock_adjustment', 'I agree, very fresh!', '2024-01-16'),
-(2, NULL, 4, 'item_stock_adjustment', 'Pork cuts were decent.', '2024-01-18'),
-(3, NULL, 5, 'item_stock_adjustment', 'Lamb was tender and juicy.', '2024-01-20'),
-(1, NULL, 6, 'item_stock_adjustment', 'Salmon was okay.', '2024-01-22'),
-(2, NULL, 7, 'item_stock_adjustment', 'Eggs are always good.', '2024-01-24'),
-(3, NULL, 8, 'item_stock_adjustment', 'Cheese was fresh.', '2024-01-25'),
-(1, NULL, 9, 'item_stock_adjustment', 'Milk was great!', '2024-01-26');
+((SELECT id FROM users WHERE email = 'starters@admin.com'), NULL, 1, 'item_stock_adjustment', 
+    'Great quality beef!', '2024-01-10'),
+((SELECT id FROM users WHERE email = 'nat@aiq.com'), NULL, 2, 'item_stock_adjustment', 
+    'Chicken was fresh and tasty.', '2024-01-12'),
+((SELECT id FROM users WHERE email = 'sog@aiq.com'), NULL, 3, 'item_stock_adjustment', 
+    'Catfish fillets were amazing.', '2024-01-15'),
+((SELECT id FROM users WHERE email = 'starters@admin.com'), 1, 1, 'item_stock_adjustment', 
+    'I agree, very fresh!', '2024-01-16'),
+((SELECT id FROM users WHERE email = 'nat@aiq.com'), NULL, 4, 'item_stock_adjustment', 
+    'Pork cuts were decent.', '2024-01-18'),
+((SELECT id FROM users WHERE email = 'sog@aiq.com'), NULL, 5, 'item_stock_adjustment', 
+    'Lamb was tender and juicy.', '2024-01-20'),
+((SELECT id FROM users WHERE email = 'starters@admin.com'), NULL, 6, 'item_stock_adjustment', 
+    'Salmon was okay.', '2024-01-22'),
+((SELECT id FROM users WHERE email = 'nat@aiq.com'), NULL, 7, 'item_stock_adjustment', 
+    'Eggs are always good.', '2024-01-24'),
+((SELECT id FROM users WHERE email = 'sog@aiq.com'), NULL, 8, 'item_stock_adjustment', 
+    'Cheese was fresh.', '2024-01-25'),
+((SELECT id FROM users WHERE email = 'starters@admin.com'), NULL, 9, 'item_stock_adjustment', 
+    'Milk was great!', '2024-01-26');
+
 
 INSERT INTO expenses_categories (name, description)
 VALUES
@@ -782,66 +799,37 @@ INSERT INTO expenses (expense_title, expense_category, payment_method_id,
  notes, status, processed_by)
 VALUES
 ('Flight to Client Meeting', 1, 1, 1, 2, 1500.00, 15.00, '2024-01-10', 
- 'Flight to meet client for project discussion', 'paid', 3),
+ 'Flight to meet client for project discussion', 'paid', 
+ (SELECT id FROM users WHERE email = 'odun@aiq.com')),
 ('Office Stationery Purchase', 2, 2, 1, 1, 250.00, 5.00, '2024-01-20', 
- 'Purchase of pens, paper, and files', 'paid', 4),
+ 'Purchase of pens, paper, and files', 'paid', 
+ (SELECT id FROM users WHERE email = 'john@example.com')),
 
 ('March Internet Bill', 3, 3, 2, 3, 120.00, 2.50, '2024-02-05', 
- 'Payment for monthly internet service', 'paid', 2),
+ 'Payment for monthly internet service', 'paid', 
+ (SELECT id FROM users WHERE email = 'nat@aiq.com')),
 ('Team Lunch', 4, 1, 1, 2, 300.00, 10.00, '2024-02-15', 
- 'Lunch with the team after project completion', 'paid', 5),
+ 'Lunch with the team after project completion', 'paid', 
+ (SELECT id FROM users WHERE email = 'jane@example.com')),
 
 ('Printer Maintenance', 5, 2, 2, 1, 500.00, 0.00, '2024-03-28', 
- 'Scheduled maintenance for office printer', 'cancelled', 4),
+ 'Scheduled maintenance for office printer', 'cancelled', 
+ (SELECT id FROM users WHERE email = 'john@example.com')),
 ('Business Conference', 1, 1, 1, 3, 800.00, 10.00, '2024-03-30', 
- 'Conference related to industry developments', 'paid', 3),
+ 'Conference related to industry developments', 'paid', 
+ (SELECT id FROM users WHERE email = 'odun@aiq.com')),
 
 ('Annual Software License', 2, 2, 1, 1, 2000.00, 50.00, '2024-04-07', 
- 'Annual renewal of office software licenses', 'paid', 4),
+ 'Annual renewal of office software licenses', 'paid', 
+ (SELECT id FROM users WHERE email = 'john@example.com')),
 ('Team Dinner', 4, 1, 1, 2, 350.00, 15.00, '2024-04-15', 
- 'Dinner with the team for quarterly review', 'paid', 5),
+ 'Dinner with the team for quarterly review', 'paid', 
+ (SELECT id FROM users WHERE email = 'jane@example.com')),
 
 ('March Electricity Bill', 3, 3, 2, 3, 250.00, 5.00, '2024-05-03', 
- 'Payment for electricity consumption in the office', 'paid', 2),
+ 'Payment for electricity consumption in the office', 'paid', 
+ (SELECT id FROM users WHERE email = 'nat@aiq.com')),
 ('Travel to Conference', 1, 1, 1, 2, 1200.00, 20.00, '2024-05-10', 
- 'Flight to attend the industry conference', 'paid', 3),
+ 'Business trip to the industry conference', 'paid', 
+ (SELECT id FROM users WHERE email = 'odun@aiq.com'));
 
-('Office Furniture Purchase', 2, 2, 1, 1, 1500.00, 30.00, '2024-06-05', 
- 'New office furniture for the expanding team', 'paid', 4),
-('Client Meeting Expenses', 4, 1, 1, 2, 500.00, 10.00, '2024-06-18', 
- 'Meeting expenses for a new client project', 'paid', 5),
-
-('Monthly Internet Bill', 3, 3, 2, 3, 130.00, 3.00, '2024-07-03', 
- 'Monthly internet bill for office', 'paid', 2),
-('Team Workshop', 4, 1, 1, 2, 600.00, 20.00, '2024-07-12', 
- 'Workshop organized for team development', 'paid', 5),
-
-('Office Supplies', 2, 2, 1, 1, 350.00, 5.00, '2024-08-09', 
- 'Replenishing office supplies for the team', 'paid', 4),
-('Client Dinner', 4, 1, 1, 2, 400.00, 15.00, '2024-08-15', 
- 'Dinner with clients to discuss future projects', 'paid', 5),
-
-('Monthly Internet Bill', 3, 3, 2, 3, 130.00, 2.50, '2024-09-01', 
- 'Monthly internet bill payment', 'paid', 2),
-('Team Lunch', 4, 1, 1, 2, 250.00, 10.00, '2024-09-10', 
- 'Lunch for the team after project completion', 'paid', 5),
-
-('Business Conference', 1, 1, 1, 3, 800.00, 25.00, '2024-10-07', 
- 'Conference related to industry developments', 'paid', 3),
-('Printer Maintenance', 5, 2, 2, 1, 400.00, 0.00, '2024-10-15', 
- 'Scheduled maintenance for office printer', 'paid', 4),
-
-('Team Workshop', 4, 1, 1, 2, 500.00, 15.00, '2024-11-02', 
- 'Team building workshop', 'paid', 5),
-('Office Renovation', 2, 2, 1, 1, 5000.00, 100.00, '2024-11-22', 
- 'Renovation of office space to accommodate more staff', 'paid', 4),
-
-('Electricity Bill', 3, 3, 2, 3, 250.00, 5.00, '2024-12-05', 
- 'Electricity payment for office', 'paid', 2),
-('Client Meeting Expenses', 4, 1, 1, 2, 600.00, 20.00, '2024-12-15', 
- 'Expenses for meeting with a potential client', 'paid', 5),
-
-('Business Travel', 1, 1, 1, 2, 1300.00, 15.00, '2025-01-02', 
- 'Business trip to meet potential investors', 'paid', 3),
-('Team Lunch', 4, 1, 1, 2, 350.00, 10.00, '2025-01-10', 
- 'Lunch for team celebration', 'paid', 5);
