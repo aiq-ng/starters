@@ -77,6 +77,39 @@ class BaseController extends WebSocketServer
         ];
     }
 
+    protected function storeRefreshToken($userId, $refreshToken)
+    {
+        $query = "
+            INSERT INTO refresh_tokens (user_id, token)
+            VALUES (?, ?)
+            ON CONFLICT (user_id) 
+            DO UPDATE SET token = EXCLUDED.token;
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$userId, $refreshToken]);
+    }
+
+    protected function deleteRefreshToken($userId)
+    {
+        $query = "DELETE FROM refresh_tokens WHERE user_id = ?";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$userId]);
+    }
+
+
+    protected function validateRefreshToken($userId, $refreshToken)
+    {
+        $query = "
+            SELECT token FROM refresh_tokens
+            WHERE user_id = ? AND token = ?
+        ";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$userId, $refreshToken]);
+
+        return $stmt->fetchColumn() !== false;
+    }
+
     public function authorizeRequest()
     {
         if (!isset($_SERVER['HTTP_AUTHORIZATION'])) {
@@ -95,8 +128,13 @@ class BaseController extends WebSocketServer
         try {
             $decoded = JWT::decode($token, new Key($this->secret_key, $this->algorithm));
 
-            if (!isset($decoded->data->id)) {
+            if (!isset($decoded->data->id) || !isset($decoded->claim)) {
                 $this->sendResponse('Invalid token structure', 401);
+                return;
+            }
+
+            if ($decoded->claim !== 'access') {
+                $this->sendResponse('Unauthorized: Invalid token type', 401);
                 return;
             }
 

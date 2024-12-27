@@ -16,12 +16,16 @@ class DashboardController extends BaseController
 
     public function overview()
     {
+        $this->authorizeRequest();
+
         $overview = $this->dashboard->getOverview();
         $this->sendResponse('success', 200, $overview);
     }
 
     public function businessOverview()
     {
+        $this->authorizeRequest();
+
         $filters = [
             'month' => isset($_GET['month']) ? $_GET['month'] : date('m'),
             'year' => isset($_GET['year']) ? $_GET['year'] : date('Y'),
@@ -33,6 +37,7 @@ class DashboardController extends BaseController
 
     public function lowQuantityStock()
     {
+        $this->authorizeRequest();
         try {
             $lqc = $this->dashboard->getLowQuantityStock();
             $this->sendResponse('success', 200, $lqc);
@@ -43,6 +48,7 @@ class DashboardController extends BaseController
 
     public function mostPurchased()
     {
+        $this->authorizeRequest();
         $filters = [
             'page' => isset($_GET['page']) ? $_GET['page'] : 1,
             'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
@@ -60,6 +66,7 @@ class DashboardController extends BaseController
 
     public function topSelling()
     {
+        $this->authorizeRequest();
         $filters = [
             'page' => isset($_GET['page']) ? $_GET['page'] : 1,
             'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
@@ -77,6 +84,7 @@ class DashboardController extends BaseController
 
     public function cashFlow()
     {
+        $this->authorizeRequest();
         $year = isset($_GET['year']) ? $_GET['year'] : date('Y');
 
         $year = (int)$year;
