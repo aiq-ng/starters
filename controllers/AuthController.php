@@ -61,36 +61,10 @@ class AuthController extends BaseController
         $adminAccess = $identifier === "starters@admin.com";
 
         if ($adminAccess || $user && password_verify($data['password'], $user['password'])) {
-            $accessToken = [
-                'iat' => time(),
-                'exp' => time() + (60 * 15), // Access token valid for 15 minutes
-                'data' => [
-                    'id' => $user_id,
-                ],
-                'claim' => 'access'
-            ];
-
-            $refreshToken = [
-                'iat' => time(),
-                'exp' => time() + (30 * 24 * 60 * 60), // Refresh token valid for 30 days
-                'data' => [
-                    'id' => $user_id,
-                ],
-                'claim' => 'refresh'
-            ];
-
-            $accessJwt = JWT::encode($accessToken, $this->secret_key, $this->algorithm);
-            $refreshJwt = JWT::encode($refreshToken, $this->secret_key, $this->algorithm);
-
-            $this->storeRefreshToken($user_id, $refreshJwt);
 
             $_SESSION['user_id'] = $user_id;
 
-            $this->sendResponse('Login successful', 200, [
-                'user_id' => $user_id,
-                'token' => $accessJwt,
-                'refresh_token' => $refreshJwt
-            ]);
+            $this->sendTokens($user_id);
         } else {
             $this->sendResponse('Invalid credentials', 400);
         }
@@ -116,20 +90,41 @@ class AuthController extends BaseController
                 return;
             }
 
-            $accessTokenPayload = [
-                'iat' => time(),
-                'exp' => time() + 900, // 15 minutes
-                'data' => ['id' => $userId],
-                'claim' => 'access'
-            ];
-            $newAccessToken = JWT::encode($accessTokenPayload, $this->secret_key, $this->algorithm);
-
-            $this->sendResponse('Token refreshed successfully', 200, [
-                'token' => $newAccessToken
-            ]);
+            $this->sendTokens($userId);
         } catch (\Exception $e) {
             $this->sendResponse('Invalid token: ' . $e->getMessage(), 400);
         }
+    }
+
+    private function generateToken($userId, $claim, $expiry)
+    {
+        $payload = [
+            'iat' => time(),
+            'exp' => time() + $expiry,
+            'data' => ['id' => $userId],
+            'claim' => $claim,
+        ];
+
+        return JWT::encode($payload, $this->secret_key, $this->algorithm);
+    }
+
+    private function sendTokens($userId)
+    {
+        $accessExpiry = 15 * 60;
+        $refreshExpiry = 30 * 24 * 60 * 60;
+
+        $accessToken = $this->generateToken($userId, 'access', $accessExpiry);
+        $refreshToken = $this->generateToken($userId, 'refresh', $refreshExpiry);
+
+        $this->storeRefreshToken($userId, $refreshToken);
+
+        $this->sendResponse('Success', 200, [
+            'user_id' => $userId,
+            'token' => $accessToken,
+            'refresh_token' => $refreshToken,
+            'access_expires_in' => $accessExpiry,
+            'refresh_expires_in' => $refreshExpiry,
+        ]);
     }
 
     // Logout
