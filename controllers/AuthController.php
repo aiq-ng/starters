@@ -92,7 +92,15 @@ class AuthController extends BaseController
                 return;
             }
 
-            $this->sendTokens($userId, $roleId);
+            $accessToken = $this->generateToken($userId, $roleId, 'access', 15 * 60);
+
+            $this->sendResponse('Success', 200, [
+                'user_id' => $userId,
+                'role_id' => $roleId,
+                'token' => $accessToken,
+                'access_expires_in' => 15 * 60,
+            ]);
+
         } catch (\Exception $e) {
             $this->sendResponse('Invalid token: ' . $e->getMessage(), 400);
         }
@@ -101,7 +109,7 @@ class AuthController extends BaseController
     private function sendTokens($userId, $roleId)
     {
         $accessExpiry = 15 * 60; // 15 minutes
-        $refreshExpiry = 7 * 24 * 60 * 60; // 7 days
+        $refreshExpiry = 30 * 24 * 60 * 60; // 30 days
 
         $accessToken = $this->generateToken($userId, $roleId, 'access', $accessExpiry);
         $refreshToken = $this->generateToken($userId, $roleId, 'refresh', $refreshExpiry);
