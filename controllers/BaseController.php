@@ -138,12 +138,29 @@ class BaseController extends WebSocketServer
                 return;
             }
 
+            if ($this->isUserActive($decoded->data->id) !== 'active') {
+                $this->sendResponse('Unauthorized: User is not active', 401);
+                return;
+            }
+
             $_SESSION['user_id'] = $decoded->data->id;
 
         } catch (Exception $e) {
             $this->sendResponse($e->getMessage(), 401);
             return;
         }
+    }
+
+    protected function isUserActive($userId)
+    {
+        $query = "SELECT status FROM users WHERE id = :id";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':id', $userId, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        $user = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        return $user['status'] ?? null;
     }
 
 

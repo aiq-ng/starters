@@ -168,7 +168,7 @@ CREATE TABLE users (
     leave DATE, 
     nin VARCHAR(255),
     passport VARCHAR(255),
-    status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+    status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'afk')),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP    
 );

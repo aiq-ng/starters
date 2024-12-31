@@ -89,6 +89,7 @@ $routes = [
         '/auth/login' => [$authController, 'login'],
         '/auth/refresh' => [$authController, 'refresh'],
         '/auth/logout' => [$authController, 'logout'],
+        '/sessions/invalidate' => [$authController, 'invalidateSessions'],
         '/products' => [$adminController, 'create'],
         '/customers' => [$customerController, 'create'],
         '/vendors' => [$vendorController, 'create'],

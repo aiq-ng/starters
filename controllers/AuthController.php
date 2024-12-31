@@ -61,14 +61,53 @@ class AuthController extends BaseController
         $role_id = $user['role_id'] ?? null;
         $adminAccess = $identifier === "starters@admin.com";
 
-        if ($adminAccess || $user && password_verify($data['password'], $user['password'])) {
+        if (!$user) {
+            $this->sendResponse('Invalid credentials', 400);
+            return;
+        }
 
+        $status = $this->isUserActive($user_id);
+
+        if ($status === 'inactive') {
+            $this->sendResponse("Unauthorized: User status is 'inactive'", 403);
+            return;
+        }
+
+        if ($status !== 'inactive') {
+            $this->updateUserStatus($user_id, 'active');
+        }
+
+        if ($adminAccess || password_verify($data['password'], $user['password'])) {
             $_SESSION['user_id'] = $user_id;
-
             $this->sendTokens($user_id, $role_id);
         } else {
             $this->sendResponse('Invalid credentials', 400);
         }
+    }
+
+    private function updateUserStatus($userId, $status)
+    {
+        $query = "UPDATE users SET status = :status WHERE id = :id";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':status', $status);
+        $stmt->bindParam(':id', $userId);
+        $stmt->execute();
+    }
+
+    public function invalidateSessions()
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+        $userId = $_SESSION['user_id'] ?? $data['user_id'] ?? null;
+
+        if (!$userId) {
+            $this->sendResponse('Unauthorized', 403);
+            return;
+        }
+
+        $this->updateUserStatus($userId, 'afk');
+        $this->sendResponse('User session inactivated', 200);
     }
 
     public function refresh()
