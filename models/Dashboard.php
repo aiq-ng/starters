@@ -314,7 +314,7 @@ class Dashboard
         }
     }
 
-    public function getMostPurchasedItems($filters = [])
+    public function getMostPurchasedProducts($filters = [])
     {
         $page = $filters['page'] ?? 1;
         $pageSize = $filters['page_size'] ?? 5;
@@ -385,7 +385,7 @@ class Dashboard
         ];
     }
 
-    public function getBestSellingItems($filters = [])
+    public function getBestSellingProducts($filters = [])
     {
         $page = $filters['page'] ?? 1;
         $pageSize = $filters['page_size'] ?? 5;

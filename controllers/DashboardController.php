@@ -55,7 +55,7 @@ class DashboardController extends BaseController
             'month' => isset($_GET['month']) ? $_GET['month'] : date('m'),
             'year' => isset($_GET['year']) ? $_GET['year'] : date('Y'),
         ];
-        $items = $this->dashboard->getMostPurchasedItems($filters);
+        $items = $this->dashboard->getMostPurchasedProducts($filters);
 
         if ($items) {
             $this->sendResponse('success', 200, $items['data'], $items['meta']);
@@ -73,7 +73,7 @@ class DashboardController extends BaseController
             'month' => isset($_GET['month']) ? $_GET['month'] : date('m'),
             'year' => isset($_GET['year']) ? $_GET['year'] : date('Y'),
         ];
-        $items = $this->dashboard->getBestSellingItems($filters);
+        $items = $this->dashboard->getBestSellingProducts($filters);
 
         if ($items) {
             $this->sendResponse('success', 200, $items['data'], $items['meta']);

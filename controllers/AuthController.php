@@ -155,7 +155,7 @@ class AuthController extends BaseController
 
         $this->storeRefreshToken($userId, $refreshToken);
 
-        $this->sendResponse('Success', 200, [
+        $this->sendResponse('Login Successfully', 200, [
             'user_id' => $userId,
             'role_id' => $roleId,
             'token' => $accessToken,
