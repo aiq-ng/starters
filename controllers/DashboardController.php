@@ -38,9 +38,14 @@ class DashboardController extends BaseController
     public function lowQuantityStock()
     {
         $this->authorizeRequest();
+        $filters = [
+            'page' => isset($_GET['page']) ? $_GET['page'] : 1,
+            'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
+        ];
+
         try {
-            $lqc = $this->dashboard->getLowQuantityStock();
-            $this->sendResponse('success', 200, $lqc);
+            $lqc = $this->dashboard->getLowQuantityStock($filters);
+            $this->sendResponse('success', 200, $lqc['data'], $lqc['meta']);
         } catch (\Exception) {
             $this->sendResponse('error', 500, ['message' => 'Failed to fetch low quantity stock']);
         }

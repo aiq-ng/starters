@@ -280,24 +280,33 @@ class Dashboard
         return (($currentValue - $previousValue) / $previousValue) * 100;
     }
 
-    public function getLowQuantityStock()
+    public function getLowQuantityStock($filters = [])
     {
+        $page = $filters['page'] ?? 1;
+        $pageSize = $filters['page_size'] ?? 5;
+        $offset = ($page - 1) * $pageSize;
+
         $query = "
             SELECT 
                 i.id, 
                 i.name, 
                 i.media,
-            CONCAT(COALESCE(SUM(item_stocks.quantity), 0), ' ', u.abbreviation) AS remaining_quantity,
-            i.availability
+                CONCAT(
+                    COALESCE(SUM(item_stocks.quantity), 0), ' ', u.abbreviation
+                ) AS remaining_quantity,
+                i.availability
             FROM items i
             LEFT JOIN item_stocks ON i.id = item_stocks.item_id
             LEFT JOIN units u ON i.unit_id = u.id
             WHERE i.availability = 'low stock'
             GROUP BY 
                 i.id, i.name, i.media, u.abbreviation
+            LIMIT :pageSize OFFSET :offset
         ";
 
         $stmt = $this->db->prepare($query);
+        $stmt->bindValue('pageSize', $pageSize, \PDO::PARAM_INT);
+        $stmt->bindValue('offset', $offset, \PDO::PARAM_INT);
 
         try {
             $stmt->execute();
@@ -307,10 +316,47 @@ class Dashboard
                 $row['media'] = $row['media'] ? json_decode($row['media'], true) : null;
             }
 
-            return $result;
+            $totalItems = $this->getLowStockCount();
+
+            $meta = [
+                'total_data' => (int) $totalItems,
+                'total_pages' => ceil($totalItems / $pageSize),
+                'page_size' => (int) $pageSize,
+                'previous_page' => $page > 1 ? (int) $page - 1 : null,
+                'current_page' => (int) $page,
+                'next_page' => $page < ceil($totalItems / $pageSize) ? (int) $page + 1 : null,
+            ];
+
+            return [
+                'data' => $result,
+                'meta' => $meta,
+            ];
         } catch (\PDOException $e) {
             error_log('Database Error: ' . $e->getMessage());
-            return [];
+            return [
+                'data' => [],
+                'meta' => [],
+            ];
+        }
+    }
+
+    private function getLowStockCount(): int
+    {
+        $query = "
+            SELECT COUNT(DISTINCT i.id) AS total_items
+            FROM items i
+            LEFT JOIN item_stocks ON i.id = item_stocks.item_id
+            WHERE i.availability = 'low stock'
+        ";
+
+        $stmt = $this->db->prepare($query);
+
+        try {
+            $stmt->execute();
+            return (int) $stmt->fetchColumn();
+        } catch (\PDOException $e) {
+            error_log('Database Error: ' . $e->getMessage());
+            return 0;
         }
     }
 
@@ -393,17 +439,17 @@ class Dashboard
 
         $query = "
             SELECT 
-                i.name AS item_name,
-                SUM(soi.quantity) AS sold_quantity,
-                i.opening_stock - SUM(soi.quantity) AS remaining_quantity,
+                pl.item_details AS item_name,
+                CONCAT(SUM(soi.quantity), ' ', u.abbreviation, '') AS sold_quantity,
+                pl.minimum_order AS remaining_quantity,
                 soi.price AS price,
                 SUM(soi.quantity * soi.price) AS amount
-            FROM
+            FROM 
                 sales_order_items soi
-            JOIN
-                items i ON soi.item_id = i.id
-            JOIN
-                units u ON i.unit_id = u.id
+            JOIN 
+                price_lists pl ON soi.item_id = pl.id
+            JOIN 
+                units u ON pl.unit_id = u.id
         ";
 
         $conditions = [];
@@ -424,36 +470,75 @@ class Dashboard
         }
 
         $query .= "
-            GROUP BY i.id, i.name, i.opening_stock, u.name, soi.price
-            ORDER BY sold_quantity DESC
-            LIMIT :pageSize OFFSET :offset
+            GROUP BY 
+                pl.item_details, pl.minimum_order, u.name, soi.price, u.abbreviation
+            ORDER BY 
+                sold_quantity DESC
+            LIMIT 
+                :page_size OFFSET :offset
         ";
 
-        $params['pageSize'] = $pageSize;
+        $params['page_size'] = $pageSize;
         $params['offset'] = $offset;
 
         $stmt = $this->db->prepare($query);
         foreach ($params as $key => $value) {
             $stmt->bindValue($key, $value, is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR);
         }
+
         $stmt->execute();
         $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        $totalItems = $this->getTotalItemCount('sales_order_items', $filters);
+        $totalItems = $this->getBestSellingCount('sales_order_items', $filters);
 
         $meta = [
-            'total_data' => (int) $totalItems,
+            'total_data' => $totalItems,
             'total_pages' => ceil($totalItems / $pageSize),
-            'page_size' => (int) $pageSize,
-            'previous_page' => $page > 1 ? (int) $page - 1 : null,
-            'current_page' => (int) $page,
-            'next_page' => (int) $page + 1,
+            'page_size' => $pageSize,
+            'previous_page' => $page > 1 ? $page - 1 : null,
+            'current_page' => $page,
+            'next_page' => $page + 1 <= ceil($totalItems / $pageSize) ? $page + 1 : null,
         ];
 
         return [
             'data' => $data,
             'meta' => $meta,
         ];
+    }
+
+    private function getBestSellingCount($table, $filters = [])
+    {
+        $countQuery = "
+            SELECT COUNT(DISTINCT pl.id) AS total_items
+            FROM $table soi
+            JOIN price_lists pl ON soi.item_id = pl.id
+        ";
+
+        $conditions = [];
+        $params = [];
+
+        if (!empty($filters['month'])) {
+            $conditions[] = "DATE_PART('month', soi.created_at) = :month";
+            $params['month'] = (int) $filters['month'];
+        }
+
+        if (!empty($filters['year'])) {
+            $conditions[] = "DATE_PART('year', soi.created_at) = :year";
+            $params['year'] = (int) $filters['year'];
+        }
+
+        if (!empty($conditions)) {
+            $countQuery .= " WHERE " . implode(" AND ", $conditions);
+        }
+
+        $stmt = $this->db->prepare($countQuery);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR);
+        }
+
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
     }
 
     private function getTotalItemCount($table, $filters = [])
