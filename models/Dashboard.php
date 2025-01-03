@@ -179,28 +179,28 @@ class Dashboard
         $year = $filters['year'] ?? date('Y');
 
         $query = "
-        SELECT 
-            COALESCE((SELECT SUM(total) 
-                      FROM sales_orders 
-                      WHERE status IN ('paid') 
-                      AND DATE_PART('month', created_at) = :month
-                      AND DATE_PART('year', created_at) = :year), 0) AS total_income,
-            COALESCE((SELECT SUM(total) 
-                      FROM purchase_orders 
-                      WHERE status IN ('paid') 
-                      AND DATE_PART('month', created_at) = :month
-                      AND DATE_PART('year', created_at) = :year), 0) 
-            +
-            COALESCE((SELECT SUM(amount) 
-                      FROM expenses 
-                      WHERE status IN ('paid') 
-                      AND DATE_PART('month', date_of_expense) = :month
-                      AND DATE_PART('year', date_of_expense) = :year), 0) AS total_expenses,
-            COALESCE((SELECT COUNT(*) 
-                      FROM vendors), 0) AS total_vendors,
-            COALESCE((SELECT COUNT(*) 
-                      FROM users), 0) AS total_employees
-    ";
+            SELECT 
+                COALESCE((SELECT SUM(total) 
+                          FROM sales_orders 
+                          WHERE status IN ('paid') 
+                          AND DATE_PART('month', created_at) = :month
+                          AND DATE_PART('year', created_at) = :year), 0) AS total_income,
+                COALESCE((SELECT SUM(total) 
+                          FROM purchase_orders 
+                          WHERE status IN ('paid') 
+                          AND DATE_PART('month', created_at) = :month
+                          AND DATE_PART('year', created_at) = :year), 0) 
+                +
+                COALESCE((SELECT SUM(amount) 
+                          FROM expenses 
+                          WHERE status IN ('paid') 
+                          AND DATE_PART('month', date_of_expense) = :month
+                          AND DATE_PART('year', date_of_expense) = :year), 0) AS total_expenses,
+                COALESCE((SELECT COUNT(*) 
+                          FROM vendors), 0) AS total_vendors,
+                COALESCE((SELECT COUNT(*) 
+                          FROM users), 0) AS total_employees
+        ";
 
         $stmt = $this->db->prepare($query);
         $stmt->bindValue(':month', (int) $month, \PDO::PARAM_INT);

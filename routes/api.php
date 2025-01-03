@@ -119,6 +119,7 @@ $routes = [
         '/sales/orders' => [$tradeController, 'createSale'],
         '/sales/price-list' => [$tradeController, 'createPriceList'],
         '/accounting/expenses' => [$accountingController, 'createExpense'],
+        '/send-notification' => [$adminController, 'sendNotification'],
         '/human-resources/employees/leave/apply' => [$humanResourceController, 'applyLeave'],
         '/human-resources/employees/(\d+|[a-fA-F0-9-]{36})/suspend' => [$humanResourceController, 'suspendEmployee'],
         '/purchases/orders/received/(\d+|[a-fA-F0-9-]{36})' => [$tradeController, 'markPurchaseAsReceived'],

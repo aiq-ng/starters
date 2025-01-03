@@ -50,15 +50,6 @@ VALUES
 ('Chef', 'fixed', NULL, NULL, 3000.00, 'Department for chefs and kitchen staff', 2),
 ('Sales Representatives', 'base', 1, 20.00, NULL, 'Department for sales staff, paid hourly', 3);
 
--- Seed data for payment_terms
-INSERT INTO no_of_working_days (name, description)
-VALUES
-('5-Day Workweek', 'Standard Monday to Friday workweek'),
-('6-Day Workweek', 'Monday to Saturday workweek'),
-('4-Day Workweek', 'Compressed workweek with 4 working days'),
-('Flexible Workweek', 'Varied workdays based on company policy'),
-('Weekend Work', 'Work schedule includes weekends');
-
 -- Seed data for users
 INSERT INTO users (
     firstname, lastname, email, password, role_id, avatar_url, 

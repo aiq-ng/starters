@@ -8,6 +8,7 @@ use Database\Database;
 use Exception;
 use Services\MediaHandler;
 use Services\EmailService;
+use Services\NotificationService;
 use Models\Purchase;
 use Models\Sale;
 use Server\WebSocketServer;
@@ -20,6 +21,7 @@ class BaseController extends WebSocketServer
     protected $exp_time;
     protected $mediaHandler;
     protected $emailService;
+    protected $notify;
 
     public function __construct()
     {
@@ -29,6 +31,7 @@ class BaseController extends WebSocketServer
         $this->exp_time = getenv('ACCESS_TOKEN_EXPIRE_MINUTES');
         $this->mediaHandler = new MediaHandler();
         $this->emailService = new EmailService();
+        $this->notify = new NotificationService();
     }
 
     protected function getRequestData()
@@ -209,6 +212,18 @@ class BaseController extends WebSocketServer
 
         echo json_encode($response);
         exit;
+    }
+
+    public function SendNotification()
+    {
+        $this->authorizeRequest();
+
+        $userId = $_POST['user_id'];
+        $message = $_POST['message'];
+
+        $messageArray = explode(' ', $message);
+
+        $this->notify->sendNotification($userId, $messageArray);
     }
 
     protected function findRecord(string $table, int $id)

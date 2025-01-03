@@ -14,30 +14,62 @@ loadEnv(__DIR__ . "/../.env");
 
 class WebSocketServer implements MessageComponentInterface, WsServerInterface
 {
+    private static ?WebSocketServer $instance = null;
     protected $clients;
-    protected $userConnections = [];
+    public $userConnections = [];
     private $secretKey;
     private $algorithm;
 
-    public function __construct()
+    // Private constructor to prevent direct instantiation
+    private function __construct()
     {
         $this->clients = new \SplObjectStorage();
         $this->secretKey = getenv('SECRET_KEY');
         $this->algorithm = getenv('ALGORITHM');
+    }
 
+    // Public static method to get the singleton instance
+    public static function getInstance(): WebSocketServer
+    {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    // Prevent cloning of the instance
+    private function __clone()
+    {
+    }
+
+    // Prevent unserializing of the instance
+    public function __wakeup()
+    {
+    }
+
+    public function getUserConnections(): array
+    {
+        return $this->userConnections;
     }
 
     public function onOpen(ConnectionInterface $conn)
     {
-        $userId = $this->extractUserIdFromToken($conn);
+        // Allowing connection without requiring token for "ping"
+        $queryParams = $conn->httpRequest->getUri()->getQuery();
+        parse_str($queryParams, $params);
 
-        if ($userId) {
-            $this->userConnections[$userId] = $conn;
-            echo "User {$userId} connected with connection ID {$conn->resourceId}\n";
+        if (isset($params['token'])) {
+            $userId = $this->extractUserIdFromToken($conn);
+            if ($userId) {
+                $this->userConnections[$userId] = $conn;
+                echo "User {$userId} connected with connection ID {$conn->resourceId}\n";
+            } else {
+                echo "Invalid token for connection {$conn->resourceId}\n";
+                $conn->close();
+                return;
+            }
         } else {
-            echo "Invalid or missing token for connection {$conn->resourceId}\n";
-            $conn->close();
-            return;
+            echo "Connection without token, still accepted for ping.\n";
         }
 
         $this->clients->attach($conn);
@@ -45,9 +77,15 @@ class WebSocketServer implements MessageComponentInterface, WsServerInterface
 
     public function onMessage(ConnectionInterface $from, $msg)
     {
+        $msg = trim($msg);
+
         echo "Message received: {$msg}\n";
 
-        $from->send("Received your message: {$msg}");
+        if (strtolower($msg) === "ping") {
+            $from->send("pong");
+        } else {
+            $from->send("Received your message: {$msg}");
+        }
     }
 
     public function onClose(ConnectionInterface $conn)
@@ -76,7 +114,6 @@ class WebSocketServer implements MessageComponentInterface, WsServerInterface
 
     private function extractUserIdFromToken(ConnectionInterface $conn)
     {
-
         $queryParams = $conn->httpRequest->getUri()->getQuery();
         parse_str($queryParams, $params);
 
@@ -96,7 +133,7 @@ class WebSocketServer implements MessageComponentInterface, WsServerInterface
                 return null;
             }
         }
-        echo "Token not provided in query parameters\n";
+
         return null;
     }
 }

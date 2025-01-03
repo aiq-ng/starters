@@ -5,14 +5,15 @@ require __DIR__ . '/vendor/autoload.php';
 use Ratchet\Server\IoServer;
 use Ratchet\Http\HttpServer;
 use Ratchet\WebSocket\WsServer;
-use Server\WebSocketServer;
+
+$webSocketServer = Server\WebSocketServer::getInstance();
 
 $port = 8090;
 
 $server = IoServer::factory(
     new HttpServer(
         new WsServer(
-            new WebSocketServer()
+            $webSocketServer
         )
     ),
     $port

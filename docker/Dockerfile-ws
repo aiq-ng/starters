@@ -1,0 +1,35 @@
+FROM php:8.3-cli
+
+# Install required packages and dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        libzip-dev \
+        libpng-dev \
+        libjpeg-dev \
+        libfreetype6-dev \
+        unzip \
+        postgresql-client \
+        libpq-dev \
+        curl \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd mysqli pdo pdo_mysql pdo_pgsql zip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install websocat
+RUN curl -Lo websocat https://github.com/vi/websocat/releases/latest/download/websocat.x86_64-unknown-linux-musl \
+    && chmod +x websocat \
+    && mv websocat /usr/local/bin/
+
+# Set the working directory in the container
+WORKDIR /workspace/starters
+
+# Copy the application files into the container
+COPY . .
+
+# Install Composer globally (using Composer's official image)
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set the entrypoint to run your WebSocket PHP script
+ENTRYPOINT ["php", "websocket.php"]
+
