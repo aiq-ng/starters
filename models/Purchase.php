@@ -27,7 +27,7 @@ class Purchase
                 CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name,
                 po.created_at::DATE AS order_date,
                 po.delivery_date,
-                po.total,
+                COALESCE(po.total, 0.00) AS total,
                 po.status,
                 CASE
                     WHEN po.status = 'issued' THEN 'Issued'
@@ -163,7 +163,7 @@ class Purchase
                 CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name, 
                 po.created_at::DATE AS order_date, 
                 po.delivery_date, 
-                po.total, 
+                COALESCE(po.total, 0.00) AS total, 
                 po.status,
                 CASE
                     WHEN po.status = 'issued' THEN 'Issued'
@@ -272,7 +272,7 @@ class Purchase
                 po.reference_number,
                 po.discount,
                 po.shipping_charge,
-                po.total,
+                COALESCE(po.total, 0.00) AS total,
                 po.created_at::DATE AS order_date,
                 po.delivery_date,
                 json_agg(

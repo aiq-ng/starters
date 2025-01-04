@@ -179,15 +179,15 @@ class BaseController extends WebSocketServer
 
     protected function sendNotificationToUser($userId, $message)
     {
-        if (isset($this->userConnections[$userId])) {
-            $conn = $this->userConnections[$userId];
+        $data = [
+            'type' => 'notification',
+            'message' => $message
+        ];
 
-            $conn->send(json_encode([
-                'type' => 'notification',
-                'message' => $message
-            ]));
-        } else {
-            echo "No active connection found for user {$userId}\n";
+        try {
+            $this->notify->sendNotification($userId, $data);
+        } catch (Exception $e) {
+            error_log("Error sending notification: " . $e->getMessage());
         }
     }
 
