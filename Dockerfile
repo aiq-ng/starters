@@ -9,9 +9,16 @@ RUN apt-get update && \
         libfreetype6-dev \
         unzip \
         postgresql-client \
-        libpq-dev \ 
+        libpq-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd mysqli pdo pdo_mysql pdo_pgsql zip \
+    && docker-php-ext-install \
+        gd \
+        mysqli \
+        pdo \
+        pdo_mysql \
+        pdo_pgsql \
+        zip \
+        sockets \ 
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -35,4 +42,3 @@ EXPOSE 8000
 
 # Set the entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-
