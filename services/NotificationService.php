@@ -15,7 +15,7 @@ class NotificationService
 
     public function sendNotification(string $userId, array $data): void
     {
-        $this->webSocketServer->publishToRabbitMQ($userId, $data);
+        $this->webSocketServer->sendMessage($userId, $data);
     }
 
     public function broadcastNotification(array $data): void

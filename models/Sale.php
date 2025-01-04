@@ -538,7 +538,7 @@ class Sale
                 CONCAT_WS(' ', c.salutation, c.first_name, c.last_name) AS customer_name, 
                 so.created_at::DATE AS date, 
                 so.order_type, 
-                COALESCE(SUM(so.total), 0.00) AS amount,
+                so.total AS amount, 
                 so.status
             FROM 
                 sales_orders so
