@@ -17,7 +17,6 @@ class ConnectionManager:
         try:
             token = websocket.query_params.get("token")
 
-            print(f"Token: {token}")
             if not token:
                 await websocket.close(code=1008, reason="Missing access token")
                 return None
@@ -27,13 +26,9 @@ class ConnectionManager:
                 await websocket.close(code=1008, reason="Invalid access token")
                 return None
 
-            print(f"Payload: {payload}")
-
             user_id = payload.get("data", {}).get("id")
             if not user_id:
                 raise ValueError("User ID not found in token payload")
-
-            print(f"User ID: {user_id}")
 
             return user_id
         except Exception as e:
