@@ -9,7 +9,7 @@ app = FastAPI()
 app.include_router(ws, prefix="/starters")
 
 
-@app.get("/starters")
+@app.get("/starters/")
 async def root():
     return {"message": "Hello, I'm a WebSocket server!"}
 
