@@ -149,6 +149,7 @@ class BaseController
             }
 
             $_SESSION['user_id'] = $decoded->data->id;
+            $_SESSION['role_id'] = $decoded->data->role;
 
         } catch (Exception $e) {
             $this->sendResponse($e->getMessage(), 401);
@@ -206,12 +207,20 @@ class BaseController
     {
         $this->authorizeRequest();
 
+        $roleId = $_SESSION['role_id'];
+
+        if ($roleId !== 1) {
+            return $this->sendResponse('Unauthorized', 403);
+        }
+
         $userId = $_POST['user_id'];
         $message = $_POST['message'];
 
         $data = [
             'user_id' => $userId,
-            'content' => $message
+            'event' => 'notification',
+            'title' => 'New Notification',
+            'body' => $message
         ];
 
         if ($this->notify->sendNotification($userId, $data)) {
@@ -219,7 +228,6 @@ class BaseController
         } else {
             $this->sendResponse('Failed to send notification', 500);
         }
-
     }
 
 

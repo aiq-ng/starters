@@ -1,12 +1,14 @@
-from typing import Union
-
 from pydantic import BaseModel
 
 
 class NotificationRequest(BaseModel):
     user_id: str
-    content: Union[str, dict, list]
+    event: str
+    title: str
+    body: str
 
 
 class NotificationAllRequest(BaseModel):
-    content: Union[str, dict, list]
+    event: str
+    title: str
+    body: str

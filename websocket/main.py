@@ -15,7 +15,14 @@ async def send_notification(request: NotificationRequest):
     try:
         print(f"\n\nSending notification to user: {request.user_id}")
 
-        await manager.send_message(request.user_id, request.content)
+        data = {
+            "user_id": request.user_id,
+            "event": request.event,
+            "title": request.title,
+            "body": request.body,
+        }
+
+        await manager.send_message(data)
         return JSONResponse(
             content={"message": "Notification sent to user"}, status_code=200
         )
@@ -26,7 +33,14 @@ async def send_notification(request: NotificationRequest):
 @app.post("/broadcast-notification/")
 async def send_notification_all(request: NotificationAllRequest):
     try:
-        await manager.broadcast(request.content)
+
+        data = {
+            "event": request.event,
+            "title": request.title,
+            "body": request.body,
+        }
+
+        await manager.broadcast(data)
         return JSONResponse(
             content={"message": "Notification sent to all users"},
             status_code=200,

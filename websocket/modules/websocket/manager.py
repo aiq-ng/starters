@@ -1,3 +1,5 @@
+import json
+
 from fastapi import WebSocket
 from starlette.websockets import WebSocketState
 
@@ -13,8 +15,6 @@ class ConnectionManager:
 
         token = websocket.query_params.get("token")
 
-        print(f"\nToken: {token}")
-
         if not token:
             await websocket.close(code=1008, reason="Missing access token")
             return None
@@ -23,12 +23,9 @@ class ConnectionManager:
             payload = await decode_token(token)
             user_id = payload.get("data", {}).get("id")
 
-            print(f"\nPayload: {payload}")
-
             if not user_id:
                 raise ValueError("User ID not found in token payload")
 
-            print(f"\nUser ID: {user_id}\n")
             return user_id
 
         except Exception as e:
@@ -52,16 +49,16 @@ class ConnectionManager:
             await websocket.close()
             del self.active_connections[user_id]
 
-    async def send_message(self, user_id: int, message: str):
+    async def send_message(self, data: dict):
         """Send a message to a specific user"""
-        websocket = self.active_connections.get(user_id)
+        websocket = self.active_connections.get(data.get("user_id"))
         if websocket:
             if websocket.client_state == WebSocketState.CONNECTED:
-                await websocket.send_text(message)
+                await websocket.send_text(json.dumps(data))
 
-    async def broadcast(self, message: str):
+    async def broadcast(self, data: dict):
         for websocket in self.active_connections.values():
-            await websocket.send_text(message)
+            await websocket.send_text(json.dumps(data))
 
 
 manager = ConnectionManager()

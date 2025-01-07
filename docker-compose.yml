@@ -2,45 +2,18 @@ services:
   websocket:
     build:
       context: .
-      dockerfile: docker/Dockerfile-ws
-    container_name: starters
+      dockerfile: docker/Dockerfile.websocket
+    container_name: starters-ws
     ports:
       - "8090:8090"
     volumes:
-      - .:/workspace/starters
+      - ./websocket:/workspace/starters/websocket
     env_file:
-      - .env
+      - websocket/.env
     networks:
       - network
     restart: always
-    healthcheck:
-      test: ["CMD", "sh", "-c", "echo 'ping' | websocat ws://localhost:8090 | grep -q 'pong'"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-
-  nginx:
-    image: nginx:latest
-    container_name: starters_nginx
-    ports:
-      - "8091:80"
-      - "443:443"
-    volumes:
-      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./docker/nginx/ssl:/etc/nginx/certs:ro
-    depends_on:
-      - app
-    networks:
-      - network
-    environment:
-      NGINX_HOST: starters.0ps.tech
-    healthcheck:
-      test: ["CMD", "curl", "-f", "https://localhost"]
-      interval: 30s
-      retries: 3
-      start_period: 30s
-      timeout: 10s
+    command: uvicorn main:app --host 0.0.0.0 --port 8090 --reload
 
 networks:
   network:
