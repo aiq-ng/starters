@@ -15,7 +15,7 @@ class NotificationService
     {
         error_log("Sending notification to user $userId via HTTP");
 
-        $url = '/send-notification';
+        $url = '/send-notification/';
         $responseData = $this->httpClientService->post(
             $url,
             [
