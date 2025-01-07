@@ -22,6 +22,8 @@ async def send_notification(request: NotificationRequest):
         data = {
             "user_id": request.user_id,
             "event": request.event,
+            "entity_id": request.entity_id,
+            "entity_type": request.entity_type,
             "title": request.title,
             "body": request.body,
         }
