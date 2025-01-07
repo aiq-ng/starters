@@ -9,11 +9,11 @@ use Exception;
 use Services\MediaHandler;
 use Services\EmailService;
 use Services\NotificationService;
+use Services\HttpClientService;
 use Models\Purchase;
 use Models\Sale;
-use Server\WebSocketServer;
 
-class BaseController extends WebSocketServer
+class BaseController
 {
     protected $db;
     protected $secret_key;
@@ -22,6 +22,7 @@ class BaseController extends WebSocketServer
     protected $mediaHandler;
     protected $emailService;
     protected $notify;
+    protected $httpClient;
 
     public function __construct()
     {
@@ -31,7 +32,8 @@ class BaseController extends WebSocketServer
         $this->exp_time = getenv('ACCESS_TOKEN_EXPIRE_MINUTES');
         $this->mediaHandler = new MediaHandler();
         $this->emailService = new EmailService();
-        $this->notify = new NotificationService();
+        $this->httpClient = new HttpClientService();
+        $this->notify = new NotificationService($this->httpClient);
     }
 
     protected function getRequestData()
@@ -177,20 +179,6 @@ class BaseController extends WebSocketServer
         return true;
     }
 
-    protected function sendNotificationToUser($userId, $message)
-    {
-        $data = [
-            'type' => 'notification',
-            'message' => $message
-        ];
-
-        try {
-            $this->notify->sendNotification($userId, $data);
-        } catch (Exception $e) {
-            error_log("Error sending notification: " . $e->getMessage());
-        }
-    }
-
     protected function sendResponse($message, $statusCode, $data = [], $meta = [])
     {
         http_response_code($statusCode);
@@ -214,17 +202,26 @@ class BaseController extends WebSocketServer
         exit;
     }
 
-    public function SendNotification()
+    public function sendNotification()
     {
         $this->authorizeRequest();
 
         $userId = $_POST['user_id'];
         $message = $_POST['message'];
 
-        $messageArray = explode(' ', $message);
+        $data = [
+            'user_id' => $userId,
+            'content' => $message
+        ];
 
-        $this->notify->sendNotification($userId, $messageArray);
+        if ($this->notify->sendNotification($userId, $data)) {
+            $this->sendResponse('Notification sent successfully', 200);
+        } else {
+            $this->sendResponse('Failed to send notification', 500);
+        }
+
     }
+
 
     protected function findRecord(string $table, int $id)
     {

@@ -1,7 +1,9 @@
 <?php
 
 // Start output buffering
-ob_start();
+if (!ob_get_level()) {
+    ob_start();
+}
 
 header('Content-Type: application/json');
 

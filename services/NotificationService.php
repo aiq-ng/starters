@@ -2,31 +2,30 @@
 
 namespace Services;
 
-use Server\WebSocketServer;
-
 class NotificationService
 {
-    private $webSocketServer;
+    private HttpClientService $httpClientService;
 
-    public function __construct()
+    public function __construct(HttpClientService $httpClientService)
     {
-        $this->webSocketServer = WebSocketServer::getInstance();
+        $this->httpClientService = $httpClientService;
     }
 
-    public function sendNotification(string $userId, array $data): void
+    public function sendNotification(string $userId, array $data)
     {
-        $this->webSocketServer->publishToRabbitMQ($userId, $data);
-    }
+        error_log("Sending notification to user $userId via HTTP");
 
-    public function broadcastNotification(array $data): void
-    {
-        $this->webSocketServer->broadcast($data);
-    }
+        $url = '/send-notification';
+        $responseData = $this->httpClientService->post(
+            $url,
+            [
+                'Content-Type' => 'application/json',
+                'Content-Length' => strlen(json_encode($data))
+            ],
+            json_encode($data)
+        );
 
-    public function sendGroupNotification(array $userIds, array $data): void
-    {
-        foreach ($userIds as $userId) {
-            $this->webSocketServer->sendMessage($userId, $data);
-        }
+        return $responseData;
+
     }
 }
