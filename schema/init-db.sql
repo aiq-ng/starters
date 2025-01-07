@@ -541,9 +541,10 @@ CREATE TABLE comments (
 CREATE TABLE notifications (
     id SERIAL PRIMARY KEY,
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-    entity_id INT NOT NULL,
-    entity_type VARCHAR(50) NOT NULL,
-    message TEXT NOT NULL,
+    entity_id INT,
+    entity_type VARCHAR(50),
+    title VARCHAR(255) NOT NULL,
+    body TEXT NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

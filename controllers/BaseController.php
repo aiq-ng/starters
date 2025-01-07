@@ -219,11 +219,13 @@ class BaseController
         $data = [
             'user_id' => $userId,
             'event' => 'notification',
+            'entity_id' => 1,
+            'entity_type' => "account",
             'title' => 'New Notification',
             'body' => $message
         ];
 
-        if ($this->notify->sendNotification($userId, $data)) {
+        if ($this->notify->sendNotification($data)) {
             $this->sendResponse('Notification sent successfully', 200);
         } else {
             $this->sendResponse('Failed to send notification', 500);
