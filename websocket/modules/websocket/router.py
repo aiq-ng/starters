@@ -1,5 +1,4 @@
 from fastapi import APIRouter, BackgroundTasks, WebSocket, WebSocketDisconnect
-from starlette.websockets import WebSocketState
 
 from modules.utils import keep_alive
 from modules.websocket.manager import ConnectionManager
@@ -14,22 +13,27 @@ async def connect_websocket(
     websocket: WebSocket, background_tasks: BackgroundTasks
 ):
     """Handle WebSocket events"""
-
     try:
         await manager.connect(websocket)
-
-        # Background task for keep-alive
         background_tasks.add_task(keep_alive, websocket)
 
-        # Handling incoming messages
         while True:
             try:
                 data = await websocket.receive_text()
-                await websocket.send_text(f"Message received: {data}")
+                await websocket.send_text(data)
             except WebSocketDisconnect:
                 break
-
     except Exception as e:
-        # Handle connection errors and ensure proper closing of WebSocket
-        if websocket.client_state != WebSocketState.CLOSED:
-            await websocket.close(code=1008, reason=f"Connection error: {e}")
+        print(f"Unexpected error: {e}")
+    finally:
+        # Disconnect user after the connection is closed
+        user_id = next(
+            (
+                uid
+                for uid, ws in manager.active_connections.items()
+                if ws == websocket
+            ),
+            None,
+        )
+        if user_id is not None:
+            await manager.disconnect(user_id)
