@@ -10,6 +10,11 @@ app = FastAPI()
 app.include_router(ws)
 
 
+@app.get("/")
+async def root():
+    return {"message": "Hello, I'm a WebSocket server!"}
+
+
 @app.post("/send-notification/")
 async def send_notification(request: NotificationRequest):
     try:
