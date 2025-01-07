@@ -232,6 +232,31 @@ class BaseController
         }
     }
 
+    public function getNotifications($userId)
+    {
+        $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        $pageSize = isset($_GET['page_size']) ? (int) $_GET['page_size'] : 10;
+
+        $offset = ($page - 1) * $pageSize;
+
+        $query = "SELECT * FROM notifications WHERE user_id = :user_id LIMIT :page_size OFFSET :offset";
+        $stmt = $this->db->prepare($query);
+
+        $stmt->bindParam(':user_id', $userId, \PDO::PARAM_STR);
+        $stmt->bindParam(':page_size', $pageSize, \PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, \PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        $notifications = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        if (empty($notifications)) {
+            $this->sendResponse('No notifications found', 404);
+        } else {
+            $this->sendResponse('success', 200, $notifications);
+        }
+    }
+
 
     protected function findRecord(string $table, int $id)
     {
