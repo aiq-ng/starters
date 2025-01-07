@@ -1,11 +1,8 @@
 import json
 
-from fastapi import APIRouter, WebSocket
-from starlette.websockets import WebSocketState
-
+from fastapi import WebSocket
 from modules.auth import decode_token
-
-ws = APIRouter(prefix="/ws", tags=["WebSocket"])
+from starlette.websockets import WebSocketState
 
 
 class ConnectionManager:

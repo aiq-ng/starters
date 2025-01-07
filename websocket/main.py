@@ -6,7 +6,7 @@ from modules.websocket.router import manager, ws
 app = FastAPI()
 
 # Bind the WebSocket router to the app
-app.include_router(ws, prefix="/starters")
+app.include_router(ws)
 
 
 @app.get("/starters/")

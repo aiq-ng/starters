@@ -1,9 +1,8 @@
 from fastapi import APIRouter, BackgroundTasks, WebSocket, WebSocketDisconnect
-
 from modules.utils import keep_alive
 from modules.websocket.manager import ConnectionManager
 
-ws = APIRouter(prefix="/ws", tags=["WebSocket"])
+ws = APIRouter(prefix="/starters/ws", tags=["WebSocket"])
 
 manager = ConnectionManager()
 
