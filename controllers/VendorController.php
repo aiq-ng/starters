@@ -66,6 +66,8 @@ class VendorController extends BaseController
     {
         $this->authorizeRequest();
 
+        error_log('Vendor ID: ' . $id);
+
         $transactions = $this->vendor->getVendorTransactions($id);
 
         if ($transactions) {

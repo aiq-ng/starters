@@ -19,21 +19,24 @@ class User
     public function register($data)
     {
         $query = "
-            INSERT INTO " . $this->table . " 
-            (firstname, lastname, email, password, role_id) VALUES (:firstname, :lastname, :email, :password, :role_id)";
+        INSERT INTO " . $this->table . " 
+        (firstname, lastname, email, password, role_id) 
+        VALUES (:firstname, :lastname, :email, :password, :role_id)
+        RETURNING id";
         $stmt = $this->db->prepare($query);
 
         $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+
+        $roleId = $data['role'] ?? 3;
 
         $stmt->bindParam(':firstname', $data['firstname']);
         $stmt->bindParam(':lastname', $data['lastname']);
         $stmt->bindParam(':email', $data['email']);
         $stmt->bindParam(':password', $hashedPassword);
-        $stmt->bindParam(':role_id', $data['role']) ?? 3;
-
+        $stmt->bindParam(':role_id', $roleId);
 
         if ($stmt->execute()) {
-            return $this->db->lastInsertId();
+            return $stmt->fetchColumn();
         } else {
             return false;
         }

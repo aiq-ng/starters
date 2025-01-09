@@ -20,6 +20,7 @@ class AuthController extends BaseController
     public function register()
     {
         $data = $this->getRequestData();
+        $data['role'] = $data['role'] ?? $this->getRoleIdByName('Admin');
 
         if (!$this->validateFields($data['firstname'], $data['lastname'], $data['email'], $data['password'])) {
             $this->sendResponse('Incomplete data provided', 400);

@@ -621,7 +621,6 @@ class BaseController
     {
         $data = [
             'name' => $_POST['name'],
-            'description' => $_POST['description'],
         ];
 
         return $this->insertData('work_leave_qualifications', $data);

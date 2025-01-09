@@ -306,7 +306,8 @@ class HumanResource
         $stmt = $this->db->prepare(
             'INSERT INTO user_leaves 
         (user_id, start_date, end_date, notes, leave_type) 
-        VALUES (?, ?, ?, ?, ?)'
+        VALUES (?, ?, ?, ?, ?) 
+        RETURNING id'
         );
 
         $stmt->execute([
@@ -317,7 +318,7 @@ class HumanResource
             $data['leave_type'] ?? 'annual'
         ]);
 
-        return $this->db->lastInsertId();
+        return $stmt->fetchColumn() ?? null;
     }
 
     public function putOnLeave($employeeId)
