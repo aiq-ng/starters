@@ -42,7 +42,7 @@ class NotificationService
         $stmt = $this->db->prepare($query);
 
         $stmt->bindValue(':user_id', $data['user_id'] ?? null, \PDO::PARAM_STR);
-        $stmt->bindValue(':entity_id', $data['entity_id'] ?? null, \PDO::PARAM_INT);
+        $stmt->bindValue(':entity_id', $data['entity_id'] ?? null, \PDO::PARAM_STR);
         $stmt->bindValue(':entity_type', $data['entity_type'] ?? null, \PDO::PARAM_STR);
         $stmt->bindValue(':title', $data['title'] ?? null, \PDO::PARAM_STR);
         $stmt->bindValue(':body', $data['body'] ?? null, \PDO::PARAM_STR);

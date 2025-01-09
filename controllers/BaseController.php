@@ -161,7 +161,7 @@ class BaseController
     {
         $query = "SELECT status FROM users WHERE id = :id";
         $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':id', $userId, \PDO::PARAM_INT);
+        $stmt->bindParam(':id', $userId, \PDO::PARAM_STR);
         $stmt->execute();
 
         $user = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -242,9 +242,9 @@ class BaseController
         $query = "SELECT * FROM notifications WHERE user_id = :user_id LIMIT :page_size OFFSET :offset";
         $stmt = $this->db->prepare($query);
 
-        $stmt->bindParam(':user_id', $userId, \PDO::PARAM_STR);
-        $stmt->bindParam(':page_size', $pageSize, \PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, \PDO::PARAM_INT);
+        $stmt->bindParam(':user_id', $userId);
+        $stmt->bindParam(':page_size', $pageSize);
+        $stmt->bindParam(':offset', $offset);
 
         $stmt->execute();
 
@@ -261,7 +261,7 @@ class BaseController
     protected function findRecord(string $table, int $id)
     {
         $stmt = $this->db->prepare("SELECT * FROM $table WHERE id = :id");
-        $stmt->bindParam(':id', $id, \PDO::PARAM_INT);
+        $stmt->bindParam(':id', $id, \PDO::PARAM_STR);
         $stmt->execute();
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -286,14 +286,28 @@ class BaseController
         return $result;
     }
 
+    public function getRoleIdByName($roleName)
+    {
+        $stmt = $this->db->prepare("SELECT id FROM roles WHERE name = :name");
+        $stmt->bindParam(':name', $roleName, \PDO::PARAM_STR);
+        $stmt->execute();
+        return $stmt->fetch(\PDO::FETCH_ASSOC)['id'] ?? null;
+    }
+
     public function isAdmin()
     {
-        $stmt = $this->db->prepare("SELECT role_id FROM users WHERE id = :id");
-        $stmt->bindParam(':id', $_SESSION['user_id'], \PDO::PARAM_INT);
-        $stmt->execute();
-        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $adminRoleId = $this->getRoleIdByName('Admin');
 
-        return $result['role_id'] == 1;
+        if (!$adminRoleId) {
+            return false;
+        }
+
+        $stmtUser = $this->db->prepare("SELECT role_id FROM users WHERE id = :id");
+        $stmtUser->bindParam(':id', $_SESSION['user_id'], \PDO::PARAM_STR);
+        $stmtUser->execute();
+        $result = $stmtUser->fetch(\PDO::FETCH_ASSOC);
+
+        return $result && $result['role_id'] === $adminRoleId;
     }
 
     public function sendInvoiceEmail($id, $type, $attachment)

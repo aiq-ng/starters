@@ -1,19 +1,19 @@
 -- Roles
 CREATE TABLE roles (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
 -- Permissions
 CREATE TABLE permissions (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) UNIQUE NOT NULL,
     description TEXT
 );
 
 -- Currencies
 CREATE TABLE currencies (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) UNIQUE NOT NULL,
     symbol VARCHAR(10) UNIQUE,
     code VARCHAR(10) UNIQUE,
@@ -23,20 +23,20 @@ CREATE TABLE currencies (
 
 -- Base Types
 CREATE TABLE base_pay_types (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) UNIQUE NOT NULL,
     description TEXT
 );
 
 -- Create work_leave_qualifications table
 CREATE TABLE work_leave_qualifications (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
 -- Branches
 CREATE TABLE branches (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -45,7 +45,7 @@ CREATE TABLE branches (
 
 -- Item Categories
 CREATE TABLE item_categories (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -54,7 +54,7 @@ CREATE TABLE item_categories (
 
 -- Units of Measurement
 CREATE TABLE units (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) UNIQUE NOT NULL,
     abbreviation VARCHAR(10) UNIQUE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -63,7 +63,7 @@ CREATE TABLE units (
 
 -- Work Leave Qualifications
 CREATE TABLE no_of_working_days (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) UNIQUE NOT NULL,
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -72,7 +72,7 @@ CREATE TABLE no_of_working_days (
 
 -- Vendor Categories
 CREATE TABLE vendor_categories (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -81,7 +81,7 @@ CREATE TABLE vendor_categories (
 
 -- Payment Methods
 CREATE TABLE payment_methods (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) UNIQUE NOT NULL,
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -89,14 +89,14 @@ CREATE TABLE payment_methods (
 );
 
 CREATE TABLE loan_types (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) NOT NULL UNIQUE,
     description TEXT
 );
 
 -- Payment Terms
 CREATE TABLE payment_terms (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) UNIQUE NOT NULL,
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -105,7 +105,7 @@ CREATE TABLE payment_terms (
 
 -- Taxes
 CREATE TABLE taxes (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) UNIQUE NOT NULL,
     rate DECIMAL(5, 2) NOT NULL,
     description TEXT,
@@ -115,7 +115,7 @@ CREATE TABLE taxes (
 
 -- Item Manufacturers
 CREATE TABLE item_manufacturers (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     website VARCHAR(255),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -124,7 +124,7 @@ CREATE TABLE item_manufacturers (
 
 -- Cash Accounts
 CREATE TABLE cash_accounts (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
     balance DECIMAL(20, 2) DEFAULT 0,
@@ -134,13 +134,13 @@ CREATE TABLE cash_accounts (
 
 -- Departments
 CREATE TABLE departments (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) UNIQUE NOT NULL,
     salary_type VARCHAR(50) CHECK (salary_type IN ('fixed', 'base')),
-    base_type_id INT REFERENCES base_pay_types(id) ON DELETE SET NULL,
+    base_type_id UUID REFERENCES base_pay_types(id) ON DELETE SET NULL,
     base_rate DECIMAL(20, 2), -- rate per hour or delivery
     base_salary DECIMAL(20, 2), -- for fixed salary
-    work_leave_qualification INT REFERENCES work_leave_qualifications(id) ON DELETE SET NULL,
+    work_leave_qualification UUID REFERENCES work_leave_qualifications(id) ON DELETE SET NULL,
     work_leave_period VARCHAR(50),
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -160,9 +160,9 @@ CREATE TABLE users (
     address TEXT,
     next_of_kin VARCHAR(100),
     date_of_employment DATE,
-    department_id INT REFERENCES departments(id) ON DELETE SET NULL,
-    role_id INT REFERENCES roles(id) ON DELETE SET NULL,
-    no_of_working_days_id INT REFERENCES no_of_working_days(id) ON DELETE SET NULL,
+    department_id UUID REFERENCES departments(id) ON DELETE SET NULL,
+    role_id UUID REFERENCES roles(id) ON DELETE SET NULL,
+    no_of_working_days_id UUID REFERENCES no_of_working_days(id) ON DELETE SET NULL,
     salary DECIMAL(20, 2),
     bank_details JSONB, -- {bank_name, account_number}
     leave DATE, 
@@ -174,7 +174,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE refresh_tokens (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL UNIQUE,
     token TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -183,12 +183,12 @@ CREATE TABLE refresh_tokens (
 
 CREATE TABLE user_permissions (
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    permission_id INT REFERENCES permissions(id) ON DELETE CASCADE,
+    permission_id UUID REFERENCES permissions(id) ON DELETE CASCADE,
     PRIMARY KEY (user_id, permission_id)
 );
 
 CREATE TABLE user_leaves (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     leave_type VARCHAR(50) CHECK (leave_type IN ('annual', 'sick', 'maternity', 'paternity', 'compassionate', 'study', 'unpaid')),
     start_date DATE DEFAULT CURRENT_DATE,
@@ -206,14 +206,14 @@ CREATE TABLE user_leaves (
 );
 
 CREATE TABLE loans (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     lender_id UUID REFERENCES users(id) ON DELETE SET NULL,
     lender_type VARCHAR(50) NOT NULL CHECK (lender_type IN ('user', 'vendor')),
     amount DECIMAL(20, 2),
     interest_rate DECIMAL(5, 2),
     start_date DATE,
     end_date DATE,
-    loan_type_id INT REFERENCES loan_types(id) ON DELETE SET NULL,
+    loan_type_id UUID REFERENCES loan_types(id) ON DELETE SET NULL,
     status VARCHAR(50) DEFAULT 'pending' CHECK (status IN 
         ('pending', 'approved', 'disbursed', 'repaid', 'defaulted')),
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -222,9 +222,9 @@ CREATE TABLE loans (
 
 -- Price Lists
 CREATE TABLE price_lists (
-    id SERIAL PRIMARY KEY,
-    item_category_id INT REFERENCES item_categories(id) ON DELETE SET NULL,
-    unit_id INT REFERENCES units(id) ON DELETE SET NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    item_category_id UUID REFERENCES item_categories(id) ON DELETE SET NULL,
+    unit_id UUID REFERENCES units(id) ON DELETE SET NULL,
     item_details VARCHAR(100) NOT NULL UNIQUE,
     unit_price DECIMAL(20, 2),
     minimum_order INT,
@@ -234,7 +234,7 @@ CREATE TABLE price_lists (
 
 -- Vendors
 CREATE TABLE vendors (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     salutation VARCHAR(10) 
         CHECK (salutation IN ('Mr', 'Mrs', 'Miss', 'Dr', 'Prof')),
     first_name VARCHAR(255),
@@ -247,9 +247,9 @@ CREATE TABLE vendors (
     address TEXT,
     website VARCHAR(255),
     social_media JSONB,
-    payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
-    currency_id INT REFERENCES currencies(id) ON DELETE SET NULL,
-    category_id INT REFERENCES vendor_categories(id) ON DELETE SET NULL,
+    payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
+    currency_id UUID REFERENCES currencies(id) ON DELETE SET NULL,
+    category_id UUID REFERENCES vendor_categories(id) ON DELETE SET NULL,
     balance DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) GENERATED ALWAYS AS (
         CASE
@@ -264,15 +264,16 @@ CREATE TABLE vendors (
 
 -- Vendor Transactions
 CREATE TABLE vendor_transactions (
-    id SERIAL PRIMARY KEY,
-    vendor_id INT REFERENCES vendors(id) ON DELETE SET NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_sequence BIGSERIAL UNIQUE,
+    vendor_id UUID REFERENCES vendors(id) ON DELETE SET NULL,
     transaction_type VARCHAR(50) 
         CHECK (transaction_type IN ('credit', 'debit')),
-    payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,
-    cash_account_id INT REFERENCES cash_accounts(id) ON DELETE SET NULL,
+    payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL,
+    cash_account_id UUID REFERENCES cash_accounts(id) ON DELETE SET NULL,
     amount DECIMAL(20, 2),
     reference_number VARCHAR(50) GENERATED ALWAYS AS (
-        'REF' || LPAD(id::TEXT, 10, '0')
+        'REF' || LPAD(order_sequence::TEXT, 10, '0')
     ) STORED,
     notes TEXT,
     invoice_sent BOOLEAN DEFAULT FALSE,
@@ -281,7 +282,7 @@ CREATE TABLE vendor_transactions (
 
 -- Customers
 CREATE TABLE customers (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_type VARCHAR(50) 
         CHECK (customer_type IN ('individual', 'business')),
     salutation VARCHAR(10) 
@@ -296,8 +297,8 @@ CREATE TABLE customers (
     address TEXT,
     website VARCHAR(255),
     social_media JSONB,
-    payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
-    currency_id INT REFERENCES currencies(id) ON DELETE SET NULL,
+    payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
+    currency_id UUID REFERENCES currencies(id) ON DELETE SET NULL,
     balance DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) GENERATED ALWAYS AS (
         CASE
@@ -312,15 +313,16 @@ CREATE TABLE customers (
 
 -- Customer Transactions
 CREATE TABLE customer_transactions (
-    id SERIAL PRIMARY KEY,
-    customer_id INT REFERENCES customers(id) ON DELETE SET NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_sequence BIGSERIAL UNIQUE,
+    customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
     transaction_type VARCHAR(50) 
         CHECK (transaction_type IN ('credit', 'debit')),
-    payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,
-    cash_account_id INT REFERENCES cash_accounts(id) ON DELETE SET NULL,
+    payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL,
+    cash_account_id UUID REFERENCES cash_accounts(id) ON DELETE SET NULL,
     amount DECIMAL(20, 2),
     reference_number VARCHAR(50) GENERATED ALWAYS AS (
-        'REF' || LPAD(id::TEXT, 10, '0')
+        'REF' || LPAD(order_sequence::TEXT, 10, '0')
     ) STORED,
     notes TEXT,
     invoice_sent BOOLEAN DEFAULT FALSE,
@@ -329,14 +331,15 @@ CREATE TABLE customer_transactions (
 
 -- Items
 CREATE TABLE items (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_sequence BIGSERIAL UNIQUE,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     sku VARCHAR(100) GENERATED ALWAYS AS (
-        UPPER(SUBSTRING(name FROM 1 FOR 3)) || '-' || LPAD(id::TEXT, 4, '0')
+        UPPER(SUBSTRING(name FROM 1 FOR 3)) || '-' || LPAD(order_sequence::TEXT, 4, '0')
     ) STORED,
-    unit_id INT REFERENCES units(id) ON DELETE SET NULL,
-    category_id INT REFERENCES item_categories(id) ON DELETE SET NULL,
+    unit_id UUID REFERENCES units(id) ON DELETE SET NULL,
+    category_id UUID REFERENCES item_categories(id) ON DELETE SET NULL,
     price DECIMAL(20, 2),
     opening_stock INT DEFAULT 0,
     threshold_value INT DEFAULT 0,
@@ -348,56 +351,57 @@ CREATE TABLE items (
 
 -- Item Stocks
 CREATE TABLE item_stocks (
-    id SERIAL PRIMARY KEY,
-    item_id INT REFERENCES items(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_sequence BIGSERIAL UNIQUE,
+    item_id UUID REFERENCES items(id) ON DELETE CASCADE,
     stock_code VARCHAR(100) GENERATED ALWAYS AS (
-        'STK-' || LPAD(id::TEXT, 5, '0')
+        'STK-' || LPAD(order_sequence::TEXT, 5, '0')
     ) STORED,
     quantity INT DEFAULT 0 NOT NULL,
     date_received DATE DEFAULT CURRENT_DATE,
     expiry_date DATE,
-    branch_id INT REFERENCES branches(id) ON DELETE SET NULL,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Item Stock Vendors
 CREATE TABLE item_stock_vendors (
-    stock_id INT REFERENCES item_stocks(id) ON DELETE CASCADE,
-    vendor_id INT REFERENCES vendors(id) ON DELETE CASCADE,
+    stock_id UUID REFERENCES item_stocks(id) ON DELETE CASCADE,
+    vendor_id UUID REFERENCES vendors(id) ON DELETE CASCADE,
     PRIMARY KEY (stock_id, vendor_id)
 );
 
 -- Item Stock Departments
 CREATE TABLE item_stock_departments (
-    stock_id INT REFERENCES item_stocks(id) ON DELETE CASCADE,
-    department_id INT REFERENCES departments(id) ON DELETE CASCADE,
+    stock_id UUID REFERENCES item_stocks(id) ON DELETE CASCADE,
+    department_id UUID REFERENCES departments(id) ON DELETE CASCADE,
     PRIMARY KEY (stock_id, department_id)
 );
 
 -- Item Stock Manufacturers
 CREATE TABLE item_stock_manufacturers (
-    stock_id INT REFERENCES item_stocks(id) ON DELETE CASCADE,
-    manufacturer_id INT REFERENCES item_manufacturers(id) ON DELETE CASCADE,
+    stock_id UUID REFERENCES item_stocks(id) ON DELETE CASCADE,
+    manufacturer_id UUID REFERENCES item_manufacturers(id) ON DELETE CASCADE,
     PRIMARY KEY (stock_id, manufacturer_id)
 );
 
 -- Item Stock Branches
 CREATE TABLE item_stock_branches (
-    stock_id INT REFERENCES item_stocks(id) ON DELETE CASCADE,
-    branch_id INT REFERENCES branches(id) ON DELETE CASCADE,
+    stock_id UUID REFERENCES item_stocks(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE CASCADE,
     PRIMARY KEY (stock_id, branch_id)
 );
 
 -- Item Stock Adjustments
 CREATE TABLE item_stock_adjustments (
-    id SERIAL PRIMARY KEY,
-    stock_id INT REFERENCES item_stocks(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    stock_id UUID REFERENCES item_stocks(id) ON DELETE CASCADE,
     manager_id UUID REFERENCES users(id) ON DELETE SET NULL,
     source_type VARCHAR(10) NOT NULL 
         CHECK (source_type IN ('user', 'vendor')),
-    source_id INT NOT NULL,
-    source_department_id INT REFERENCES departments(id) ON DELETE SET NULL,
+    source_id UUID NOT NULL,
+    source_department_id UUID REFERENCES departments(id) ON DELETE SET NULL,
     quantity INT NOT NULL,
     adjustment_type VARCHAR(50) 
         CHECK (adjustment_type IN ('addition', 'subtraction')),
@@ -407,20 +411,21 @@ CREATE TABLE item_stock_adjustments (
 
 -- Purchase Orders
 CREATE TABLE purchase_orders (
-    id SERIAL PRIMARY KEY,
-    vendor_id INT REFERENCES vendors(id) ON DELETE SET NULL,
-    branch_id INT REFERENCES branches(id) ON DELETE SET NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_sequence BIGSERIAL UNIQUE,
+    vendor_id UUID REFERENCES vendors(id) ON DELETE SET NULL,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
     purchase_order_number VARCHAR(50) GENERATED ALWAYS AS (
-        'PO-' || LPAD(id::TEXT, 5, '0')
+        'PO-' || LPAD(order_sequence::TEXT, 5, '0')
     ) STORED,
     reference_number VARCHAR(50) GENERATED ALWAYS AS (
-        'REF' || LPAD(id::TEXT, 5, '0')
+        'REF' || LPAD(order_sequence::TEXT, 5, '0')
     ) STORED,
     invoice_number VARCHAR(50) GENERATED ALWAYS AS (
-        'INV-' || LPAD(id::TEXT, 5, '0')
+        'INV-' || LPAD(order_sequence::TEXT, 5, '0')
     ) STORED,
     delivery_date DATE,
-    payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
+    payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
     subject TEXT,
     notes TEXT,
     terms_and_conditions TEXT,
@@ -437,12 +442,12 @@ CREATE TABLE purchase_orders (
 
 -- Purchase Order Items
 CREATE TABLE purchase_order_items (
-    id SERIAL PRIMARY KEY,
-    purchase_order_id INT REFERENCES purchase_orders(id) ON DELETE CASCADE,
-    item_id INT REFERENCES items(id) ON DELETE SET NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    purchase_order_id UUID REFERENCES purchase_orders(id) ON DELETE CASCADE,
+    item_id UUID REFERENCES items(id) ON DELETE SET NULL,
     quantity INT NOT NULL,
     price DECIMAL(20, 2),
-    tax_id INT REFERENCES taxes(id) ON DELETE SET NULL,
+    tax_id UUID REFERENCES taxes(id) ON DELETE SET NULL,
     total DECIMAL(20, 2) GENERATED ALWAYS AS (quantity * price) STORED,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -450,25 +455,26 @@ CREATE TABLE purchase_order_items (
 
 -- Sales Orders
 CREATE TABLE sales_orders (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_sequence BIGSERIAL UNIQUE,
     order_type VARCHAR(50) 
         CHECK (order_type IN ('order', 'service')),
     order_title VARCHAR(255),
     order_id VARCHAR(255) GENERATED ALWAYS AS (
         CASE
-            WHEN order_type = 'order' THEN 'SLO-' || LPAD(id::TEXT, 3, '0')
-            ELSE 'SLS-' || LPAD(id::TEXT, 3, '0')
+            WHEN order_type = 'order' THEN 'SLO-' || LPAD(order_sequence::TEXT, 3, '0')
+            ELSE 'SLS-' || LPAD(order_sequence::TEXT, 3, '0')
         END
     ) STORED,
     invoice_number VARCHAR(50) GENERATED ALWAYS AS (
-        'INV-' || LPAD(id::TEXT, 5, '0')
+        'INV-' || LPAD(order_sequence::TEXT, 5, '0')
     ) STORED,
     reference_number VARCHAR(50) GENERATED ALWAYS AS (
-        'REF' || LPAD(id::TEXT, 5, '0')
+        'REF' || LPAD(order_sequence::TEXT, 5, '0')
     ) STORED,
-    customer_id INT REFERENCES customers(id) ON DELETE SET NULL,
-    payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
-    payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,
+    customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
+    payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
+    payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL,
     delivery_option VARCHAR(50) 
         CHECK (delivery_option IN ('pickup', 'delivery')),
     assigned_driver_id UUID REFERENCES users(id) ON DELETE SET NULL,
@@ -487,9 +493,9 @@ CREATE TABLE sales_orders (
 
 -- Sales Order Items
 CREATE TABLE sales_order_items (
-    id SERIAL PRIMARY KEY,
-    sales_order_id INT REFERENCES sales_orders(id) ON DELETE CASCADE,
-    item_id INT REFERENCES price_lists(id) ON DELETE SET NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    sales_order_id UUID REFERENCES sales_orders(id) ON DELETE CASCADE,
+    item_id UUID REFERENCES price_lists(id) ON DELETE SET NULL,
     quantity INT NOT NULL,
     price DECIMAL(20, 2) NOT NULL,
     total DECIMAL(20, 2) GENERATED ALWAYS AS (quantity * price) STORED,
@@ -498,7 +504,7 @@ CREATE TABLE sales_order_items (
 );
 
 CREATE TABLE expenses_categories (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -506,15 +512,16 @@ CREATE TABLE expenses_categories (
 );
 
 CREATE TABLE expenses (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_sequence BIGSERIAL UNIQUE,
     expense_title VARCHAR(255),
-    expense_category INT REFERENCES expenses_categories(id) ON DELETE SET NULL, 
+    expense_category UUID REFERENCES expenses_categories(id) ON DELETE SET NULL, 
     expense_id VARCHAR(255) GENERATED ALWAYS AS (
-        'EXP-' || LPAD(id::TEXT, 5, '0')
+        'EXP-' || LPAD(order_sequence::TEXT, 5, '0')
     ) STORED,
-    payment_method_id INT REFERENCES payment_methods(id) ON DELETE SET NULL,
-    payment_term_id INT REFERENCES payment_terms(id) ON DELETE SET NULL,
-    department_id INT REFERENCES departments(id) ON DELETE SET NULL,
+    payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL,
+    payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
+    department_id UUID REFERENCES departments(id) ON DELETE SET NULL,
     amount DECIMAL(20, 2),
     bank_charges DECIMAL(20, 2) DEFAULT 0,
     date_of_expense DATE DEFAULT CURRENT_DATE,
@@ -528,10 +535,10 @@ CREATE TABLE expenses (
 
 -- Comments
 CREATE TABLE comments (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-    parent_id INT REFERENCES comments(id) ON DELETE CASCADE,
-    entity_id INT NOT NULL,
+    parent_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+    entity_id UUID NOT NULL,
     entity_type VARCHAR(50) NOT NULL,
     comment TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -539,9 +546,9 @@ CREATE TABLE comments (
 
 -- Notifications
 CREATE TABLE notifications (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-    entity_id INT,
+    entity_id UUID,
     entity_type VARCHAR(50),
     title VARCHAR(255) NOT NULL,
     body TEXT NOT NULL,

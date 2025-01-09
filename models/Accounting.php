@@ -485,7 +485,7 @@ class Accounting
         ";
 
         $stmt = $this->db->prepare($query);
-        $stmt->bindValue('order_id', $orderId, \PDO::PARAM_INT);
+        $stmt->bindValue('order_id', $orderId);
 
         $stmt->execute();
 
@@ -507,7 +507,7 @@ class Accounting
         ";
 
         $stmt = $this->db->prepare($query);
-        $stmt->bindValue('order_id', $orderId, \PDO::PARAM_INT);
+        $stmt->bindValue('order_id', $orderId);
 
         $stmt->execute();
     }

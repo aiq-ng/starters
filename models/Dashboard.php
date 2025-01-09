@@ -367,7 +367,8 @@ class Dashboard
         $offset = ($page - 1) * $pageSize;
 
         $query = "
-            SELECT 
+            SELECT  
+                i.id AS item_id,
                 i.name AS item_name,
                 CONCAT(SUM(poi.quantity), '(', u.name, ')') AS purchased_quantity,
                 i.opening_stock - SUM(poi.quantity) AS remaining_quantity,
@@ -399,7 +400,7 @@ class Dashboard
         }
 
         $query .= "
-            GROUP BY i.id, i.name, i.opening_stock, u.name, poi.price
+            GROUP BY i.id, i.name, i.opening_stock, u.name, poi.price, i.id
             ORDER BY purchased_quantity DESC
             LIMIT :pageSize OFFSET :offset
         ";
@@ -438,7 +439,8 @@ class Dashboard
         $offset = ($page - 1) * $pageSize;
 
         $query = "
-            SELECT 
+            SELECT
+                pl.id AS item_id, 
                 pl.item_details AS item_name,
                 CONCAT(SUM(soi.quantity), ' ', u.abbreviation, '') AS sold_quantity,
                 pl.minimum_order AS remaining_quantity,
@@ -471,7 +473,7 @@ class Dashboard
 
         $query .= "
             GROUP BY 
-                pl.item_details, pl.minimum_order, u.name, soi.price, u.abbreviation
+                pl.item_details, pl.minimum_order, u.name, soi.price, u.abbreviation, pl.id
             ORDER BY 
                 sold_quantity DESC
             LIMIT 

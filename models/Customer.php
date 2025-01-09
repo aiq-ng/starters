@@ -331,7 +331,7 @@ class Customer
         ";
 
         $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':customer_id', $customerId, \PDO::PARAM_INT);
+        $stmt->bindParam(':customer_id', $customerId, \PDO::PARAM_STR);
 
         if ($stmt->execute()) {
             $result = $stmt->fetch(\PDO::FETCH_ASSOC);

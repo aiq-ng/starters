@@ -690,6 +690,7 @@ class Sale
 
         $query = "
             SELECT
+                SO.id,
                 so.order_title AS title,
                 so.additional_note AS description,
                 so.created_at,

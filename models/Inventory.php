@@ -24,7 +24,7 @@ class Inventory
         ";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':itemId', $itemId, \PDO::PARAM_INT);
+        $stmt->bindParam(':itemId', $itemId);
         $stmt->execute();
 
         return $stmt->fetchColumn();
@@ -180,7 +180,7 @@ class Inventory
         ";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':itemId', $itemId, \PDO::PARAM_INT);
+        $stmt->bindParam(':itemId', $itemId);
 
         try {
             $stmt->execute();
@@ -207,7 +207,7 @@ class Inventory
 
         $stmt = $this->db->prepare($sql);
 
-        $stmt->bindParam(':itemId', $itemId, \PDO::PARAM_INT);
+        $stmt->bindParam(':itemId', $itemId);
 
         return $stmt->execute();
     }
@@ -273,10 +273,10 @@ class Inventory
             ";
 
             $stockStmt = $this->db->prepare($stockSql);
-            $stockStmt->bindParam(':itemId', $itemId, \PDO::PARAM_INT);
-            $stockStmt->bindParam(':quantity', $data['quantity'], \PDO::PARAM_INT);
-            $stockStmt->bindParam(':expiryDate', $data['expiry_date'], \PDO::PARAM_STR);
-            $stockStmt->bindParam(':dateReceived', $dateReceived, \PDO::PARAM_STR);
+            $stockStmt->bindParam(':itemId', $itemId);
+            $stockStmt->bindParam(':quantity', $data['quantity']);
+            $stockStmt->bindParam(':expiryDate', $data['expiry_date']);
+            $stockStmt->bindParam(':dateReceived', $dateReceived);
 
             if (!$stockStmt->execute()) {
                 throw new \Exception('Failed to insert item stock.');
@@ -491,13 +491,13 @@ class Inventory
                 ";
                 $stmt = $this->db->prepare($query);
 
-                $stmt->bindValue(':stockId', $newStockId, \PDO::PARAM_INT);
-                $stmt->bindValue(':quantity', $quantity, \PDO::PARAM_INT);
-                $stmt->bindValue(':adjustmentType', $data['adjustment_type'], \PDO::PARAM_STR);
-                $stmt->bindValue(':description', $data['description'], \PDO::PARAM_STR);
-                $stmt->bindValue(':source_id', $data['source_id'], \PDO::PARAM_INT);
-                $stmt->bindValue(':source_department_id', $data['source_department_id'], \PDO::PARAM_INT);
-                $stmt->bindValue(':manager_id', $data['manager_id'], \PDO::PARAM_INT);
+                $stmt->bindValue(':stockId', $newStockId);
+                $stmt->bindValue(':quantity', $quantity);
+                $stmt->bindValue(':adjustmentType', $data['adjustment_type']);
+                $stmt->bindValue(':description', $data['description']);
+                $stmt->bindValue(':source_id', $data['source_id']);
+                $stmt->bindValue(':source_department_id', $data['source_department_id']);
+                $stmt->bindValue(':manager_id', $data['manager_id']);
 
                 if (!$stmt->execute()) {
                     throw new \Exception('Failed to log stock adjustment for addition.');
@@ -539,8 +539,8 @@ class Inventory
                     WHERE id = :stockId
                 ";
                 $updateStmt = $this->db->prepare($updateSql);
-                $updateStmt->bindValue(':subtractAmount', $subtractAmount, \PDO::PARAM_INT);
-                $updateStmt->bindValue(':stockId', $stockId, \PDO::PARAM_INT);
+                $updateStmt->bindValue(':subtractAmount', $subtractAmount);
+                $updateStmt->bindValue(':stockId', $stockId);
 
                 if ($updateStmt->execute()) {
                     $affectedStockIds[] = $stockId;
@@ -553,13 +553,13 @@ class Inventory
                         :description, :source_id, :source_department_id, :manager_id, 'user')
                     ";
                     $logStmt = $this->db->prepare($logSql);
-                    $logStmt->bindValue(':stockId', $stockId, \PDO::PARAM_INT);
-                    $logStmt->bindValue(':quantity', $subtractAmount, \PDO::PARAM_INT);
-                    $logStmt->bindValue(':adjustmentType', $data['adjustment_type'], \PDO::PARAM_STR);
-                    $logStmt->bindValue(':description', $data['description'], \PDO::PARAM_STR);
-                    $logStmt->bindValue(':source_id', $data['source_id'], \PDO::PARAM_INT);
-                    $logStmt->bindValue(':source_department_id', $data['source_department_id'], \PDO::PARAM_INT);
-                    $logStmt->bindValue(':manager_id', $data['manager_id'], \PDO::PARAM_INT);
+                    $logStmt->bindValue(':stockId', $stockId);
+                    $logStmt->bindValue(':quantity', $subtractAmount);
+                    $logStmt->bindValue(':adjustmentType', $data['adjustment_type']);
+                    $logStmt->bindValue(':description', $data['description']);
+                    $logStmt->bindValue(':source_id', $data['source_id']);
+                    $logStmt->bindValue(':source_department_id', $data['source_department_id']);
+                    $logStmt->bindValue(':manager_id', $data['manager_id']);
 
                     if (!$logStmt->execute()) {
                         throw new \Exception('Failed to log stock adjustment.');
@@ -586,7 +586,7 @@ class Inventory
         ";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':itemId', $itemId, \PDO::PARAM_INT);
+        $stmt->bindParam(':itemId', $itemId, \PDO::PARAM_STR);
         $stmt->execute();
 
         error_log("getStocksByItemId: $itemId");
@@ -654,7 +654,7 @@ class Inventory
         ";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':itemId', $itemId, \PDO::PARAM_INT);
+        $stmt->bindParam(':itemId', $itemId, \PDO::PARAM_STR);
         $stmt->execute();
 
         $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);

@@ -323,7 +323,7 @@ class Vendor
         ";
 
         $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':vendor_id', $vendorId, \PDO::PARAM_INT);
+        $stmt->bindParam(':vendor_id', $vendorId);
 
         if ($stmt->execute()) {
             $result = $stmt->fetch(\PDO::FETCH_ASSOC);

@@ -44,21 +44,17 @@ class User
     {
         if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
             $query = "SELECT * FROM " . $this->table . " WHERE email = ? LIMIT 1";
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(1, $identifier, \PDO::PARAM_STR);
-        } elseif (is_numeric($identifier)) {
-            $query = "SELECT * FROM " . $this->table . " WHERE id = ? LIMIT 1";
-            $stmt = $this->db->prepare($query);
-            $stmt->bindParam(1, $identifier, \PDO::PARAM_INT);
         } else {
-            return null;
+            $query = "SELECT * FROM " . $this->table . " WHERE id = ? LIMIT 1";
         }
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(1, $identifier, \PDO::PARAM_STR);
 
         $stmt->execute();
 
         if ($stmt->rowCount() > 0) {
-            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-            return $row;
+            return $stmt->fetch(\PDO::FETCH_ASSOC);
         }
 
         return null;
