@@ -224,6 +224,7 @@ class Inventory
                 price, threshold_value, media, opening_stock)
                 VALUES (:name, :description, :unitId, :categoryId,
                 :price, :threshold, :media, :openingStock)
+                RETURNING id
             ";
 
             $mediaLinks = json_encode($mediaLinks);
@@ -243,7 +244,7 @@ class Inventory
                 throw new \Exception('Failed to insert item.');
             }
 
-            $itemId = $this->db->lastInsertId();
+            $itemId = $itemId = $stmt->fetchColumn();
 
             if (!$this->createItemStock($itemId, $data)) {
                 throw new \Exception('Failed to insert item stock.');
@@ -271,6 +272,8 @@ class Inventory
                 VALUES (:itemId, :quantity, :expiryDate, :dateReceived)
                 RETURNING id
             ";
+
+            error_log("createItemStock: $itemId");
 
             $stockStmt = $this->db->prepare($stockSql);
             $stockStmt->bindParam(':itemId', $itemId);
