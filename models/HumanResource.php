@@ -31,65 +31,82 @@ class HumanResource
 
     public function createDepartment($data)
     {
-        $stmt = $this->db->prepare(
-            'INSERT INTO departments 
-        (name, salary_type, base_type_id, base_rate, base_salary, 
-        work_leave_qualification, work_leave_period, description) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-        );
+        try {
+            $stmt = $this->db->prepare(
+                'INSERT INTO departments 
+            (name, salary_type, base_type_id, base_rate, base_salary, 
+            work_leave_qualification, work_leave_period, description) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            RETURNING id'
+            );
 
-        $stmt->execute([
-            $data['name'],
-            $data['salary_type'],
-            $data['base_type_id'] ?? null,
-            $data['base_rate'] ?? null,
-            $data['base_salary'] ?? null,
-            $data['work_leave_qualification'] ?? null,
-            $data['work_leave_period'] ?? null,
-            $data['description'] ?? null,
-        ]);
+            $stmt->execute([
+                $data['name'],
+                $data['salary_type'],
+                $data['base_type_id'] ?? null,
+                $data['base_rate'] ?? null,
+                $data['base_salary'] ?? null,
+                $data['work_leave_qualification'] ?? null,
+                $data['work_leave_period'] ?? null,
+                $data['description'] ?? null,
+            ]);
 
-        return $this->db->lastInsertId();
+            $departmentId = $stmt->fetchColumn();
+
+            return $departmentId;
+
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
+        }
     }
 
     public function addEmployee($data, $mediaLinks)
     {
-        $stmt = $this->db->prepare(
-            'INSERT INTO users 
-        (email, firstname, lastname, date_of_birth, address, next_of_kin,
-        date_of_employment, department_id, role_id, no_of_working_days_id, 
-        salary, bank_details, nin, passport, avatar_url, username, password) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        );
+        try {
+            $stmt = $this->db->prepare(
+                'INSERT INTO users 
+            (email, firstname, lastname, date_of_birth, address, next_of_kin,
+            date_of_employment, department_id, role_id, no_of_working_days_id, 
+            salary, bank_details, nin, passport, avatar_url, username, password) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            RETURNING id'
+            );
 
-        $bankDetails = [
-            'account_number' => $data['account_number'] ?? null,
-            'bank_name' => $data['bank_name'] ?? null,
-        ];
-        $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+            $bankDetails = [
+                'account_number' => $data['account_number'] ?? null,
+                'bank_name' => $data['bank_name'] ?? null,
+            ];
+            $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
 
+            $stmt->execute([
+                $data['email'] ?? null,
+                $data['firstname'] ?? null,
+                $data['lastname'] ?? null,
+                $data['date_of_birth'] ?? null,
+                $data['address'] ?? null,
+                $data['next_of_kin'] ?? null,
+                $data['date_of_employment'] ?? null,
+                $data['department_id'] ?? null,
+                $data['role_id'] ?? null,
+                $data['no_of_working_days_id'] ?? null,
+                $data['salary'] ?? null,
+                json_encode($bankDetails),
+                $mediaLinks['nin'][0] ?? null,
+                $mediaLinks['passport'][0] ?? null,
+                $mediaLinks['avatar_url'][0] ?? null,
+                $data['username'] ?? null,
+                $hashedPassword,
+            ]);
 
-        $stmt->execute([
-            $data['email'] ?? null,
-            $data['firstname'] ?? null,
-            $data['lastname'] ?? null,
-            $data['date_of_birth'] ?? null,
-            $data['address'] ?? null,
-            $data['next_of_kin'] ?? null,
-            $data['date_of_employment'] ?? null,
-            $data['department_id'] ?? null,
-            $data['role_id'] ?? null,
-            $data['no_of_working_days_id'] ?? null,
-            $data['salary'] ?? null,
-            json_encode($bankDetails),
-            $mediaLinks['nin'][0] ?? null,
-            $mediaLinks['passport'][0] ?? null,
-            $mediaLinks['avatar_url'][0] ?? null,
-            $data['username'] ?? null,
-            $hashedPassword,
-        ]);
+            $employeeId = $stmt->fetchColumn();
 
-        return $this->db->lastInsertId();
+            return $employeeId;
+
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
+        }
     }
 
     public function getAdmins()

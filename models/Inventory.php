@@ -273,8 +273,6 @@ class Inventory
                 RETURNING id
             ";
 
-            error_log("createItemStock: $itemId");
-
             $stockStmt = $this->db->prepare($stockSql);
             $stockStmt->bindParam(':itemId', $itemId);
             $stockStmt->bindParam(':quantity', $data['quantity']);

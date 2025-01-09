@@ -25,7 +25,7 @@ class Vendor
         (:salutation, :first_name, :last_name, :display_name, :company_name, 
         :email, :work_phone, :mobile_phone, :address, :social_media, 
         :payment_term_id, :currency_id, :category_id, :website)
-    ";
+        RETURNING id";
 
         $stmt = $this->db->prepare($query);
 
@@ -45,7 +45,7 @@ class Vendor
         $stmt->bindValue(':website', $data['website'] ?? null);
 
         if ($stmt->execute()) {
-            return $this->db->lastInsertId();
+            return $stmt->fetchColumn();
         }
 
         return null;
