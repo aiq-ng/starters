@@ -223,6 +223,7 @@ CREATE TABLE loans (
 -- Price Lists
 CREATE TABLE price_lists (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_sequence BIGSERIAL UNIQUE,
     item_category_id UUID REFERENCES item_categories(id) ON DELETE SET NULL,
     unit_id UUID REFERENCES units(id) ON DELETE SET NULL,
     item_details VARCHAR(100) NOT NULL UNIQUE,

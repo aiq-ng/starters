@@ -21,6 +21,7 @@ class Purchase
         $query = "
             SELECT
                 po.id,
+                po.order_sequence AS serial_number,
                 po.purchase_order_number,
                 po.reference_number,
                 po.invoice_number,

@@ -330,7 +330,8 @@ class Sale
 
         $query = "
             SELECT 
-                pl.id, 
+                pl.id,
+                pl.order_sequence AS serial_number,
                 ic.name AS item_category, 
                 pl.item_details, 
                 pl.unit_price, 
@@ -462,7 +463,8 @@ class Sale
     {
         $query = "
             SELECT 
-                pl.id, 
+                pl.id,
+                pl.order_sequence AS serial_number,
                 pl.item_category_id, 
                 pl.item_details, 
                 pl.unit_price, 
