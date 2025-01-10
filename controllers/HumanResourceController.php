@@ -18,7 +18,9 @@ class HumanResourceController extends BaseController
     {
         $this->authorizeRequest();
 
-        $data = $this->humanResource->getOverview();
+        $adminId = $this->getRoleIdByName('Admin');
+
+        $data = $this->humanResource->getOverview($adminId);
 
         if ($data) {
             $this->sendResponse('success', 200, $data);

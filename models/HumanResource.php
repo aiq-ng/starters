@@ -13,17 +13,18 @@ class HumanResource
         $this->db = Database::getInstance()->getConnection();
     }
 
-    public function getOverview()
+    public function getOverview($roleId = null)
     {
         $sql = "
             SELECT 
-                (SELECT COUNT(*) FROM users WHERE role_id != 1) AS employee_count,
+                (SELECT COUNT(*) FROM users WHERE role_id != :roleId) AS employee_count,
                 (SELECT COUNT(*) FROM departments) AS department_count,
-                (SELECT COUNT(*) FROM users WHERE role_id = 1) AS admin_count,
+                (SELECT COUNT(*) FROM users WHERE role_id = :roleId) AS admin_count,
                 (SELECT COUNT(*) FROM user_leaves WHERE status = 'on leave') AS on_leave_count
         ";
 
         $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':roleId', $roleId, \PDO::PARAM_INT);
         $stmt->execute();
 
         return $stmt->fetch(\PDO::FETCH_ASSOC);
