@@ -128,6 +128,7 @@ class HumanResource
         $page = $filters['page'] ?? 1;
         $pageSize = $filters['page_size'] ?? 10;
         $offset = ($page - 1) * $pageSize;
+        $adminId = $filters['role_id'] ?? null;
 
         $sql = "
             SELECT
@@ -143,11 +144,11 @@ class HumanResource
             LEFT JOIN departments d ON u.department_id = d.id
             LEFT JOIN roles r ON u.role_id = r.id
             LEFT JOIN user_leaves ul ON u.id = ul.user_id
-            WHERE u.role_id != 3
+            WHERE u.role_id != :adminId
         ";
 
         $conditions = [];
-        $params = [];
+        $params = [':adminId' => $adminId];
 
         if (!empty($filters['department'])) {
             $conditions[] = "d.name = :department";
@@ -156,20 +157,19 @@ class HumanResource
 
         if (!empty($filters['search'])) {
             $conditions[] = "(
-                u.name LIKE :search OR
-                r.name LIKE :search OR
-                d.name LIKE :search OR
-                u.bank_details::TEXT LIKE :search
-            )";
-            $params[':search'] = "%" . $filters['search'] . "%";
+            u.name LIKE :search OR
+            r.name LIKE :search OR
+            d.name LIKE :search OR
+            u.bank_details::TEXT LIKE :search
+        )";
+            $params[':search'] = '%' . $filters['search'] . '%';
         }
 
         if ($conditions) {
-            $sql .= " AND " . implode(' AND ', $conditions);
+            $sql .= ' AND ' . implode(' AND ', $conditions);
         }
 
-        $sql .= " LIMIT :pageSize OFFSET :offset";
-
+        $sql .= ' LIMIT :pageSize OFFSET :offset';
         $stmt = $this->db->prepare($sql);
 
         foreach ($params as $key => $value) {
@@ -180,7 +180,6 @@ class HumanResource
         $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
 
         $stmt->execute();
-
         $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         foreach ($result as $key => $employee) {
@@ -192,12 +191,12 @@ class HumanResource
         $totalCount = $this->countEmployees($filters);
 
         $meta = [
-            'total_data' => (int) $totalCount,
+            'total_data' => (int)$totalCount,
             'total_pages' => ceil($totalCount / $pageSize),
-            'page_size' => (int) $pageSize,
-            'previous_page' => $page > 1 ? (int) $page - 1 : null,
-            'current_page' => (int) $page,
-            'next_page' => $page < ceil($totalCount / $pageSize) ? (int) $page + 1 : null,
+            'page_size' => (int)$pageSize,
+            'previous_page' => $page > 1 ? (int)$page - 1 : null,
+            'current_page' => (int)$page,
+            'next_page' => $page < ceil($totalCount / $pageSize) ? (int)$page + 1 : null,
         ];
 
         return [
@@ -214,11 +213,11 @@ class HumanResource
             LEFT JOIN departments d ON u.department_id = d.id
             LEFT JOIN roles r ON u.role_id = r.id
             LEFT JOIN user_leaves ul ON u.id = ul.user_id
-            WHERE u.role_id != 1
+            WHERE u.role_id != :adminId
         ";
 
         $conditions = [];
-        $params = [];
+        $params = [':adminId' => $filters['role_id'] ?? null];
 
         if (!empty($filters['department'])) {
             $conditions[] = "d.name = :department";
@@ -227,16 +226,16 @@ class HumanResource
 
         if (!empty($filters['search'])) {
             $conditions[] = "(
-                u.name LIKE :search OR
-                r.name LIKE :search OR
-                d.name LIKE :search OR
-                u.bank_details::TEXT LIKE :search
-            )";
-            $params[':search'] = "%" . $filters['search'] . "%";
+            u.name LIKE :search OR
+            r.name LIKE :search OR
+            d.name LIKE :search OR
+            u.bank_details::TEXT LIKE :search
+        )";
+            $params[':search'] = '%' . $filters['search'] . '%';
         }
 
         if ($conditions) {
-            $sql .= " AND " . implode(' AND ', $conditions);
+            $sql .= ' AND ' . implode(' AND ', $conditions);
         }
 
         $stmt = $this->db->prepare($sql);

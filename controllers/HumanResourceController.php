@@ -138,6 +138,11 @@ class HumanResourceController extends BaseController
             'search' => isset($_GET['search']) ? $_GET['search'] : null,
         ];
 
+        $adminId = $this->getRoleIdByName('Admin');
+        if ($adminId) {
+            $filters['role_id'] = $adminId;
+        }
+
 
         $employees = $this->humanResource->getEmployees($filters);
 
