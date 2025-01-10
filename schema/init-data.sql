@@ -51,9 +51,9 @@ INSERT INTO loan_types (name, description) VALUES
 -- Seed departments
 INSERT INTO departments (name, salary_type, base_type_id, base_rate, base_salary, description, work_leave_qualification)
 VALUES
-('Snacks', 'fixed', NULL, NULL, 2500.00, 'Department for local and imported snacks', 
+('Accounting', 'fixed', NULL, NULL, 2500.00, 'Department for finance and accounting', 
     (SELECT id FROM work_leave_qualifications WHERE name = '3 months')),
-('Beverages', 'fixed', NULL, NULL, 2000.00, 'Department for drinks, tea, coffee, and juices', 
+('Human Resources', 'fixed', NULL, NULL, 2000.00, 'Department for HR and recruitment', 
     (SELECT id FROM work_leave_qualifications WHERE name = '6 months')),
 ('Dispatch Riders', 'base', (SELECT id FROM base_pay_types WHERE name = 'hourly'), 15.00, NULL, 'Department for dispatch riders', 
     (SELECT id FROM work_leave_qualifications WHERE name = 'annually')),
@@ -450,9 +450,9 @@ VALUES
 INSERT INTO item_stock_departments (stock_id, department_id)
 VALUES
 ((SELECT id FROM item_stocks WHERE item_id = (SELECT id FROM items WHERE name = 'Beef')), 
- (SELECT id FROM departments WHERE name = 'Snacks')),
+ (SELECT id FROM departments WHERE name = 'Accounting')),
 ((SELECT id FROM item_stocks WHERE item_id = (SELECT id FROM items WHERE name = 'Chicken')), 
- (SELECT id FROM departments WHERE name = 'Beverages')),
+ (SELECT id FROM departments WHERE name = 'Human Resources')),
 ((SELECT id FROM item_stocks WHERE item_id = (SELECT id FROM items WHERE name = 'Catfish')), 
  (SELECT id FROM departments WHERE name = 'Dispatch Riders')),
 ((SELECT id FROM item_stocks WHERE item_id = (SELECT id FROM items WHERE name = 'Pork')), 

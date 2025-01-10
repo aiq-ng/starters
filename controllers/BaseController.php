@@ -85,11 +85,9 @@ class BaseController
     protected function storeRefreshToken($userId, $refreshToken)
     {
         $query = "
-            INSERT INTO refresh_tokens (user_id, token)
-            VALUES (?, ?)
-            ON CONFLICT (user_id) 
-            DO UPDATE SET token = EXCLUDED.token;
-        ";
+        INSERT INTO refresh_tokens (user_id, token)
+        VALUES (?, ?)
+    ";
 
         $stmt = $this->db->prepare($query);
         $stmt->execute([$userId, $refreshToken]);

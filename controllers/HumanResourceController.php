@@ -54,7 +54,7 @@ class HumanResourceController extends BaseController
 
         $data = $this->getRequestData();
 
-        $formData = $data['form_data'];
+        $formData = $data['form_data'] ?? [];
         $mediaFiles = $data['files'] ?? [];
 
         if (!$this->validateFields(
