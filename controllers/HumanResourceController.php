@@ -120,7 +120,8 @@ class HumanResourceController extends BaseController
     {
         $this->authorizeRequest();
 
-        $admins = $this->humanResource->getAdmins();
+        $adminId = $this->getRoleIdByName('Admin');
+        $admins = $this->humanResource->getAdmins($adminId);
 
         if ($admins) {
             $this->sendResponse('success', 200, $admins);

@@ -110,15 +110,16 @@ class HumanResource
         }
     }
 
-    public function getAdmins()
+    public function getAdmins($roleId = null)
     {
         $stmt = $this->db->prepare(
             'SELECT u.id, u.name, r.name AS role
-            FROM users u
-            JOIN roles r ON u.role_id = r.id
-            WHERE u.role_id = 1'
+             FROM users u
+             JOIN roles r ON u.role_id = r.id
+             WHERE u.role_id = :roleId'
         );
 
+        $stmt->bindValue(':roleId', $roleId, \PDO::PARAM_INT);
         $stmt->execute();
 
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);

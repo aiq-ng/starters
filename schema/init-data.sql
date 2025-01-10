@@ -32,6 +32,15 @@ INSERT INTO work_leave_qualifications (name) VALUES
 ('6 months'),
 ('annually');
 
+INSERT INTO no_of_working_days (name, description)
+VALUES 
+('Standard Week', 'A typical working week with 5 days, Monday to Friday'),
+('Extended Week', 'A working week that includes Saturday, making it 6 days'),
+('Shift Work', 'A rotating shift schedule, covering various days including weekends'),
+('Flexible Week', 'A flexible working arrangement with varied working days'),
+('Compressed Week', 'A compressed working schedule with fewer working days but longer hours');
+
+
 INSERT INTO loan_types (name, description) VALUES
 ('personal', 'Personal loans for individual use'),
 ('staff', 'Loans provided to staff members'),
@@ -705,16 +714,16 @@ INSERT INTO purchase_order_items (
 )
 VALUES
 ((SELECT id FROM purchase_orders WHERE notes = 'Ensure items are fresh'), (SELECT id FROM items WHERE name = 'Beef'), 2, 5000.00, (SELECT id FROM taxes WHERE name = 'VAT (7.50)')),
-((SELECT id FROM purchase_orders WHERE notes = 'Ensure items are fresh'), (SELECT id FROM items WHERE name = 'Chicken'), 1, 10000.00, (SELECT id FROM taxes WHERE name = 'Sales Tax (5.00)')),
-((SELECT id FROM purchase_orders WHERE notes = 'Ensure items are fresh'), (SELECT id FROM items WHERE name = 'Catfish'), 5, 4000.00, (SELECT id FROM taxes WHERE name = 'VAT (7.50)')),
-((SELECT id FROM purchase_orders WHERE notes = 'Ensure items are fresh'), (SELECT id FROM items WHERE name = 'Pork'), 10, 2000.00, (SELECT id FROM taxes WHERE name = 'Sales Tax (5.00)')),
-((SELECT id FROM purchase_orders WHERE notes = 'Ensure items are fresh'), (SELECT id FROM items WHERE name = 'Lamb'), 3, 3000.00, (SELECT id FROM taxes WHERE name = 'VAT (7.50)')),
-((SELECT id FROM purchase_orders WHERE notes = 'Ensure items are fresh'), (SELECT id FROM items WHERE name = 'Salmon'), 7, 7000.00, (SELECT id FROM taxes WHERE name = 'Sales Tax (5.00)')),
-((SELECT id FROM purchase_orders WHERE notes = 'Ensure items are fresh'), (SELECT id FROM items WHERE name = 'Eggs'), 4, 8000.00, (SELECT id FROM taxes WHERE name = 'VAT (7.50)')),
-((SELECT id FROM purchase_orders WHERE notes = 'Ensure items are fresh'), (SELECT id FROM items WHERE name = 'Cheese'), 2, 6000.00, (SELECT id FROM taxes WHERE name = 'Sales Tax (5.00)')),
-((SELECT id FROM purchase_orders WHERE notes = 'Ensure items are fresh'), (SELECT id FROM items WHERE name = 'Milk'), 6, 9000.00, (SELECT id FROM taxes WHERE name = 'VAT (7.50)')),
-((SELECT id FROM purchase_orders WHERE notes = 'Ensure items are fresh'), (SELECT id FROM items WHERE name = 'Yogurt'), 8, 12000.00, (SELECT id FROM taxes WHERE name = 'Sales Tax (5.00)')),
-((SELECT id FROM purchase_orders WHERE notes = 'Ensure items are fresh'), (SELECT id FROM items WHERE name = 'Bread'), 2, 4000.00, (SELECT id FROM taxes WHERE name = 'VAT (7.50)'));
+((SELECT id FROM purchase_orders WHERE notes = 'Ensure all items are delivered in time'), (SELECT id FROM items WHERE name = 'Chicken'), 1, 10000.00, (SELECT id FROM taxes WHERE name = 'Sales Tax (5.00)')),
+((SELECT id FROM purchase_orders WHERE notes = 'Ensure all items are delivered in time'), (SELECT id FROM items WHERE name = 'Catfish'), 5, 4000.00, (SELECT id FROM taxes WHERE name = 'VAT (7.50)')),
+((SELECT id FROM purchase_orders WHERE notes = 'Ensure all items are delivered in time'), (SELECT id FROM items WHERE name = 'Pork'), 10, 2000.00, (SELECT id FROM taxes WHERE name = 'Sales Tax (5.00)')),
+((SELECT id FROM purchase_orders WHERE notes = 'Ensure all items are delivered in time'), (SELECT id FROM items WHERE name = 'Lamb'), 3, 3000.00, (SELECT id FROM taxes WHERE name = 'VAT (7.50)')),
+((SELECT id FROM purchase_orders WHERE notes = 'Ensure all items are delivered in time'), (SELECT id FROM items WHERE name = 'Salmon'), 7, 7000.00, (SELECT id FROM taxes WHERE name = 'Sales Tax (5.00)')),
+((SELECT id FROM purchase_orders WHERE notes = 'Ensure all items are delivered in time'), (SELECT id FROM items WHERE name = 'Eggs'), 4, 8000.00, (SELECT id FROM taxes WHERE name = 'VAT (7.50)')),
+((SELECT id FROM purchase_orders WHERE notes = 'Ensure all items are delivered in time'), (SELECT id FROM items WHERE name = 'Cheese'), 2, 6000.00, (SELECT id FROM taxes WHERE name = 'Sales Tax (5.00)')),
+((SELECT id FROM purchase_orders WHERE notes = 'Ensure all items are delivered in time'), (SELECT id FROM items WHERE name = 'Milk'), 6, 9000.00, (SELECT id FROM taxes WHERE name = 'VAT (7.50)')),
+((SELECT id FROM purchase_orders WHERE notes = 'Ensure all items are delivered in time'), (SELECT id FROM items WHERE name = 'Yogurt'), 8, 12000.00, (SELECT id FROM taxes WHERE name = 'Sales Tax (5.00)')),
+((SELECT id FROM purchase_orders WHERE notes = 'Ensure all items are delivered in time'), (SELECT id FROM items WHERE name = 'Bread'), 2, 4000.00, (SELECT id FROM taxes WHERE name = 'VAT (7.50)'));
 
 
 -- Insert into sales_orders
@@ -1246,7 +1255,7 @@ VALUES
     (SELECT id FROM payment_methods WHERE name = 'Bank Transfer'), 
     (SELECT id FROM payment_terms WHERE name = 'Due in 14 days'), 
     (SELECT id FROM departments WHERE name = 'Snacks'), 
-    300.00, 10.00, '2024-02-15', 
+    300.00, 10.00, '2025-01-15', 
     'Lunch with the team after project completion', 'paid', 
     (SELECT id FROM users WHERE email = 'jane@example.com')),
 
@@ -1255,7 +1264,7 @@ VALUES
     (SELECT id FROM payment_methods WHERE name = 'USSD Payment'), 
     (SELECT id FROM payment_terms WHERE name = 'Due in 30 days'), 
     (SELECT id FROM departments WHERE name = 'Beverages'), 
-    500.00, 0.00, '2024-03-28', 
+    500.00, 0.00, '2025-01-28', 
     'Scheduled maintenance for office printer', 'cancelled', 
     (SELECT id FROM users WHERE email = 'john@example.com')),
 
@@ -1264,7 +1273,7 @@ VALUES
     (SELECT id FROM payment_methods WHERE name = 'Bank Transfer'), 
     (SELECT id FROM payment_terms WHERE name = 'Due on receipt'), 
     (SELECT id FROM departments WHERE name = 'Snacks'), 
-    800.00, 10.00, '2024-03-30', 
+    800.00, 10.00, '2025-01-30', 
     'Conference related to industry developments', 'paid', 
     (SELECT id FROM users WHERE email = 'odun@aiq.com')),
 
@@ -1273,7 +1282,7 @@ VALUES
     (SELECT id FROM payment_methods WHERE name = 'USSD Payment'), 
     (SELECT id FROM payment_terms WHERE name = 'Due on delivery'), 
     (SELECT id FROM departments WHERE name = 'Beverages'), 
-    2000.00, 50.00, '2024-04-07', 
+    2000.00, 50.00, '2025-01-07', 
     'Annual renewal of office software licenses', 'paid', 
     (SELECT id FROM users WHERE email = 'john@example.com')),
 
@@ -1282,7 +1291,7 @@ VALUES
     (SELECT id FROM payment_methods WHERE name = 'Cash'), 
     (SELECT id FROM payment_terms WHERE name = 'Due in 7 days'), 
     (SELECT id FROM departments WHERE name = 'Snacks'), 
-    350.00, 15.00, '2024-04-15', 
+    350.00, 15.00, '2025-01-15', 
     'Dinner with the team for quarterly review', 'paid', 
     (SELECT id FROM users WHERE email = 'jane@example.com')),
 
@@ -1291,7 +1300,7 @@ VALUES
     (SELECT id FROM payment_methods WHERE name = 'Bank Transfer'), 
     (SELECT id FROM payment_terms WHERE name = 'Due in 14 days'), 
     (SELECT id FROM departments WHERE name = 'Dispatch Riders'), 
-    250.00, 5.00, '2024-05-03', 
+    250.00, 5.00, '2025-01-03', 
     'Payment for electricity consumption in the office', 'paid', 
     (SELECT id FROM users WHERE email = 'nat@aiq.com')),
 
@@ -1300,7 +1309,7 @@ VALUES
     (SELECT id FROM payment_methods WHERE name = 'Bank Transfer'), 
     (SELECT id FROM payment_terms WHERE name = 'Due on receipt'), 
     (SELECT id FROM departments WHERE name = 'Snacks'), 
-    1200.00, 20.00, '2024-05-10', 
+    1200.00, 20.00, '2025-01-10', 
     'Business trip to the industry conference', 'paid', 
     (SELECT id FROM users WHERE email = 'odun@aiq.com'));
 
