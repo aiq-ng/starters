@@ -675,86 +675,93 @@ class Inventory
         $month = $params['month'] ?? date('m');
 
         $query = "
-    WITH days AS (
-        SELECT generate_series(
-            '$year-$month-01'::DATE, 
-            '$year-$month-01'::DATE + INTERVAL '1 month' - INTERVAL '1 day', 
-            '1 day'::INTERVAL
-        )::DATE AS day
-    ),
-    item_prices AS (
-        SELECT
-            i.id AS item_id,
-            i.name AS item_name,
-            i.price,
-            i.created_at::DATE AS created_day
-        FROM items i
-        WHERE i.id = :item_id
-          AND EXTRACT(YEAR FROM i.created_at) <= :year
-          AND EXTRACT(MONTH FROM i.created_at) <= :month
-    ),
-    item_stock_prices AS (
-        SELECT
-            i.id AS item_id,
-            i.name AS item_name,
-            i.price,
-            is_stock.created_at::DATE AS created_day
-        FROM items i
-        JOIN item_stocks is_stock ON i.id = is_stock.item_id
-        WHERE i.id = :item_id
-          AND EXTRACT(YEAR FROM is_stock.created_at) <= :year
-          AND EXTRACT(MONTH FROM is_stock.created_at) <= :month
-    ),
-    combined_prices AS (
-        SELECT 
-            created_day,
-            item_id,
-            item_name,
-            price,
-            ROW_NUMBER() OVER (PARTITION BY created_day ORDER BY created_day DESC) AS row_num
-        FROM (
-            SELECT created_day, item_id, item_name, price FROM item_prices
-            UNION ALL
-            SELECT created_day, item_id, item_name, price FROM item_stock_prices
-        ) cp
-    ),
-    latest_prices AS (
-        SELECT
-            created_day,
-            item_id,
-            item_name,
-            price
-        FROM combined_prices
-        WHERE row_num = 1
-    ),
-    filled_prices AS (
-        SELECT 
-            d.day,
-            lp.item_id,
-            lp.item_name,
-            lp.price,
-            -- Propagate the last known price forward
-            CASE
-                WHEN lp.price IS NOT NULL THEN lp.price
-                ELSE prev_price.price
-            END AS filled_price
-        FROM days d
-        LEFT JOIN latest_prices lp ON d.day = lp.created_day
-        LEFT JOIN LATERAL (
-            SELECT price
-            FROM latest_prices 
-            WHERE created_day <= d.day AND item_id = :item_id
-            ORDER BY created_day DESC
-            LIMIT 1
-        ) prev_price ON true
-    )
-    SELECT 
-        EXTRACT(DAY FROM day)::INT AS day,
-        COALESCE(TO_CHAR(filled_price, 'FM999999990.00'), '0.00') AS price,
-        TO_CHAR(day, 'YYYY-MM-DD') AS date
-    FROM filled_prices
-    ORDER BY day;
-    ";
+            WITH days AS (
+                SELECT generate_series(
+                    '$year-$month-01'::DATE, 
+                    '$year-$month-01'::DATE + INTERVAL '1 month' - INTERVAL '1 day', 
+                    '1 day'::INTERVAL
+                )::DATE AS day
+            ),
+            item_prices AS (
+                SELECT
+                    i.id AS item_id,
+                    i.name AS item_name,
+                    i.price,
+                    i.created_at::DATE AS created_day
+                FROM items i
+                WHERE i.id = :item_id
+                  AND EXTRACT(YEAR FROM i.created_at) <= :year
+                  AND EXTRACT(MONTH FROM i.created_at) <= :month
+            ),
+            item_stock_prices AS (
+                SELECT
+                    i.id AS item_id,
+                    i.name AS item_name,
+                    i.price,
+                    is_stock.created_at::DATE AS created_day
+                FROM items i
+                JOIN item_stocks is_stock ON i.id = is_stock.item_id
+                WHERE i.id = :item_id
+                  AND EXTRACT(YEAR FROM is_stock.created_at) <= :year
+                  AND EXTRACT(MONTH FROM is_stock.created_at) <= :month
+            ),
+            combined_prices AS (
+                SELECT 
+                    created_day,
+                    item_id,
+                    item_name,
+                    price,
+                    ROW_NUMBER() OVER (PARTITION BY created_day ORDER BY created_day DESC) AS row_num
+                FROM (
+                    SELECT created_day, item_id, item_name, price FROM item_prices
+                    UNION ALL
+                    SELECT created_day, item_id, item_name, price FROM item_stock_prices
+                ) cp
+            ),
+            latest_prices AS (
+                SELECT
+                    created_day,
+                    item_id,
+                    item_name,
+                    price
+                FROM combined_prices
+                WHERE row_num = 1
+            ),
+            filled_prices AS (
+                SELECT 
+                    d.day,
+                    lp.item_id,
+                    lp.item_name,
+                    lp.price,
+                    -- Propagate the last known price forward
+                    CASE
+                        WHEN lp.price IS NOT NULL THEN lp.price
+                        ELSE COALESCE(prev_price.price, prev_month_price.price)
+                    END AS filled_price
+                FROM days d
+                LEFT JOIN latest_prices lp ON d.day = lp.created_day
+                LEFT JOIN LATERAL (
+                    SELECT price
+                    FROM latest_prices 
+                    WHERE created_day <= d.day AND item_id = :item_id
+                    ORDER BY created_day DESC
+                    LIMIT 1
+                ) prev_price ON true
+                LEFT JOIN LATERAL (
+                    SELECT price
+                    FROM latest_prices 
+                    WHERE created_day < '$year-$month-01'::DATE AND item_id = :item_id
+                    ORDER BY created_day DESC
+                    LIMIT 1
+                ) prev_month_price ON d.day = '$year-$month-01'::DATE
+            )
+            SELECT 
+                EXTRACT(DAY FROM day)::INT AS day,
+                COALESCE(TO_CHAR(filled_price, 'FM999999990.00'), '0.00') AS price,
+                TO_CHAR(day, 'YYYY-MM-DD') AS date
+            FROM filled_prices
+            ORDER BY day;
+            ";
 
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(':year', $year, \PDO::PARAM_INT);
