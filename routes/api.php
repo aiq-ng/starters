@@ -72,6 +72,7 @@ $routes = [
         '/accounting/overview' => [$accountingController, 'overview'],
         '/accounting/graph' => [$accountingController, 'revenueAndExpensesGraph'],
         '/inventory' => [$inventoryController, 'index'],
+        '/inventory/graph/([a-fA-F0-9-]{36})' => [$inventoryController, 'graph'],
         '/notifications/([a-fA-F0-9-]{36})' => [$adminController, 'getNotifications'],
         '/vendors/([a-fA-F0-9-]{36})' => [$vendorController, 'show'],
         '/customers/([a-fA-F0-9-]{36})' => [$customerController, 'show'],

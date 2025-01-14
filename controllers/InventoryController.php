@@ -38,6 +38,22 @@ class InventoryController extends BaseController
         $this->sendResponse('success', 200, $inventory['inventory'], $inventory['meta']);
     }
 
+    public function graph($itemId)
+    {
+        $this->authorizeRequest();
+        $params = [
+            'year' => isset($_GET['year']) ? $_GET['year'] : date('Y'),
+            'month' => isset($_GET['month']) ? $_GET['month'] : date('m'),
+        ];
+
+        $graphData = $this->inventory->getItemPricesByDay($itemId, $params);
+
+        if (empty($graphData)) {
+            $this->sendResponse('Graph data not found', 404, []);
+        }
+        $this->sendResponse('success', 200, $graphData);
+    }
+
     public function createItem()
     {
         $this->authorizeRequest();
