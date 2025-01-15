@@ -80,6 +80,8 @@ class TradeController extends BaseController
         }
     }
 
+
+
     public function markPurchaseAsReceived($purchaseId)
     {
         $this->authorizeRequest();
@@ -190,6 +192,22 @@ class TradeController extends BaseController
         }
         $this->sendResponse('success', 201, ['sale_id' => $saleId]);
     }
+
+    public function patchSale($saleId)
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+
+        $updateResult = $this->sale->patchSalesOrder($saleId, $data);
+
+        if ($updateResult) {
+            $this->sendResponse('sale updated successfully', 200);
+        } else {
+            $this->sendResponse('Failed to update sale', 500);
+        }
+    }
+
 
     public function getPurchaseInvoice($purchaseId)
     {

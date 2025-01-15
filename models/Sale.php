@@ -843,6 +843,34 @@ class Sale
         }
     }
 
+    public function patchSalesOrder($orderId, $data)
+    {
+        $setClauses = [];
+        $params = [':order_id' => $orderId];
+
+        foreach ($data as $field => $value) {
+            $setClauses[] = "$field = :$field";
+            $params[":$field"] = $value;
+        }
+
+        $setClauseString = implode(', ', $setClauses);
+        $query = "
+            UPDATE sales_orders
+            SET $setClauseString
+            WHERE id = :order_id
+            RETURNING id;
+        ";
+
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute($params);
+            return $stmt->fetchColumn();
+        } catch (\PDOException $e) {
+            throw new \Exception("Failed to update sales order: " . $e->getMessage());
+        }
+    }
+
+
     private function insertSalesOrderItem($salesOrderId, $items)
     {
         $query = "

@@ -140,6 +140,9 @@ $routes = [
         '/customers/([a-fA-F0-9-]{36})' => [$customerController, 'update'],
         '/vendors/([a-fA-F0-9-]{36})' => [$vendorController, 'update'],
     ],
+    'PATCH' => [
+        '/sales/orders/([a-fA-F0-9-]{36})' => [$tradeController, 'patchSale'],
+    ],
     'DELETE' => [
         '/sales/price-list/([a-fA-F0-9-]{36})' => [$tradeController, 'deletePriceList'],
         '/human-resources/employees/([a-fA-F0-9-]{36})' => [$humanResourceController, 'deleteEmployee'],
