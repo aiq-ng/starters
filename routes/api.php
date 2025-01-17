@@ -9,6 +9,7 @@ use Controllers\DashboardController;
 use Controllers\AdminController;
 use Controllers\HumanResourceController;
 use Controllers\AccountingController;
+use Controllers\KitchenController;
 
 // Create instances of the controllers
 $authController = new AuthController();
@@ -20,6 +21,7 @@ $dashboardController = new DashboardController();
 $adminController = new AdminController();
 $humanResourceController = new HumanResourceController();
 $accountingController = new AccountingController();
+$kitchenController = new KitchenController();
 
 // Define routes
 $routes = [
@@ -67,6 +69,8 @@ $routes = [
         '/sales/graph' => [$tradeController, 'salesGraph'],
         '/sales/stocks/topselling' => [$tradeController, 'topSellingStocks'],
         '/sales/upcoming-events' => [$tradeController, 'upcomingEvents'],
+        '/kitchen' => [$kitchenController, 'index'],
+        '/kitchen/orders/([a-fA-F0-9-]{36})' => [$kitchenController, 'show'],
         '/accounting/expenses' => [$accountingController, 'getExpenses'],
         '/accounting/bills' => [$accountingController, 'getBills'],
         '/accounting/overview' => [$accountingController, 'overview'],
@@ -120,6 +124,7 @@ $routes = [
         '/employees/register' => [$humanResourceController, 'create'],
         '/sales/orders' => [$tradeController, 'createSale'],
         '/sales/price-list' => [$tradeController, 'createPriceList'],
+        '/kitchen/prepared' => [$kitchenController, 'markAsPrepared'],
         '/accounting/expenses' => [$accountingController, 'createExpense'],
         '/send-notification' => [$adminController, 'sendNotification'],
         '/human-resources/employees/leave/apply' => [$humanResourceController, 'applyLeave'],

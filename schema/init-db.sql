@@ -486,7 +486,8 @@ CREATE TABLE sales_orders (
     delivery_charge DECIMAL(20, 2) DEFAULT 0,
     total DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'pending' 
-        CHECK (status IN ('upcoming', 'pending', 'sent', 'paid', 'cancelled')),
+        -- CHECK (status IN ('upcoming', 'pending', 'sent', 'paid', 'cancelled')),
+        CHECK (status IN ('pending', 'cancelled', 'prepared', 'delivered', 'received')),
     processed_by UUID REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP

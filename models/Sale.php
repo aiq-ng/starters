@@ -913,18 +913,17 @@ class Sale
                 so.delivery_date,
                 json_agg(
                     json_build_object(
-                    'item_id', soi.item_id,
-                    'item_name', i.name,
-                    'item_description', i.description,
-                        'quantity', soi.quantity,
-                        'price', soi.price,
-                        'ammount', soi.quantity * soi.price
+                    'item_id', p.id,
+                    'item_name', p.item_details,
+                    'quantity', soi.quantity,
+                    'price', soi.price,
+                    'ammount', soi.quantity * soi.price
                     )
                 ) AS items
             FROM sales_orders so
             LEFT JOIN customers c ON so.customer_id = c.id
             LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
-            LEFT JOIN items i ON soi.item_id = i.id
+            LEFT JOIN price_lists p ON soi.item_id = p.id
             WHERE so.id = :sales_order_id
             GROUP BY so.id, c.display_name, so.invoice_number, so.order_title, so.order_type, 
                      so.discount, so.delivery_charge, so.total, c.email, so.created_at, so.delivery_date;
