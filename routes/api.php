@@ -125,6 +125,7 @@ $routes = [
         '/sales/orders' => [$tradeController, 'createSale'],
         '/sales/price-list' => [$tradeController, 'createPriceList'],
         '/kitchen/prepared' => [$kitchenController, 'markAsPrepared'],
+        '/accounting/received' => [$accountingController, 'markAsReceived'],
         '/accounting/expenses' => [$accountingController, 'createExpense'],
         '/send-notification' => [$adminController, 'sendNotification'],
         '/human-resources/employees/leave/apply' => [$humanResourceController, 'applyLeave'],

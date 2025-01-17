@@ -512,4 +512,14 @@ class Accounting
         $stmt->execute();
     }
 
+    public function markAsReceived(array $ids)
+    {
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+        $query = "UPDATE sales_orders SET status = 'received' WHERE id IN ($placeholders)";
+        $stmt = $this->db->prepare($query);
+
+        $stmt->execute($ids);
+    }
+
 }
