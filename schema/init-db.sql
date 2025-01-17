@@ -488,6 +488,7 @@ CREATE TABLE sales_orders (
     status VARCHAR(50) DEFAULT 'pending' 
         -- CHECK (status IN ('upcoming', 'pending', 'sent', 'paid', 'cancelled')),
         CHECK (status IN ('pending', 'cancelled', 'prepared', 'delivered', 'received', 'paid')),
+    sent_to_kitchen BOOLEAN DEFAULT FALSE,
     processed_by UUID REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -591,7 +592,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
 CREATE TRIGGER trigger_update_item_availability
 AFTER INSERT OR UPDATE OR DELETE
 ON item_stocks
@@ -602,4 +602,3 @@ CREATE TRIGGER check_overdue_status
 BEFORE UPDATE ON purchase_orders
 FOR EACH ROW
 EXECUTE FUNCTION set_status_to_overdue();
-

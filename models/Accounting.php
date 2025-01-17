@@ -3,6 +3,8 @@
 namespace Models;
 
 use Database\Database;
+use Services\NotificationService;
+use Controllers\BaseController;
 
 class Accounting
 {
@@ -500,26 +502,103 @@ class Accounting
 
     public function confirmSalesOrderPayment($orderId)
     {
-        $query = "
-            UPDATE sales_orders
-            SET status = 'paid'
-            WHERE id = :order_id
+        try {
+            $query = "
+                UPDATE sales_orders
+                SET status = 'paid',
+                    sent_to_kitchen = TRUE
+                WHERE id = :order_id
+            ";
+
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue('order_id', $orderId);
+            $stmt->execute();
+
+            if ($this->countPaidSalesOrders() >= 10) {
+                error_log("10 sales orders have been paid. Marking as received.");
+                $ids = $this->getSalesOrdersToKitchen();
+
+                error_log("Sales orders to mark as received: " . json_encode($ids));
+
+                if (empty($ids)) {
+                    return;
+                }
+                $this->markAsReceived($ids);
+            }
+
+        } catch (\PDOException $e) {
+            error_log("Error in confirmSalesOrderPayment: " . $e->getMessage());
+            throw new \Exception("An error occurred while confirming sales order payment.");
+        }
+    }
+
+    private function countPaidSalesOrders()
+    {
+        $countQuery = "
+            SELECT COUNT(*) 
+            FROM sales_orders
+            WHERE status = 'paid'
         ";
 
-        $stmt = $this->db->prepare($query);
-        $stmt->bindValue('order_id', $orderId);
+        $countStmt = $this->db->prepare($countQuery);
+        $countStmt->execute();
 
-        $stmt->execute();
+        return $countStmt->fetchColumn();
+
+    }
+
+
+    public function getSalesOrdersToKitchen()
+    {
+        try {
+            $fetchQuery = "
+                SELECT id
+                FROM sales_orders
+                WHERE sent_to_kitchen = TRUE
+                AND status = 'paid'
+            ";
+
+            $fetchStmt = $this->db->prepare($fetchQuery);
+            $fetchStmt->execute();
+
+            return $fetchStmt->fetchAll(\PDO::FETCH_COLUMN, 0);
+
+        } catch (\PDOException $e) {
+            error_log("Error in getSalesOrdersToKitchen: " . $e->getMessage());
+            throw new \Exception("An error occurred while fetching sales orders to kitchen.");
+        }
     }
 
     public function markAsReceived(array $ids)
     {
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        try {
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
-        $query = "UPDATE sales_orders SET status = 'received' WHERE id IN ($placeholders)";
-        $stmt = $this->db->prepare($query);
+            $query = "UPDATE sales_orders SET status = 'received' WHERE id IN ($placeholders)";
+            $stmt = $this->db->prepare($query);
 
-        $stmt->execute($ids);
+            $stmt->execute($ids);
+
+            $userToNotify =  BaseController::getUserByRole('Chef');
+            $totalMarked = $stmt->rowCount();
+
+            if ($totalMarked > 0) {
+                $notification = [
+                    'user_id' => $userToNotify['id'],
+                    'event' => 'notification',
+                    'entity_id' => $ids[0],
+                    'entity_type' => "sales_order",
+                    'title' => 'Sales Order Received',
+                    'body' => "{$totalMarked} sales order(s) have been accepted",
+                ];
+
+                (new NotificationService())->sendNotification($notification);
+
+            }
+
+        } catch (\PDOException $e) {
+            error_log("Error in markAsReceived: " . $e->getMessage());
+            throw new \Exception("An error occurred while marking sales orders as received.");
+        }
     }
-
 }

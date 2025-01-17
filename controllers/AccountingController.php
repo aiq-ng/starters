@@ -160,6 +160,7 @@ class AccountingController extends BaseController
             $this->accounting->markAsReceived($ids);
 
             $this->sendResponse('Sales marked as received', 200);
+
         } catch (\Exception $e) {
             $this->sendResponse('An error occurred: ' . $e->getMessage(), 500);
         }

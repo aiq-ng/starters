@@ -88,7 +88,28 @@ class TradeController extends BaseController
 
         $result = $this->purchase->markAsReceived($purchaseId);
 
+        error_log($result);
+
         if ($result) {
+
+            $userToNotify =  BaseController::getUserByRole('Accountant');
+            if (is_string($result)) {
+                $vendorName = $result;
+            } else {
+                $vendorName = 'a vendor';
+            }
+
+            $notification = [
+                'user_id' => $userToNotify['id'],
+                'event' => 'notification',
+                'entity_id' => $purchaseId,
+                'entity_type' => "purchase_order",
+                'title' => 'New Purchase Order',
+                'body' => 'Purchase order from ' . $vendorName . ' has been received',
+            ];
+
+            $this->notify->sendNotification($notification);
+
             $this->sendResponse('success', 200);
         } else {
             $this->sendResponse('Failed to mark purchase as received', 500);

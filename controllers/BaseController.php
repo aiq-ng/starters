@@ -9,7 +9,6 @@ use Exception;
 use Services\MediaHandler;
 use Services\EmailService;
 use Services\NotificationService;
-use Services\HttpClientService;
 use Models\Purchase;
 use Models\Sale;
 
@@ -22,7 +21,6 @@ class BaseController
     protected $mediaHandler;
     protected $emailService;
     protected $notify;
-    protected $httpClient;
 
     public function __construct()
     {
@@ -32,8 +30,7 @@ class BaseController
         $this->exp_time = getenv('ACCESS_TOKEN_EXPIRE_MINUTES');
         $this->mediaHandler = new MediaHandler();
         $this->emailService = new EmailService();
-        $this->httpClient = new HttpClientService();
-        $this->notify = new NotificationService($this->httpClient);
+        $this->notify = new NotificationService();
     }
 
     protected function getRequestData()
@@ -253,6 +250,29 @@ class BaseController
         } else {
             $this->sendResponse('success', 200, $notifications);
         }
+    }
+
+    public static function getUserByRole($roleName)
+    {
+        $db = Database::getInstance()->getConnection();
+
+        $roleQuery = "SELECT id FROM roles WHERE name = :name";
+        $stmtRole = $db->prepare($roleQuery);
+        $stmtRole->bindParam(':name', $roleName);
+        $stmtRole->execute();
+        $roleId = $stmtRole->fetch(\PDO::FETCH_ASSOC)['id'];
+
+        if (!$roleId) {
+            return null;
+        }
+
+        $userQuery = "SELECT * FROM users WHERE role_id = :role_id LIMIT 1";
+        $stmtUser = $db->prepare($userQuery);
+        $stmtUser->bindParam(':role_id', $roleId);
+        $stmtUser->execute();
+
+        $user = $stmtUser->fetch(\PDO::FETCH_ASSOC);
+        return $user;
     }
 
 

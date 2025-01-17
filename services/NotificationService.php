@@ -9,9 +9,9 @@ class NotificationService
     private HttpClientService $httpClientService;
     private $db;
 
-    public function __construct(HttpClientService $httpClientService)
+    public function __construct()
     {
-        $this->httpClientService = $httpClientService;
+        $this->httpClientService = new HttpClientService();
         $this->db = Database::getInstance()->getConnection();
     }
 

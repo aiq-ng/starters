@@ -322,16 +322,19 @@ class Purchase
             $items = $this->getPurchaseOrderItems($purchaseOrderId);
 
             $inventory = new Inventory();
+            if ($items) {
+                $vendorId = $items[0]['vendor_id'];
 
-            foreach ($items as $item) {
-                if (!$inventory->createItemStock($item['item_id'], $item)) {
-                    throw new \Exception('Failed to insert item stock.');
+                foreach ($items as $item) {
+                    if (!$inventory->createItemStock($item['item_id'], $item)) {
+                        throw new \Exception('Failed to insert item stock.');
+                    }
                 }
             }
 
             $this->db->commit();
 
-            return true;
+            return $vendorId ?? true;
 
         } catch (\Exception $e) {
             $this->db->rollBack();
@@ -341,21 +344,6 @@ class Purchase
 
     public function updatePurchaseOrderStatus($purchaseOrderId)
     {
-        $query = "
-            SELECT status 
-            FROM purchase_orders 
-            WHERE id = :purchase_order_id
-        ";
-
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([':purchase_order_id' => $purchaseOrderId]);
-
-        $currentStatus = $stmt->fetchColumn();
-
-        if ($currentStatus === 'received') {
-            throw new \Exception('Purchase order has already been marked as received.');
-        }
-
         $updateQuery = "
             UPDATE purchase_orders
             SET status = 'received',
@@ -373,28 +361,35 @@ class Purchase
 
     public function getPurchaseOrderItems($purchaseOrderId)
     {
-        $query = "
-            SELECT poi.id, 
-                poi.item_id, 
-                poi.quantity, 
-                poi.price, 
-                poi.tax_id,
-                po.branch_id,
-                po.vendor_id 
-            FROM purchase_order_items poi
-            LEFT JOIN purchase_orders po ON poi.purchase_order_id = po.id
-            WHERE poi.purchase_order_id = :purchase_order_id
-        ";
+        try {
+            $query = "
+                SELECT poi.id, 
+                    poi.item_id, 
+                    poi.quantity, 
+                    poi.price, 
+                    poi.tax_id,
+                    po.branch_id,
+                    po.vendor_id,
+                    v.display_name AS vendor_name
+                FROM purchase_order_items poi
+                LEFT JOIN purchase_orders po ON poi.purchase_order_id = po.id
+                LEFT JOIN vendors v ON po.vendor_id = v.id
+                WHERE poi.purchase_order_id = :purchase_order_id
+            ";
 
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([':purchase_order_id' => $purchaseOrderId]);
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([':purchase_order_id' => $purchaseOrderId]);
 
-        $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        foreach ($results as &$result) {
-            $result['expiry_date'] = date('Y-m-d', strtotime('+1 year'));
+            foreach ($results as &$result) {
+                $result['expiry_date'] = date('Y-m-d', strtotime('+1 year'));
+            }
+
+            return $results;
+        } catch (\Exception $e) {
+            error_log('Error fetching purchase order items: ' . $e->getMessage());
+            return [];
         }
-
-        return $results;
     }
 }
