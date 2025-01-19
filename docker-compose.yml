@@ -1,21 +1,39 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.app
+    container_name: starters-app
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./:/workspace/starters/app
+    environment:
+      - PORT=9090
+    env_file:
+      - .env
+    networks:
+      - starters-network
+    restart: always
+
   websocket:
     build:
       context: .
       dockerfile: docker/Dockerfile.websocket
     container_name: starters-ws
     ports:
-      - "8090:8090"
+      - "9091:9091"
     volumes:
       - ./websocket:/workspace/starters/websocket
+    environment:
+      - PORT=9091
     env_file:
       - websocket/.env
     networks:
-      - network
+      - starters-network
     restart: always
-    command: uvicorn main:app --host 0.0.0.0 --port 8090 --reload
 
 networks:
-  network:
+  starters-network:
     driver: bridge
 

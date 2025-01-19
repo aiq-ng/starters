@@ -1,4 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, WebSocket, WebSocketDisconnect
+from modules.logging import logger
 from modules.utils import keep_alive
 from modules.websocket.manager import ConnectionManager
 
@@ -7,12 +8,13 @@ ws = APIRouter(prefix="/ws", tags=["WebSocket"])
 manager = ConnectionManager()
 
 
-@ws.websocket("/")
+@ws.websocket("")
 async def connect_websocket(
     websocket: WebSocket, background_tasks: BackgroundTasks
 ):
     """Handle WebSocket events"""
     try:
+        logger.info("WebSocket connection initiated")
         await manager.connect(websocket)
         background_tasks.add_task(keep_alive, websocket)
 
@@ -23,7 +25,7 @@ async def connect_websocket(
             except WebSocketDisconnect:
                 break
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        logger.error(f"Unexpected error: {e}")
     finally:
         # Disconnect user after the connection is closed
         user_id = next(

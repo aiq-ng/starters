@@ -22,8 +22,16 @@ COPY websocket/pyproject.toml websocket/poetry.lock ./
 RUN poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi --no-root
 
 COPY websocket .
+COPY docker .
 
-EXPOSE 8090
+# Copy the entrypoint script
+COPY docker/scripts/websocket-entry.sh /usr/local/bin/entrypoint.sh
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8090", "--reload"]
+# Make the script executable
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
+# Expose the port
+EXPOSE 9091
+
+# Set the entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

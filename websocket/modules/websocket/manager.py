@@ -2,6 +2,7 @@ import json
 
 from fastapi import WebSocket
 from modules.auth import decode_token
+from modules.logging import logger
 from starlette.websockets import WebSocketState
 
 
@@ -14,21 +15,29 @@ class ConnectionManager:
         try:
             token = websocket.query_params.get("token")
 
+            logger.info(f"Token: {token}")
             if not token:
+                logger.error("Missing access token")
                 await websocket.close(code=1008, reason="Missing access token")
                 return None
 
             payload = await decode_token(token)
+            logger.info(f"Payload: {payload}")
             if not payload:
+                logger.error("Invalid access token")
                 await websocket.close(code=1008, reason="Invalid access token")
                 return None
 
             user_id = payload.get("data", {}).get("id")
+            logger.info(f"User ID: {user_id}")
+
             if not user_id:
+                logger.error("User ID not found in token payload")
                 raise ValueError("User ID not found in token payload")
 
             return user_id
         except Exception as e:
+            logger.error(f"Invalid token: {e}")
             await websocket.close(code=1008, reason=f"Invalid token: {e}")
             return None
 
@@ -43,7 +52,7 @@ class ConnectionManager:
             self.active_connections[user_id] = websocket
         except Exception as e:
             # Log the exception if needed
-            print(f"Error during connection: {e}")
+            logger.error(f"Error during connection: {e}")
             if websocket.client_state != WebSocketState.CLOSED:
                 await websocket.close(
                     code=1008, reason=f"Connection error: {e}"

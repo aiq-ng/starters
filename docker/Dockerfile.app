@@ -23,7 +23,7 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
-WORKDIR /workspace/starters
+WORKDIR /workspace/starters/app
 
 # Copy the application files to the working directory
 COPY . .
@@ -32,13 +32,13 @@ COPY . .
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy the entrypoint script
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY docker/scripts/app-entry.sh /usr/local/bin/entrypoint.sh
 
 # Make the script executable
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Expose the port
-EXPOSE 8000
+EXPOSE 9090
 
 # Set the entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

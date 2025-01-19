@@ -26,7 +26,7 @@ jobs:
       run: echo "$HEROKU_API_KEY" | docker login --username=_ --password-stdin registry.heroku.com
 
     - name: Build Docker image
-      run: docker build -t registry.heroku.com/${{ secrets.HEROKU_APP_NAME }}/web .
+      run: docker build -t registry.heroku.com/${{ secrets.HEROKU_APP_NAME }}/web -f docker/Dockerfile.app .
 
     - name: Push Docker image to Heroku
       run: docker push registry.heroku.com/${{ secrets.HEROKU_APP_NAME }}/web
