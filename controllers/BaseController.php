@@ -365,18 +365,80 @@ class BaseController
         $this->sendResponse('Invoice sent successfully', 200);
     }
 
-    protected function fetchData(string $table, array $columns = ['*'])
-    {
-        $columnsList = implode(', ', $columns);
-        $query = "SELECT $columnsList FROM $table";
-        $stmt = $this->db->query($query);
-        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    protected function fetchData(
+        string $table,
+        array $searchColumns = [],
+        array $columns = ['*']
+    ) {
+        $filters = [
+            'search' => isset($_GET['search']) ? $_GET['search'] : null,
+            'page' => isset($_GET['page']) && is_numeric($_GET['page']) && (int)$_GET['page'] > 0
+                ? (int)$_GET['page']
+                : 1,
+            'page_size' => isset($_GET['page_size']) && is_numeric($_GET['page_size']) && (int)$_GET['page_size'] > 0
+                ? (int)$_GET['page_size']
+                : 10,
+        ];
 
-        if (empty($result)) {
-            throw new \Exception("No records found in the table '$table'.");
+        $page = $filters['page'];
+        $perPage = $filters['page_size'];
+
+        $searchConditions = [];
+        if (!empty($filters['search'])) {
+            foreach ($searchColumns as $column) {
+                $searchConditions[$column] = $filters['search'];
+            }
         }
 
-        return $result;
+        $columnsList = implode(', ', $columns);
+        $offset = ($page - 1) * $perPage;
+        $searchQuery = '';
+
+        if (!empty($searchConditions)) {
+            $searchClauses = [];
+            foreach ($searchConditions as $column => $value) {
+                $searchClauses[] = "$column ILIKE :$column";
+            }
+            $searchQuery = 'WHERE ' . implode(' OR ', $searchClauses);
+        }
+
+        $query = "SELECT $columnsList FROM $table $searchQuery LIMIT :perPage OFFSET :offset";
+        $countQuery = "SELECT COUNT(*) as total FROM $table $searchQuery";
+
+        $stmt = $this->db->prepare($query);
+        $countStmt = $this->db->prepare($countQuery);
+
+        if (!empty($searchConditions)) {
+            foreach ($searchConditions as $column => $value) {
+                $stmt->bindValue(":$column", "%$value%");
+                $countStmt->bindValue(":$column", "%$value%");
+            }
+        }
+        $stmt->bindValue(':perPage', $perPage, \PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+
+        $stmt->execute();
+        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $countStmt->execute();
+        $totalItems = (int) $countStmt->fetch(\PDO::FETCH_ASSOC)['total'];
+
+        if (empty($result)) {
+            return $this->sendResponse('Not Found', 404, []);
+        }
+
+        $totalPages = ceil($totalItems / $perPage);
+
+        $meta = [
+            'total_data' => $totalItems,
+            'total_pages' => $totalPages,
+            'page_size' => $perPage,
+            'previous_page' => $page > 1 ? $page - 1 : null,
+            'current_page' => $page,
+            'next_page' => $page + 1 <= $totalPages ? $page + 1 : null,
+        ];
+
+        return ['data' => $result, 'meta' => $meta];
     }
 
     protected function insertData(string $table, array $data)
@@ -400,8 +462,8 @@ class BaseController
 
     public function getRoles()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('roles'));
-
+        $result = $this->fetchData('roles', ['name'], ['id', 'name']);
+        return $this->sendResponse('success', 200, $result['data'], $result['meta']);
     }
 
     public function createRole()
@@ -415,7 +477,20 @@ class BaseController
 
     public function getUnits()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('units', ['id', 'name', 'abbreviation']));
+
+        $result = $this->fetchData(
+            'units',
+            ['name', 'abbreviation'],
+            ['id', 'name', 'abbreviation']
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
+
     }
 
     public function createUnit()
@@ -428,14 +503,20 @@ class BaseController
         return $this->insertData('units', $data);
     }
 
-    public function getVendors()
-    {
-        return $this->sendResponse('success', 200, $this->fetchData('vendors'));
-    }
-
     public function getVendorCategories()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('vendor_categories', ['id', 'name', 'description']));
+        $result = $this->fetchData(
+            'vendor_categories',
+            ['name', 'description'],
+            ['id', 'name', 'description']
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
     }
 
     public function createVendorCategory()
@@ -450,7 +531,18 @@ class BaseController
 
     public function getCurrencies()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('currencies', ['id', 'name', 'symbol']));
+        $result = $this->fetchData(
+            'currencies',
+            ['name', 'symbol', 'code'],
+            ['id', 'name', 'symbol', 'code']
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
     }
 
     public function createCurrency()
@@ -466,7 +558,18 @@ class BaseController
 
     public function getPaymentMethods()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('payment_methods', ['id', 'name', 'description']));
+        $result = $this->fetchData(
+            'payment_methods',
+            ['name', 'description'],
+            ['id', 'name', 'description']
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
     }
 
     public function createPaymentMethod()
@@ -481,7 +584,18 @@ class BaseController
 
     public function getPaymentTerms()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('payment_terms', ['id', 'name', 'description']));
+        $result = $this->fetchData(
+            'payment_terms',
+            ['name', 'description'],
+            ['id', 'name', 'description']
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
     }
 
     public function createPaymentTerm()
@@ -496,7 +610,18 @@ class BaseController
 
     public function getTaxes()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('taxes', ['id', 'name', 'rate',  'description']));
+        $result = $this->fetchData(
+            'taxes',
+            ['name', 'rate', 'description'],
+            ['id', 'name', 'rate', 'description']
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
     }
 
     public function createTax()
@@ -512,7 +637,18 @@ class BaseController
 
     public function getDepartments()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('departments', ['id', 'name', 'description']));
+        $result = $this->fetchData(
+            'departments',
+            ['name', 'description'],
+            ['id', 'name', 'description']
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
     }
 
     public function createDepartment()
@@ -527,7 +663,18 @@ class BaseController
 
     public function getBranches()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('branches', ['id', 'name']));
+        $result = $this->fetchData(
+            'branches',
+            ['name', 'description'],
+            ['id', 'name', 'description']
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
     }
 
     public function createBranch()
@@ -542,7 +689,18 @@ class BaseController
 
     public function getItemCategories()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('item_categories', ['id', 'name', 'description']));
+        $result = $this->fetchData(
+            'item_categories',
+            ['name', 'description'],
+            ['id', 'name', 'description']
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
     }
 
     public function createItemCategory()
@@ -557,7 +715,18 @@ class BaseController
 
     public function getItemManufacturers()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('item_manufacturers', ['id', 'name', 'website']));
+        $result = $this->fetchData(
+            'item_manufacturers',
+            ['name', 'website'],
+            ['id', 'name', 'website']
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
     }
 
     public function createItemManufacturer()
@@ -572,7 +741,18 @@ class BaseController
 
     public function getBasePayTypes()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('base_pay_types'));
+        $result = $this->fetchData(
+            'base_pay_types',
+            ['name', 'description'],
+            ['id', 'name', 'description']
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
     }
 
     public function createBasePayType()
@@ -587,12 +767,34 @@ class BaseController
 
     public function getUsers()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('users', ['id', 'name', 'email', 'role_id']));
+        $result = $this->fetchData(
+            'users',
+            ['name', 'email'],
+            ['id', 'name', 'email', 'role_id']
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
     }
 
     public function getNoOfWorkingDays()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('no_of_working_days'));
+        $result = $this->fetchData(
+            'no_of_working_days',
+            ['name', 'description'],
+            ['id', 'name', 'description']
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
     }
 
     public function createNoOfWorkingDays()
@@ -607,7 +809,18 @@ class BaseController
 
     public function getPermissions()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('permissions'));
+        $result = $this->fetchData(
+            'permissions',
+            ['name', 'description'],
+            ['id', 'name', 'description']
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
     }
 
     public function createPermission()
@@ -622,7 +835,18 @@ class BaseController
 
     public function getExpensesCategories()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('expenses_categories'));
+        $result = $this->fetchData(
+            'expenses_categories',
+            ['name', 'description'],
+            ['id', 'name', 'description']
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
     }
 
     public function createExpensesCategory()
@@ -646,6 +870,17 @@ class BaseController
 
     public function getWorkLeaveQualifications()
     {
-        return $this->sendResponse('success', 200, $this->fetchData('work_leave_qualifications'));
+        $result = $this->fetchData(
+            'work_leave_qualifications',
+            ['name'],
+            ['id', 'name']
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
     }
 }
