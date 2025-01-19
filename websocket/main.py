@@ -1,20 +1,21 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+
 from modules.schemas import NotificationAllRequest, NotificationRequest
 from modules.websocket.router import manager, ws
 
 app = FastAPI()
 
 # Bind the WebSocket router to the app
-app.include_router(ws, prefix="/starters")
+app.include_router(ws)
 
 
-@app.get("/starters/")
+@app.get("/")
 async def root():
     return {"message": "Hello, I'm a WebSocket server!"}
 
 
-@app.post("/starters/send-notification/")
+@app.post("/send-notification/")
 async def send_notification(request: NotificationRequest):
     try:
         print(f"\n\nSending notification to user: {request.user_id}")
@@ -36,7 +37,7 @@ async def send_notification(request: NotificationRequest):
         return JSONResponse(content={"message": str(e)}, status_code=400)
 
 
-@app.post("/starters/broadcast-notification/")
+@app.post("/broadcast-notification/")
 async def send_notification_all(request: NotificationAllRequest):
     try:
 

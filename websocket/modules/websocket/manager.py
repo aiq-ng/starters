@@ -1,9 +1,10 @@
 import json
 
 from fastapi import WebSocket
+from starlette.websockets import WebSocketState
+
 from modules.auth import decode_token
 from modules.logging import logger
-from starlette.websockets import WebSocketState
 
 
 class ConnectionManager:
@@ -15,21 +16,18 @@ class ConnectionManager:
         try:
             token = websocket.query_params.get("token")
 
-            logger.info(f"Token: {token}")
             if not token:
                 logger.error("Missing access token")
                 await websocket.close(code=1008, reason="Missing access token")
                 return None
 
             payload = await decode_token(token)
-            logger.info(f"Payload: {payload}")
             if not payload:
                 logger.error("Invalid access token")
                 await websocket.close(code=1008, reason="Invalid access token")
                 return None
 
             user_id = payload.get("data", {}).get("id")
-            logger.info(f"User ID: {user_id}")
 
             if not user_id:
                 logger.error("User ID not found in token payload")
@@ -68,8 +66,7 @@ class ConnectionManager:
             ):
                 await websocket.close()
         except Exception as e:
-            # Log the exception if needed
-            print(f"Error during disconnect: {e}")
+            logger.error(f"Error during disconnect: {e}")
 
     async def send_message(self, data: dict):
         """Send a message to a specific user"""
@@ -81,8 +78,7 @@ class ConnectionManager:
             ):
                 await websocket.send_text(json.dumps(data))
         except Exception as e:
-            # Log the exception if needed
-            print(f"Error sending message: {e}")
+            logger.error(f"Error sending message: {e}")
 
     async def broadcast(self, data: dict):
         """Broadcast a message to all connected users"""
@@ -91,8 +87,7 @@ class ConnectionManager:
                 if websocket.client_state == WebSocketState.CONNECTED:
                     await websocket.send_text(json.dumps(data))
         except Exception as e:
-            # Log the exception if needed
-            print(f"Error broadcasting message: {e}")
+            logger.error(f"Error broadcasting message: {e}")
 
 
 manager = ConnectionManager()

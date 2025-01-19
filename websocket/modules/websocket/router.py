@@ -1,4 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, WebSocket, WebSocketDisconnect
+
 from modules.logging import logger
 from modules.utils import keep_alive
 from modules.websocket.manager import ConnectionManager
@@ -15,6 +16,7 @@ async def connect_websocket(
     """Handle WebSocket events"""
     try:
         logger.info("WebSocket connection initiated")
+
         await manager.connect(websocket)
         background_tasks.add_task(keep_alive, websocket)
 
