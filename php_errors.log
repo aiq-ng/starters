@@ -192,3 +192,6 @@ Stack trace:
 
 [20-Oct-2024 01:51:13 UTC] Retrieved products for warehouse ID:
 [20-Oct-2024 01:59:49 UTC] Retrieved products for warehouse ID:
+[19-Jan-2025 18:15:35 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[19-Jan-2025 18:17:33 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":"beef"}
+[19-Jan-2025 18:22:59 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
