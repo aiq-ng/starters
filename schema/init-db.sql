@@ -496,6 +496,16 @@ CREATE TABLE sales_orders (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Chef Assignments
+CREATE TABLE chef_assignments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    chef_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    order_id UUID REFERENCES sales_orders(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_chef_order UNIQUE (chef_id, order_id)
+);
+
 -- Sales Order Items
 CREATE TABLE sales_order_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

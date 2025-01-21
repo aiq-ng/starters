@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS expenses CASCADE;
 DROP TABLE IF EXISTS expenses_categories CASCADE;
 
 -- Sales Orders and Items
+DROP TABLE IF EXISTS chef_assignments CASCADE;
 DROP TABLE IF EXISTS sales_order_items CASCADE;
 DROP TABLE IF EXISTS sales_orders CASCADE;
 

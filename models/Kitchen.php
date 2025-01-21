@@ -14,15 +14,26 @@ class Kitchen
 
     }
 
-    public function markAsPrepared(array $ids)
+    public function getChefs($roleId)
     {
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $query = "SELECT u.id, u.name, COUNT(ca.order_id) AS total_assignments 
+              FROM users u
+              LEFT JOIN chef_assignments ca ON u.id = ca.chef_id
+              WHERE u.role_id = :role_id
+              GROUP BY u.id, u.name";
 
-        $query = "UPDATE sales_orders SET status = 'prepared' WHERE id IN ($placeholders)";
         $stmt = $this->db->prepare($query);
 
-        $stmt->execute($ids);
+        try {
+            $stmt->bindValue(':role_id', $roleId);
+            $stmt->execute();
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            return $result;
+        } catch (\Exception $e) {
+            throw new \Exception("Failed to fetch chefs: " . $e->getMessage());
+        }
     }
+
 
     public function getNewOrders($filters = [])
     {
@@ -166,6 +177,37 @@ class Kitchen
             return $count;
         } catch (\Exception $e) {
             throw new \Exception("Failed to fetch orders count: " . $e->getMessage());
+        }
+    }
+
+    public function updateOrderStatus($id, $status)
+    {
+        $query = "UPDATE sales_orders SET status = :status WHERE id = :id";
+        $stmt = $this->db->prepare($query);
+
+        try {
+            $stmt->execute([
+                ':id' => $id,
+                ':status' => $status,
+            ]);
+        } catch (\Exception $e) {
+            throw new \Exception("Failed to update order status: " . $e->getMessage());
+        }
+    }
+
+    public function assignOrder($orderId, $userId)
+    {
+        $query = "INSERT INTO chef_assignments (order_id, chef_id) VALUES (:order_id, :chef_id)";
+
+        $stmt = $this->db->prepare($query);
+
+        try {
+            $stmt->execute([
+                ':order_id' => $orderId,
+                ':chef_id' => $userId,
+            ]);
+        } catch (\Exception $e) {
+            throw new \Exception("Failed to assign order: " . $e->getMessage());
         }
     }
 

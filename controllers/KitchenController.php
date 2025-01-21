@@ -60,24 +60,60 @@ class KitchenController extends BaseController
         }
     }
 
-    public function markAsPrepared()
+    public function updateStatus($salesId)
     {
         $this->authorizeRequest();
 
         try {
-            $data = $this->getRequestData();
 
-            if (empty($data['ids'])) {
-                $this->sendResponse('Sales IDs are required', 400);
+            $status = isset($_GET['status']) ? $_GET['status'] : null;
+
+            if (empty($status)) {
+                $this->sendResponse('Status is required', 400);
             }
 
-            $ids = is_array($data['ids']) ? $data['ids'] : [$data['ids']];
+            $this->kitchen->updateOrderStatus($salesId, $status);
 
-            $this->kitchen->markAsPrepared($ids);
-
-            $this->sendResponse('Sales marked as prepared', 200);
+            $this->sendResponse('Status updated', 200);
         } catch (\Exception $e) {
             $this->sendResponse('An error occurred: ' . $e->getMessage(), 500);
+        }
+    }
+
+    public function assignOrder($salesId)
+    {
+        $this->authorizeRequest();
+
+        try {
+
+            $chefId = isset($_GET['chef_id']) ? $_GET['chef_id'] : null;
+
+            if (empty($chefId)) {
+                $this->sendResponse('Chef ID is required', 400);
+            }
+
+            $this->kitchen->assignOrder($salesId, $chefId);
+
+            $this->sendResponse('Order assigned', 200);
+
+        } catch (\Exception $e) {
+            $this->sendResponse('An error occurred: ' . $e->getMessage(), 500);
+        }
+
+    }
+
+    public function getChefs()
+    {
+        $this->authorizeRequest();
+
+        $chefId = $this->getRoleIdByName('Chef');
+
+        $chefs = $this->kitchen->getChefs($chefId);
+
+        if (!empty($chefs)) {
+            $this->sendResponse('success', 200, $chefs);
+        } else {
+            $this->sendResponse('Chefs not found', 404);
         }
     }
 

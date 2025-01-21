@@ -1065,6 +1065,14 @@ VALUES
  (SELECT id FROM price_lists WHERE item_details = 'Frozen Mixed Vegetables'), 2, 1500.00);
 
 
+INSERT INTO chef_assignments (chef_id, order_id)
+VALUES
+((SELECT id FROM users WHERE email = 'starters@admin.com'), 
+ (SELECT id FROM sales_orders WHERE customer_note = 'Confirm with team')),
+((SELECT id FROM users WHERE email = 'starters@admin.com'), 
+ (SELECT id FROM sales_orders WHERE customer_note = 'Ensure vegetarian options')),
+((SELECT id FROM users WHERE email = 'starters@admin.com'), 
+ (SELECT id FROM sales_orders WHERE customer_note = 'Ensure delivery by noon'));
 
 -- Insert into item_stock_adjustments
 INSERT INTO item_stock_adjustments (
