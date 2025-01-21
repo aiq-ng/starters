@@ -911,6 +911,7 @@ class Sale
                 c.email AS customer_email,
                 so.discount,
                 so.delivery_charge,
+                so.delivery_address,
                 so.total,
                 so.created_at AS invoice_date,
                 so.delivery_date,

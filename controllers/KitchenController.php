@@ -45,16 +45,8 @@ class KitchenController extends BaseController
 
         $invoice = $this->sale->getInvoiceDetails($salesId);
 
-        $returnData = [
-            'id' => $invoice['id'],
-            'order_title' => $invoice['order_title'],
-            'invoice_number' => $invoice['invoice_number'],
-            'customer_name' => $invoice['customer_name'],
-            'items' => $invoice['items'],
-        ];
-
         if ($invoice) {
-            $this->sendResponse('success', 200, $returnData);
+            $this->sendResponse('success', 200, $invoice);
         } else {
             $this->sendResponse('Data not found', 404);
         }
