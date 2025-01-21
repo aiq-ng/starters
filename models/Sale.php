@@ -259,11 +259,11 @@ class Sale
         }
 
         $query = "
-        SELECT SUM(total) AS total_sales
-        FROM sales_orders
-        WHERE created_at BETWEEN :start_date AND :end_date
-        AND status = 'paid'
-    ";
+            SELECT SUM(total) AS total_sales
+            FROM sales_orders
+            WHERE created_at BETWEEN :start_date AND :end_date
+            AND status = 'paid'
+        ";
 
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(':start_date', $$period === 'today' ? $startOfDay : ($period === 'week' ? $startOfWeek : $startOfMonth));
@@ -805,20 +805,21 @@ class Sale
             INSERT INTO sales_orders (
                 order_type, order_title, payment_term_id, customer_id,
                 payment_method_id, delivery_option, 
-                assigned_driver_id, delivery_date, additional_note,
-                customer_note, discount, delivery_charge, total
+                assigned_driver_id, delivery_date, delivery_time, delivery_address,
+                additional_note, customer_note, discount, delivery_charge, total
             ) 
             VALUES (
                 :order_type, :order_title, :payment_term_id, :customer_id,
                 :payment_method_id, :delivery_option, 
-                :assigned_driver_id, :delivery_date, :additional_note,
-                :customer_note, :discount, :delivery_charge,
+                :assigned_driver_id, :delivery_date, :delivery_time, :delivery_address, 
+                :additional_note, :customer_note, :discount, :delivery_charge,
                 :total 
             ) 
             RETURNING id;
         ";
 
         try {
+
             $stmt = $this->db->prepare($query);
 
             $stmt->execute([
@@ -830,6 +831,8 @@ class Sale
                 ':delivery_option' => $data['delivery_option'] ?? null,
                 ':assigned_driver_id' => $data['assigned_driver_id'] ?? null,
                 ':delivery_date' => $data['delivery_date'] ?? null,
+                ':delivery_time' => $data['delivery_time'] ?? null,
+                ':delivery_address' => $data['delivery_address'] ?? null,
                 ':additional_note' => $data['additional_note'] ?? null,
                 ':customer_note' => $data['customer_note'] ?? null,
                 ':discount' => $data['discount'] ?? null,

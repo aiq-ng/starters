@@ -195,3 +195,425 @@ Stack trace:
 [19-Jan-2025 18:15:35 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
 [19-Jan-2025 18:17:33 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":"beef"}
 [19-Jan-2025 18:22:59 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[21-Jan-2025 11:47:03 UTC] Error: Undefined array key "email" in /workspace/starters/app/controllers/AuthController.php on line 53
+[21-Jan-2025 12:17:43 UTC] Exception: Failed to orders: SQLSTATE[HY093]: Invalid parameter number: :search
+[21-Jan-2025 12:59:46 UTC] Exception: Failed to insert sales order: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type uuid: "4"
+CONTEXT:  unnamed portal parameter $3 = '...'
+[21-Jan-2025 13:02:12 UTC] Exception: Failed to insert sales order: SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "sales_orders" violates foreign key constraint "sales_orders_assigned_driver_id_fkey"
+DETAIL:  Key (assigned_driver_id)=(76da6901-b6ab-460f-b78a-d18757a368fc) is not present in table "users".
+[21-Jan-2025 13:03:18 UTC] Exception: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type uuid: "3"
+CONTEXT:  unnamed portal parameter $2 = '...'
+[21-Jan-2025 13:08:02 UTC] Exception: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type uuid: "3"
+CONTEXT:  unnamed portal parameter $2 = '...'
+[21-Jan-2025 13:10:04 UTC] {"order_type":"order","order_title":"Office Supplies Purchase","customer_id":"fbdd13c5-6064-416c-a5d2-a9b134387592","payment_method_id":"8da41adb-619a-4244-ba82-641a7a5599bb","payment_term_id":"8b6297ec-42dc-4d2c-84b8-397f8df7aaad","delivery_option":"delivery","assigned_driver_id":"78ed5adf-e9ca-4acc-b276-11e095ceae6d","delivery_date":"2024-12-05","delivery_time":"13:12","delivery_address":"An address","additional_note":"Ensure to be available for delivery.","customer_note":"Thank You For Your Business","discount":5,"delivery_charge":50,"total":1050,"items":[{"item_id":3,"quantity":10,"price":100},{"item_id":4,"quantity":5,"price":50}],"user_id":"c5721736-2250-4827-80c7-6d2a47aec057"}
+[21-Jan-2025 13:10:06 UTC] Exception: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type uuid: "3"
+CONTEXT:  unnamed portal parameter $2 = '...'
+[21-Jan-2025 13:12:07 UTC] {"order_type":"order","order_title":"Office Supplies Purchase","customer_id":"fbdd13c5-6064-416c-a5d2-a9b134387592","payment_method_id":"8da41adb-619a-4244-ba82-641a7a5599bb","payment_term_id":"8b6297ec-42dc-4d2c-84b8-397f8df7aaad","delivery_option":"delivery","assigned_driver_id":"78ed5adf-e9ca-4acc-b276-11e095ceae6d","delivery_date":"2024-12-05","delivery_time":"13:12","delivery_address":"An address","additional_note":"Ensure to be available for delivery.","customer_note":"Thank You For Your Business","discount":5,"delivery_charge":50,"total":1050,"items":[{"item_id":3,"quantity":10,"price":100},{"item_id":4,"quantity":5,"price":50}]}
+[21-Jan-2025 13:12:07 UTC] {"order_type":"order","order_title":"Office Supplies Purchase","customer_id":"fbdd13c5-6064-416c-a5d2-a9b134387592","payment_method_id":"8da41adb-619a-4244-ba82-641a7a5599bb","payment_term_id":"8b6297ec-42dc-4d2c-84b8-397f8df7aaad","delivery_option":"delivery","assigned_driver_id":"78ed5adf-e9ca-4acc-b276-11e095ceae6d","delivery_date":"2024-12-05","delivery_time":"13:12","delivery_address":"An address","additional_note":"Ensure to be available for delivery.","customer_note":"Thank You For Your Business","discount":5,"delivery_charge":50,"total":1050,"items":[{"item_id":3,"quantity":10,"price":100},{"item_id":4,"quantity":5,"price":50}],"user_id":"c5721736-2250-4827-80c7-6d2a47aec057"}
+[21-Jan-2025 13:12:10 UTC] Exception: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type uuid: "3"
+CONTEXT:  unnamed portal parameter $2 = '...'
+[21-Jan-2025 13:13:11 UTC] {"order_type":"order","order_title":"Office Supplies Purchase","customer_id":"fbdd13c5-6064-416c-a5d2-a9b134387592","payment_method_id":"8da41adb-619a-4244-ba82-641a7a5599bb","payment_term_id":"8b6297ec-42dc-4d2c-84b8-397f8df7aaad","delivery_option":"delivery","assigned_driver_id":"78ed5adf-e9ca-4acc-b276-11e095ceae6d","delivery_date":"2024-12-05","delivery_time":"13:12","delivery_address":"An address","additional_note":"Ensure to be available for delivery.","customer_note":"Thank You For Your Business","discount":5,"delivery_charge":50,"total":1050,"items":[{"item_id":3,"quantity":10,"price":100},{"item_id":4,"quantity":5,"price":50}],"user_id":"c5721736-2250-4827-80c7-6d2a47aec057"}
+[21-Jan-2025 13:13:13 UTC] Exception: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type uuid: "3"
+CONTEXT:  unnamed portal parameter $2 = '...'
+[21-Jan-2025 13:14:19 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[21-Jan-2025 13:15:16 UTC] {"order_type":"order","order_title":"Office Supplies Purchase","customer_id":"fbdd13c5-6064-416c-a5d2-a9b134387592","payment_method_id":"8da41adb-619a-4244-ba82-641a7a5599bb","payment_term_id":"8b6297ec-42dc-4d2c-84b8-397f8df7aaad","delivery_option":"delivery","assigned_driver_id":"78ed5adf-e9ca-4acc-b276-11e095ceae6d","delivery_date":"2024-12-05","delivery_time":"13:12","delivery_address":"An address","additional_note":"Ensure to be available for delivery.","customer_note":"Thank You For Your Business","discount":5,"delivery_charge":50,"total":1050,"items":[{"item_id":"05a07750-ae74-4d5a-af9a-6e882d3c65c7","quantity":10,"price":100},{"item_id":"09ded5a7-a57a-474b-8fab-8618a8155787","quantity":5,"price":50}],"user_id":"c5721736-2250-4827-80c7-6d2a47aec057"}
+[21-Jan-2025 13:15:18 UTC] Exception: SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "sales_order_items" violates foreign key constraint "sales_order_items_item_id_fkey"
+DETAIL:  Key (item_id)=(05a07750-ae74-4d5a-af9a-6e882d3c65c7) is not present in table "price_lists".
+[21-Jan-2025 13:16:38 UTC] {"order_type":"order","order_title":"Office Supplies Purchase","customer_id":"fbdd13c5-6064-416c-a5d2-a9b134387592","payment_method_id":"8da41adb-619a-4244-ba82-641a7a5599bb","payment_term_id":"8b6297ec-42dc-4d2c-84b8-397f8df7aaad","delivery_option":"delivery","assigned_driver_id":"78ed5adf-e9ca-4acc-b276-11e095ceae6d","delivery_date":"2024-12-05","delivery_time":"13:12","delivery_address":"An address","additional_note":"Ensure to be available for delivery.","customer_note":"Thank You For Your Business","discount":5,"delivery_charge":50,"total":1050,"items":[{"item_id":"f2150f75-8a52-4d61-8a89-370e539a46d0","quantity":10,"price":100},{"item_id":"1b2c630d-03be-4ff8-904e-04de40fc6e88","quantity":5,"price":50}],"user_id":"c5721736-2250-4827-80c7-6d2a47aec057"}
+[21-Jan-2025 13:28:07 UTC] Page: 1, PageSize: 10, Status: received, Date: 2025-01-21, Search: , OrderType: , SortBy: delivery_date, Order: DESC
+[21-Jan-2025 13:29:18 UTC] Page: 1, PageSize: 10, Status: , Date: 2025-01-21, Search: , OrderType: , SortBy: delivery_date, Order: DESC
+[21-Jan-2025 13:30:27 UTC] Page: 1, PageSize: 10, Status: new order, Date: 2025-01-21, Search: , OrderType: , SortBy: delivery_date, Order: DESC
+[21-Jan-2025 13:37:44 UTC] Executing Query: 
+    SELECT so.id,
+        so.invoice_number,
+        so.reference_number,
+        so.order_title,
+        so.order_type,
+        c.display_name AS customer_name,
+        c.email AS customer_email,
+        so.discount,
+        so.delivery_charge,
+        so.total,
+        so.created_at AS invoice_date,
+        so.delivery_date,
+        so.status,
+        so.processed_by,
+        json_agg(
+            json_build_object(
+                'item_id', p.id,
+                'item_name', p.item_details,
+                'quantity', soi.quantity,
+                'price', soi.price,
+                'amount', soi.quantity * soi.price
+            )
+        ) AS items
+    FROM sales_orders so
+    LEFT JOIN customers c ON so.customer_id = c.id
+    LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
+    LEFT JOIN price_lists p ON soi.item_id = p.id
+    WHERE 1=1
+ AND so.status = :status AND DATE(so.created_at) = :date
+    GROUP BY so.id, c.display_name, c.email, so.invoice_number, so.order_title,
+             so.order_type, so.discount, so.delivery_charge, so.total, 
+             so.created_at, so.delivery_date, so.status, so.processed_by
+    ORDER BY so.delivery_date DESC
+    LIMIT :page_size OFFSET :offset
+
+[21-Jan-2025 13:37:44 UTC] With Params: Array
+(
+    [:status] => new order
+    [:date] => 2025-01-21
+    [:page_size] => 10
+    [:offset] => 0
+)
+
+[21-Jan-2025 13:38:13 UTC] Executing Query: 
+    SELECT so.id,
+        so.invoice_number,
+        so.reference_number,
+        so.order_title,
+        so.order_type,
+        c.display_name AS customer_name,
+        c.email AS customer_email,
+        so.discount,
+        so.delivery_charge,
+        so.total,
+        so.created_at AS invoice_date,
+        so.delivery_date,
+        so.status,
+        so.processed_by,
+        json_agg(
+            json_build_object(
+                'item_id', p.id,
+                'item_name', p.item_details,
+                'quantity', soi.quantity,
+                'price', soi.price,
+                'amount', soi.quantity * soi.price
+            )
+        ) AS items
+    FROM sales_orders so
+    LEFT JOIN customers c ON so.customer_id = c.id
+    LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
+    LEFT JOIN price_lists p ON soi.item_id = p.id
+    WHERE 1=1
+ AND so.status IN ('new order', 'in progress', 'completed') AND DATE(so.created_at) = :date
+    GROUP BY so.id, c.display_name, c.email, so.invoice_number, so.order_title,
+             so.order_type, so.discount, so.delivery_charge, so.total, 
+             so.created_at, so.delivery_date, so.status, so.processed_by
+    ORDER BY so.delivery_date DESC
+    LIMIT :page_size OFFSET :offset
+
+[21-Jan-2025 13:38:13 UTC] With Params: Array
+(
+    [:date] => 2025-01-21
+    [:page_size] => 10
+    [:offset] => 0
+)
+
+[21-Jan-2025 13:40:30 UTC] Executing Query: 
+            SELECT so.id,
+                so.invoice_number,
+                so.reference_number,
+                so.order_title,
+                so.order_type,
+                c.display_name AS customer_name,
+                c.email AS customer_email,
+                so.discount,
+                so.delivery_charge,
+                so.total,
+                so.created_at AS invoice_date,
+                so.delivery_date,
+                so.status,
+                so.processed_by,
+                json_agg(
+                    json_build_object(
+                        'item_id', p.id,
+                        'item_name', p.item_details,
+                        'quantity', soi.quantity,
+                        'price', soi.price,
+                        'amount', soi.quantity * soi.price
+                    )
+                ) AS items
+            FROM sales_orders so
+            LEFT JOIN customers c ON so.customer_id = c.id
+            LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
+            LEFT JOIN price_lists p ON soi.item_id = p.id
+            WHERE 1=1
+         AND so.status IN ('new order', 'in progress', 'completed')
+        GROUP BY so.id, c.display_name, c.email, so.invoice_number, so.order_title,
+                 so.order_type, so.discount, so.delivery_charge, so.total, 
+                 so.created_at, so.delivery_date, so.status, so.processed_by
+        ORDER BY so.delivery_date DESC
+        LIMIT :page_size OFFSET :offset
+    
+[21-Jan-2025 13:40:30 UTC] With Params: Array
+(
+    [:page_size] => 10
+    [:offset] => 0
+)
+
+[21-Jan-2025 13:51:31 UTC] Exception: Failed to fetch orders: Failed to fetch orders count: SQLSTATE[HY093]: Invalid parameter number: :page_size
+[21-Jan-2025 13:53:19 UTC] Exception: Failed to fetch orders: Failed to fetch orders count: SQLSTATE[HY093]: Invalid parameter number: :page_size
+[21-Jan-2025 13:53:27 UTC] Exception: Failed to fetch orders: Failed to fetch orders count: SQLSTATE[HY093]: Invalid parameter number: :page_size
+[21-Jan-2025 13:55:20 UTC] PHP Fatal error:  Cannot redeclare Models\Sale::getNewOrders() in /workspace/starters/app/models/Sale.php on line 659
+[21-Jan-2025 13:55:20 UTC] Fatal Error: Cannot redeclare Models\Sale::getNewOrders() in /workspace/starters/app/models/Sale.php on line 659
+[21-Jan-2025 13:56:25 UTC] Exception: Failed to fetch orders: Failed to fetch orders count: SQLSTATE[HY093]: Invalid parameter number: :page_size
+[21-Jan-2025 13:57:40 UTC] Exception: Failed to fetch orders: Failed to fetch orders count: SQLSTATE[HY093]: Invalid parameter number: :page_size
+[21-Jan-2025 13:57:48 UTC] Exception: Failed to fetch orders: Failed to fetch orders count: SQLSTATE[HY093]: Invalid parameter number: :page_size
+[21-Jan-2025 14:00:12 UTC] Exception: Failed to fetch orders: Failed to fetch orders count: SQLSTATE[HY093]: Invalid parameter number: :page_size
+[21-Jan-2025 14:10:46 UTC] Exception: Failed to fetch orders: Failed to fetch orders count: SQLSTATE[HY093]: Invalid parameter number: :page_size
+[21-Jan-2025 14:12:27 UTC] Exception: Failed to fetch orders: Failed to fetch orders count: SQLSTATE[HY093]: Invalid parameter number: :page_size
+[21-Jan-2025 14:13:50 UTC] Exception: Failed to fetch orders: Failed to fetch orders count: SQLSTATE[HY093]: Invalid parameter number: :page_size
+[21-Jan-2025 14:13:57 UTC] Exception: Failed to fetch orders: Failed to fetch orders count: SQLSTATE[HY093]: Invalid parameter number: :page_size
+[21-Jan-2025 14:15:26 UTC] Exception: Failed to fetch orders: Failed to fetch orders count: SQLSTATE[HY093]: Invalid parameter number: :page_size
+[21-Jan-2025 14:16:26 UTC] Array
+(
+    [search] => 
+    [page] => 1
+    [page_size] => 10
+    [status] => 
+    [order_type] => 
+    [date] => 2025-01-21
+)
+
+[21-Jan-2025 14:16:26 UTC] Exception: Failed to fetch orders: Failed to fetch orders count: SQLSTATE[HY093]: Invalid parameter number: :page_size
+[21-Jan-2025 14:18:52 UTC] Final query in getNewOrders: 
+    SELECT so.id,
+        so.invoice_number,
+        so.reference_number,
+        so.order_title,
+        so.order_type,
+        c.display_name AS customer_name,
+        c.email AS customer_email,
+        so.discount,
+        so.delivery_charge,
+        so.total,
+        so.created_at AS invoice_date,
+        so.delivery_date,
+        so.status,
+        so.processed_by,
+        json_agg(
+            json_build_object(
+                'item_id', p.id,
+                'item_name', p.item_details,
+                'quantity', soi.quantity,
+                'price', soi.price,
+                'amount', soi.quantity * soi.price
+            )
+        ) AS items
+    FROM sales_orders so
+    LEFT JOIN customers c ON so.customer_id = c.id
+    LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
+    LEFT JOIN price_lists p ON soi.item_id = p.id
+    WHERE 1=1
+ AND so.status IN ('new order', 'in progress', 'completed') AND DATE(so.created_at) = :date
+    GROUP BY so.id, c.display_name, c.email, so.invoice_number, so.order_title,
+            so.order_type, so.discount, so.delivery_charge, so.total, 
+            so.created_at, so.delivery_date, so.status, so.processed_by
+    ORDER BY so.delivery_date DESC
+    LIMIT 10 OFFSET 0
+
+[21-Jan-2025 14:18:52 UTC] Parameters: Array
+(
+    [:date] => 2025-01-21
+)
+
+[21-Jan-2025 14:18:53 UTC] Error: Undefined array key "meta" in /workspace/starters/app/controllers/KitchenController.php on line 36
+[21-Jan-2025 14:19:27 UTC] Final query in getNewOrders: 
+    SELECT so.id,
+        so.invoice_number,
+        so.reference_number,
+        so.order_title,
+        so.order_type,
+        c.display_name AS customer_name,
+        c.email AS customer_email,
+        so.discount,
+        so.delivery_charge,
+        so.total,
+        so.created_at AS invoice_date,
+        so.delivery_date,
+        so.status,
+        so.processed_by,
+        json_agg(
+            json_build_object(
+                'item_id', p.id,
+                'item_name', p.item_details,
+                'quantity', soi.quantity,
+                'price', soi.price,
+                'amount', soi.quantity * soi.price
+            )
+        ) AS items
+    FROM sales_orders so
+    LEFT JOIN customers c ON so.customer_id = c.id
+    LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
+    LEFT JOIN price_lists p ON soi.item_id = p.id
+    WHERE 1=1
+ AND so.status IN ('new order', 'in progress', 'completed') AND DATE(so.created_at) = :date
+    GROUP BY so.id, c.display_name, c.email, so.invoice_number, so.order_title,
+            so.order_type, so.discount, so.delivery_charge, so.total, 
+            so.created_at, so.delivery_date, so.status, so.processed_by
+    ORDER BY so.delivery_date DESC
+    LIMIT 10 OFFSET 0
+
+[21-Jan-2025 14:19:27 UTC] Parameters: Array
+(
+    [:date] => 2025-01-21
+)
+
+[21-Jan-2025 14:19:28 UTC] Error: Undefined array key "meta" in /workspace/starters/app/controllers/KitchenController.php on line 36
+[21-Jan-2025 14:19:47 UTC] Final query in getNewOrders: 
+    SELECT so.id,
+        so.invoice_number,
+        so.reference_number,
+        so.order_title,
+        so.order_type,
+        c.display_name AS customer_name,
+        c.email AS customer_email,
+        so.discount,
+        so.delivery_charge,
+        so.total,
+        so.created_at AS invoice_date,
+        so.delivery_date,
+        so.status,
+        so.processed_by,
+        json_agg(
+            json_build_object(
+                'item_id', p.id,
+                'item_name', p.item_details,
+                'quantity', soi.quantity,
+                'price', soi.price,
+                'amount', soi.quantity * soi.price
+            )
+        ) AS items
+    FROM sales_orders so
+    LEFT JOIN customers c ON so.customer_id = c.id
+    LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
+    LEFT JOIN price_lists p ON soi.item_id = p.id
+    WHERE 1=1
+ AND so.status IN ('new order', 'in progress', 'completed') AND DATE(so.created_at) = :date
+    GROUP BY so.id, c.display_name, c.email, so.invoice_number, so.order_title,
+            so.order_type, so.discount, so.delivery_charge, so.total, 
+            so.created_at, so.delivery_date, so.status, so.processed_by
+    ORDER BY so.delivery_date DESC
+    LIMIT 10 OFFSET 0
+
+[21-Jan-2025 14:19:47 UTC] Parameters: Array
+(
+    [:date] => 2025-01-21
+)
+
+[21-Jan-2025 14:24:24 UTC] Final query in getNewOrders: 
+    SELECT so.id,
+        so.invoice_number,
+        so.reference_number,
+        so.order_title,
+        so.order_type,
+        c.display_name AS customer_name,
+        c.email AS customer_email,
+        so.discount,
+        so.delivery_charge,
+        so.total,
+        so.created_at AS invoice_date,
+        so.delivery_date,
+        so.status,
+        so.processed_by,
+        json_agg(
+            json_build_object(
+                'item_id', p.id,
+                'item_name', p.item_details,
+                'quantity', soi.quantity,
+                'price', soi.price,
+                'amount', soi.quantity * soi.price
+            )
+        ) AS items
+    FROM sales_orders so
+    LEFT JOIN customers c ON so.customer_id = c.id
+    LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
+    LEFT JOIN price_lists p ON soi.item_id = p.id
+    WHERE 1=1
+ AND so.status IN ('new order', 'in progress', 'completed') AND DATE(so.created_at) = :date
+    GROUP BY so.id, c.display_name, c.email, so.invoice_number, so.order_title,
+            so.order_type, so.discount, so.delivery_charge, so.total, 
+            so.created_at, so.delivery_date, so.status, so.processed_by
+    ORDER BY so.delivery_date DESC
+    LIMIT :page_size OFFSET :offset
+
+[21-Jan-2025 14:24:24 UTC] Parameters: Array
+(
+    [:date] => 2025-01-21
+    [:page_size] => 10
+    [:offset] => 0
+)
+
+[21-Jan-2025 14:24:24 UTC] Final count query in getCount: 
+    SELECT COUNT(DISTINCT so.id)
+    FROM sales_orders so
+    LEFT JOIN customers c ON so.customer_id = c.id
+    LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
+    LEFT JOIN price_lists p ON soi.item_id = p.id
+    WHERE 1=1
+ AND so.status IN ('new order', 'in progress', 'completed') AND DATE(so.created_at) = :date
+[21-Jan-2025 14:24:24 UTC] Parameters: Array
+(
+    [:date] => 2025-01-21
+    [:page_size] => 10
+    [:offset] => 0
+)
+
+[21-Jan-2025 14:24:24 UTC] Exception: Failed to fetch orders: Failed to fetch orders count: SQLSTATE[HY093]: Invalid parameter number: :page_size
+[21-Jan-2025 14:25:18 UTC] Final count query in getCount: 
+    SELECT COUNT(DISTINCT so.id)
+    FROM sales_orders so
+    LEFT JOIN customers c ON so.customer_id = c.id
+    LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
+    LEFT JOIN price_lists p ON soi.item_id = p.id
+    WHERE 1=1
+ AND so.status IN ('new order', 'in progress', 'completed') AND DATE(so.created_at) = :date
+[21-Jan-2025 14:25:18 UTC] Parameters: Array
+(
+    [:date] => 2025-01-21
+)
+
+[21-Jan-2025 14:25:19 UTC] Final query in getNewOrders: 
+    SELECT so.id,
+        so.invoice_number,
+        so.reference_number,
+        so.order_title,
+        so.order_type,
+        c.display_name AS customer_name,
+        c.email AS customer_email,
+        so.discount,
+        so.delivery_charge,
+        so.total,
+        so.created_at AS invoice_date,
+        so.delivery_date,
+        so.status,
+        so.processed_by,
+        json_agg(
+            json_build_object(
+                'item_id', p.id,
+                'item_name', p.item_details,
+                'quantity', soi.quantity,
+                'price', soi.price,
+                'amount', soi.quantity * soi.price
+            )
+        ) AS items
+    FROM sales_orders so
+    LEFT JOIN customers c ON so.customer_id = c.id
+    LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
+    LEFT JOIN price_lists p ON soi.item_id = p.id
+    WHERE 1=1
+ AND so.status IN ('new order', 'in progress', 'completed') AND DATE(so.created_at) = :date
+    GROUP BY so.id, c.display_name, c.email, so.invoice_number, so.order_title,
+            so.order_type, so.discount, so.delivery_charge, so.total, 
+            so.created_at, so.delivery_date, so.status, so.processed_by
+    ORDER BY so.delivery_date DESC
+    LIMIT :page_size OFFSET :offset
+
+[21-Jan-2025 14:25:19 UTC] Parameters: Array
+(
+    [:date] => 2025-01-21
+    [:page_size] => 10
+    [:offset] => 0
+)
+

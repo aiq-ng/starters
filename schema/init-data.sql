@@ -743,15 +743,15 @@ VALUES
     (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-01-10', 'Deliver hot', 'Knock loudly', 
     2000, 1000, 60000, 'paid', 
-    (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-01-01'),
+    (SELECT id FROM users WHERE email = 'starters@admin.com'), '2025-01-21'),
 ('order', 'Corporate Brunch', 
     (SELECT id FROM customers WHERE display_name = 'AdeyemiFarms'), 
     (SELECT id FROM payment_terms WHERE name = 'Due on delivery'), 
     (SELECT id FROM payment_methods WHERE name = 'Bank Transfer'), 
     'pickup', NULL, 
     '2024-01-25', 'Prepare sandwiches', 'Contact HR', 
-    3000, 0, 150000, 'received', 
-    (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-01-15'),
+    3000, 0, 150000, 'new order', 
+    (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 ('order', 'Lunch Pack', 
     (SELECT id FROM customers WHERE display_name = 'AdeyemiFarms'), 
     (SELECT id FROM payment_terms WHERE name = 'Due in 7 days'), 
@@ -759,7 +759,7 @@ VALUES
     'delivery', 
     (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
-    1500, 500, 70000, 'delivered', 
+    1500, 500, 70000, 'sent', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 
 -- February 2024
@@ -769,7 +769,7 @@ VALUES
     (SELECT id FROM payment_methods WHERE name = 'Cash'), 
     'pickup', NULL, 
     '2024-02-14', 'Pack with care', 'Include roses', 
-    5000, 0, 90000, 'delivered', 
+    5000, 0, 90000, 'sent', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-02-01'),
 ('service', 'February Catering', 
     (SELECT id FROM customers WHERE display_name = 'AdeyemiFarms'), 
@@ -787,7 +787,7 @@ VALUES
     'delivery', 
     (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver by 1 PM', 'Call before delivery', 
-    1500, 500, 70000, 'prepared', 
+    1500, 500, 70000, 'completed', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 
 -- March 2024
@@ -806,7 +806,7 @@ VALUES
     'delivery', 
     (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-03-20', 'Follow-up with team', 'Serve by noon', 
-    4500, 500, 200000, 'prepared', 
+    4500, 500, 200000, 'completed', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-03-10'),
 ('order', 'March Celebration', 
     (SELECT id FROM customers WHERE display_name = 'AdeyemiFarms'), 
@@ -815,7 +815,7 @@ VALUES
     'delivery', 
     (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver before 5 PM', 'Include birthday cake', 
-    1500, 1000, 80000, 'prepared', 
+    1500, 1000, 80000, 'completed', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 
 -- April 2024
@@ -825,7 +825,7 @@ VALUES
     (SELECT id FROM payment_methods WHERE name = 'Cash'), 
     'pickup', NULL, 
     '2024-04-10', 'Include chocolate eggs', 'Contact before delivery', 
-    2500, 0, 110000, 'received', 
+    2500, 0, 110000, 'new order', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-04-01'),
 ('service', 'Easter Catering', 
     (SELECT id FROM customers WHERE display_name = 'AdeyemiFarms'), 
@@ -843,7 +843,7 @@ VALUES
     'delivery', 
     (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver by 12 PM', 'Call before arrival', 
-    1800, 300, 95000, 'prepared', 
+    1800, 300, 95000, 'completed', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 
 -- May 2024
@@ -862,7 +862,7 @@ VALUES
     (SELECT id FROM payment_methods WHERE name = 'Bank Transfer'), 
     'pickup', NULL, 
     '2024-05-20', 'Coordinate with client', 'Ensure proper packaging', 
-    7000, 12000, 400000, 'prepared', 
+    7000, 12000, 400000, 'completed', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-05-15'),
 ('order', 'May Celebration', 
     (SELECT id FROM customers WHERE display_name = 'AdeyemiFarms'), 
@@ -871,7 +871,7 @@ VALUES
     'delivery', 
     (SELECT id FROM users WHERE email = 'jane@example.com'), 
     CURRENT_DATE, 'Deliver by 3 PM', 'Call before delivery', 
-    2500, 1000, 130000, 'prepared', 
+    2500, 1000, 130000, 'completed', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), NOW()),
 
 -- June 2024
@@ -901,7 +901,7 @@ VALUES
     (SELECT id FROM payment_methods WHERE name = 'Bank Transfer'), 
     'pickup', NULL, 
     '2024-07-10', 'Ensure extra ribs', 'Confirm with HR', 
-    3500, 0, 175000, 'prepared', 
+    3500, 0, 175000, 'completed', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-07-05'),
 
 -- August 2024
@@ -912,7 +912,7 @@ VALUES
     'delivery', 
     (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-08-10', 'Include extra notebooks', 'Call before delivery', 
-    2500, 0, 100000, 'received', 
+    2500, 0, 100000, 'new order', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-08-01'),
 ('service', 'August Catering', 
     (SELECT id FROM customers WHERE display_name = 'AdeyemiFarms'), 
@@ -931,7 +931,7 @@ VALUES
     'delivery', 
     (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-09-01', 'Include extra drinks', 'Call before delivery', 
-    2000, 500, 95000, 'prepared', 
+    2000, 500, 95000, 'completed', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-09-01'),
 ('service', 'September Catering', 
     (SELECT id FROM customers WHERE display_name = 'AdeyemiFarms'), 
@@ -940,7 +940,7 @@ VALUES
     'delivery', 
     (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-09-05', 'Include dessert', 'Ensure vegetarian options', 
-    4500, 0, 220000, 'received', 
+    4500, 0, 220000, 'new order', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-09-01'),
 
 -- October 2024
@@ -950,7 +950,7 @@ VALUES
     (SELECT id FROM payment_methods WHERE name = 'Bank Transfer'), 
     'pickup', NULL, 
     '2024-10-31', 'Include spooky snacks', 'Ensure packaging is festive', 
-    5000, 0, 200000, 'received', 
+    5000, 0, 200000, 'new order', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-10-01'),
 ('service', 'Corporate Halloween Catering', 
     (SELECT id FROM customers WHERE display_name = 'AdeyemiFarms'), 
@@ -959,7 +959,7 @@ VALUES
     'delivery', 
     (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-10-25', 'Include extra candy', 'Confirm number of attendees', 
-    4500, 1000, 225000, 'prepared', 
+    4500, 1000, 225000, 'completed', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-10-05'),
 
 -- November 2024
@@ -978,7 +978,7 @@ VALUES
     (SELECT id FROM payment_methods WHERE name = 'Bank Transfer'), 
     'pickup', NULL, 
     '2024-11-25', 'Ensure gluten-free options', 'Confirm with client', 
-    5000, 5000, 300000, 'prepared', 
+    5000, 5000, 300000, 'completed', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-11-10'),
 
 -- December 2024
@@ -989,7 +989,7 @@ VALUES
     'delivery', 
     (SELECT id FROM users WHERE email = 'jane@example.com'), 
     '2024-12-25', 'Include gifts', 'Ensure delivery by noon', 
-    7000, 0, 300000, 'received', 
+    7000, 0, 300000, 'new order', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-12-01'),
 ('service', 'Christmas Catering', 
     (SELECT id FROM customers WHERE display_name = 'AdeyemiFarms'), 
@@ -997,7 +997,7 @@ VALUES
     (SELECT id FROM payment_methods WHERE name = 'Cash'), 
     'pickup', NULL, 
     '2024-12-24', 'Prepare extra sides', 'Coordinate with team', 
-    5500, 1000, 275000, 'prepared', 
+    5500, 1000, 275000, 'completed', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), '2024-12-05'),
 
 -- January 2025
@@ -1016,7 +1016,7 @@ VALUES
     (SELECT id FROM payment_methods WHERE name = 'Bank Transfer'), 
     'pickup', NULL, 
     '2025-01-02', 'Ensure vegetarian options', 'Confirm with team', 
-    6000, 0, 250000, 'prepared', 
+    6000, 0, 250000, 'completed', 
     (SELECT id FROM users WHERE email = 'starters@admin.com'), '2025-01-05');
 
 

@@ -480,14 +480,16 @@ CREATE TABLE sales_orders (
         CHECK (delivery_option IN ('pickup', 'delivery')),
     assigned_driver_id UUID REFERENCES users(id) ON DELETE SET NULL,
     delivery_date DATE,
+    delivery_time TIME DEFAULT (CURRENT_TIME + INTERVAL '30 minutes'),
+    delivery_address TEXT,
     additional_note TEXT,
     customer_note TEXT,
     discount DECIMAL(20, 2) DEFAULT 0,
     delivery_charge DECIMAL(20, 2) DEFAULT 0,
     total DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'pending' 
-        -- CHECK (status IN ('upcoming', 'pending', 'sent', 'paid', 'cancelled')),
-        CHECK (status IN ('pending', 'cancelled', 'prepared', 'delivered', 'received', 'paid')),
+        -- upcoming for services
+        CHECK (status IN ('pending', 'cancelled', 'completed', 'sent', 'new order', 'in progress', 'paid', 'upcoming')), 
     sent_to_kitchen BOOLEAN DEFAULT FALSE,
     processed_by UUID REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
