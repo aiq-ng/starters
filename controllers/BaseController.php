@@ -202,25 +202,26 @@ class BaseController
     {
         $this->authorizeRequest();
 
-        $roleId = $_SESSION['role_id'];
+        $UserRoleId = $_SESSION['role_id'];
 
-        if ($roleId !== 1) {
+        $roleId = $this->getRoleIdByName("Admin");
+
+        if ($UserRoleId !== $roleId) {
             return $this->sendResponse('Unauthorized', 403);
         }
 
-        $userId = $_POST['user_id'];
-        $message = $_POST['message'];
+        $data = $this->getRequestData();
 
-        $data = [
-            'user_id' => $userId,
+        $notificationData = [
+            'user_id' => $data['user_id'],
             'event' => 'notification',
-            'entity_id' => "1",
+            'entity_id' => $data['user_id'],
             'entity_type' => "account",
             'title' => 'New Notification',
-            'body' => $message
+            'body' => $data['message'],
         ];
 
-        if ($this->notify->sendNotification($data)) {
+        if ($this->notify->sendNotification($notificationData)) {
             $this->sendResponse('Notification sent successfully', 200);
         } else {
             $this->sendResponse('Failed to send notification', 500);

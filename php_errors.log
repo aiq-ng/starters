@@ -630,3 +630,44 @@ HINT:  Perhaps you meant to reference the column "u.firstname".
 [22-Jan-2025 05:10:42 UTC] Failed to fetch assigned orders: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type uuid: "1"
 CONTEXT:  unnamed portal parameter $1 = '...'
 [22-Jan-2025 05:10:42 UTC] Exception: Failed to fetch assigned orders.
+[22-Jan-2025 09:21:21 UTC] Error: Undefined array key "user_id" in /workspace/starters/app/controllers/BaseController.php on line 213
+[22-Jan-2025 09:22:36 UTC] Error: Undefined array key "user_id" in /workspace/starters/app/controllers/BaseController.php on line 213
+[22-Jan-2025 09:22:46 UTC] Error: Undefined array key "user_id" in /workspace/starters/app/controllers/BaseController.php on line 213
+[22-Jan-2025 09:24:31 UTC] Error: Undefined array key "form_data" in /workspace/starters/app/controllers/BaseController.php on line 216
+[22-Jan-2025 09:25:08 UTC] Sending notification to user 87505cfc-497d-4bde-bf98-81b35751607d via HTTP
+[22-Jan-2025 09:25:08 UTC] Sending HTTP request to https://localhost:9091/send-notification/
+[22-Jan-2025 09:25:08 UTC] Error sending notification: cURL error 7: Failed to connect to localhost port 9091 after 0 ms: Couldn't connect to server (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://localhost:9091/send-notification/
+[22-Jan-2025 09:25:08 UTC] Exception: cURL error 7: Failed to connect to localhost port 9091 after 0 ms: Couldn't connect to server (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://localhost:9091/send-notification/
+[22-Jan-2025 09:26:29 UTC] Exception: Call to a member function prepare() on null
+[22-Jan-2025 09:27:04 UTC] Exception: Call to a member function prepare() on null
+[22-Jan-2025 09:28:47 UTC] Exception: Call to a member function prepare() on null
+[22-Jan-2025 09:29:47 UTC] Sending notification to user 87505cfc-497d-4bde-bf98-81b35751607d via HTTP
+[22-Jan-2025 09:29:47 UTC] Sending HTTP request to localhost:9091/send-notification/
+[22-Jan-2025 09:29:47 UTC] Error sending notification: cURL error 7: Failed to connect to localhost port 9091 after 0 ms: Couldn't connect to server (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://localhost:9091/send-notification/
+[22-Jan-2025 09:29:47 UTC] Exception: cURL error 7: Failed to connect to localhost port 9091 after 0 ms: Couldn't connect to server (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://localhost:9091/send-notification/
+[22-Jan-2025 09:32:18 UTC] Sending notification to user 87505cfc-497d-4bde-bf98-81b35751607d via HTTP
+[22-Jan-2025 09:32:18 UTC] Sending HTTP request to http://localhost:9091/send-notification/
+[22-Jan-2025 09:32:18 UTC] Error sending notification: cURL error 7: Failed to connect to localhost port 9091 after 0 ms: Couldn't connect to server (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://localhost:9091/send-notification/
+[22-Jan-2025 09:32:18 UTC] Exception: cURL error 7: Failed to connect to localhost port 9091 after 0 ms: Couldn't connect to server (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://localhost:9091/send-notification/
+[22-Jan-2025 09:36:13 UTC] Sending notification to user 87505cfc-497d-4bde-bf98-81b35751607d via HTTP
+[22-Jan-2025 09:36:13 UTC] Sending HTTP request to http://localhost:9091/send-notification/
+[22-Jan-2025 09:36:13 UTC] Exception: cURL error 7: Failed to connect to localhost port 9091 after 0 ms: Couldn't connect to server (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://localhost:9091/send-notification/
+[22-Jan-2025 09:37:19 UTC] Sending notification to user 87505cfc-497d-4bde-bf98-81b35751607d via HTTP
+[22-Jan-2025 09:37:19 UTC] Sending HTTP request to http://localhost:9091/send-notification/
+[22-Jan-2025 09:37:19 UTC] Exception: cURL error 7: Failed to connect to localhost port 9091 after 0 ms: Couldn't connect to server (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://localhost:9091/send-notification/
+[22-Jan-2025 09:38:05 UTC] Sending notification to user 87505cfc-497d-4bde-bf98-81b35751607d via HTTP
+[22-Jan-2025 09:38:05 UTC] Sending HTTP request to http://websocket:9091/send-notification/
+[22-Jan-2025 09:38:06 UTC] Exception: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type uuid: "1"
+CONTEXT:  unnamed portal parameter $2 = '...'
+[22-Jan-2025 09:40:16 UTC] Sending notification to user 87505cfc-497d-4bde-bf98-81b35751607d via HTTP
+[22-Jan-2025 09:40:16 UTC] Sending HTTP request to http://websocket:9091/send-notification/
+[22-Jan-2025 09:40:16 UTC] Error sending HTTP request: Client error: `POST http://websocket:9091/send-notification/` resulted in a `422 Unprocessable Entity` response:
+{"detail":[{"type":"string_type","loc":["body","entity_id"],"msg":"Input should be a valid string","input":null}]}
+
+[22-Jan-2025 09:41:25 UTC] Sending notification to user 87505cfc-497d-4bde-bf98-81b35751607d via HTTP
+[22-Jan-2025 09:41:25 UTC] Sending HTTP request to http://websocket:9091/send-notification/
+[22-Jan-2025 09:41:25 UTC] Error sending HTTP request: Client error: `POST http://websocket:9091/send-notification/` resulted in a `422 Unprocessable Entity` response:
+{"detail":[{"type":"string_type","loc":["body","entity_id"],"msg":"Input should be a valid string","input":null}]}
+
+[22-Jan-2025 09:41:46 UTC] Sending notification to user 87505cfc-497d-4bde-bf98-81b35751607d via HTTP
+[22-Jan-2025 09:41:46 UTC] Sending HTTP request to http://websocket:9091/send-notification/
