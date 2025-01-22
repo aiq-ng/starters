@@ -211,4 +211,47 @@ class Kitchen
         }
     }
 
+    public function getAssignedOrders($chefId)
+    {
+        $query = "
+            SELECT so.id,
+                   so.order_id,
+                   u.firstname AS chef_name,
+                   so.delivery_time,
+                   json_agg(
+                       json_build_object(
+                           'item_id', p.id,
+                           'item_name', p.item_details,
+                           'quantity', soi.quantity
+                       )
+                   ) AS items
+            FROM chef_assignments ca
+            LEFT JOIN sales_orders so ON so.id = ca.order_id
+            LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
+            LEFT JOIN price_lists p ON soi.item_id = p.id
+            LEFT JOIN users u ON ca.chef_id = u.id
+            WHERE ca.chef_id = :chef_id
+            GROUP BY so.id, so.order_id, so.delivery_date, so.delivery_time,
+                     u.firstname
+            ORDER BY so.created_at DESC
+        ";
+
+        $stmt = $this->db->prepare($query);
+
+        try {
+            $stmt->bindValue(':chef_id', $chefId);
+            $stmt->execute();
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            foreach ($result as &$row) {
+                $row['items'] = json_decode($row['items'], true);
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            error_log("Failed to fetch assigned orders: " . $e->getMessage());
+            throw new \Exception("Failed to fetch assigned orders.");
+        }
+    }
+
 }

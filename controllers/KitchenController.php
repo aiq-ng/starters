@@ -109,4 +109,21 @@ class KitchenController extends BaseController
         }
     }
 
+    public function getChefOrders()
+    {
+        $this->authorizeRequest();
+
+        $chefId = isset($_GET['chef_id']) ? $_GET['chef_id'] : null;
+
+        $id = $chefId ? $chefId : $_SESSION['user_id'];
+
+        $orders = $this->kitchen->getAssignedOrders($id);
+
+        if (!empty($orders)) {
+            $this->sendResponse('success', 200, $orders);
+        } else {
+            $this->sendResponse('Orders not found', 404);
+        }
+    }
+
 }

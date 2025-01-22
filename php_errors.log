@@ -617,3 +617,16 @@ DETAIL:  Key (item_id)=(05a07750-ae74-4d5a-af9a-6e882d3c65c7) is not present in 
     [:offset] => 0
 )
 
+[22-Jan-2025 05:04:08 UTC] Failed to fetch assigned orders: SQLSTATE[42703]: Undefined column: 7 ERROR:  column u.first_name does not exist
+LINE 4:                    CONCAT(u.first_name, ' ', u.last_name) AS...
+                                  ^
+HINT:  Perhaps you meant to reference the column "u.firstname".
+[22-Jan-2025 05:04:08 UTC] Exception: Failed to fetch assigned orders.
+[22-Jan-2025 05:06:43 UTC] Failed to fetch assigned orders: SQLSTATE[42703]: Undefined column: 7 ERROR:  column u.first_name does not exist
+LINE 20:                      u.first_name, u.last_name
+                              ^
+HINT:  Perhaps you meant to reference the column "u.firstname".
+[22-Jan-2025 05:06:43 UTC] Exception: Failed to fetch assigned orders.
+[22-Jan-2025 05:10:42 UTC] Failed to fetch assigned orders: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type uuid: "1"
+CONTEXT:  unnamed portal parameter $1 = '...'
+[22-Jan-2025 05:10:42 UTC] Exception: Failed to fetch assigned orders.
