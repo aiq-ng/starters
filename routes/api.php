@@ -148,11 +148,15 @@ $routes = [
         '/products/([a-fA-F0-9-]{36})' => [$adminController, 'update'],
         '/customers/([a-fA-F0-9-]{36})' => [$customerController, 'update'],
         '/vendors/([a-fA-F0-9-]{36})' => [$vendorController, 'update'],
+        '/purchases/orders/([a-fA-F0-9-]{36})' => [$tradeController, 'updatePurchase'],
+        '/sales/orders/([a-fA-F0-9-]{36})' => [$tradeController, 'updateSales'],
     ],
     'PATCH' => [
         '/sales/orders/([a-fA-F0-9-]{36})' => [$tradeController, 'patchSale'],
     ],
     'DELETE' => [
+        '/purchases/orders/([a-fA-F0-9-]{36})' => [$tradeController, 'deletePurchaseOrder'],
+        '/sales/orders/([a-fA-F0-9-]{36})' => [$tradeController, 'deleteSalesOrder'],
         '/sales/price-list/([a-fA-F0-9-]{36})' => [$tradeController, 'deletePriceList'],
         '/human-resources/employees/([a-fA-F0-9-]{36})' => [$humanResourceController, 'deleteEmployee'],
         '/products/([a-fA-F0-9-]{36})' => [$adminController, 'delete'],

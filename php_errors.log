@@ -671,3 +671,5 @@ CONTEXT:  unnamed portal parameter $2 = '...'
 
 [22-Jan-2025 09:41:46 UTC] Sending notification to user 87505cfc-497d-4bde-bf98-81b35751607d via HTTP
 [22-Jan-2025 09:41:46 UTC] Sending HTTP request to http://websocket:9091/send-notification/
+[27-Jan-2025 14:50:27 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"DESC","search":"1test"}
+[27-Jan-2025 14:50:40 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"DESC","search":""}

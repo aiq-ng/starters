@@ -80,7 +80,92 @@ class TradeController extends BaseController
         }
     }
 
+    public function updatePurchase($purchaseId)
+    {
+        $this->authorizeRequest();
 
+        $data = $this->getRequestData();
+
+        if (!$this->validateFields($data['vendor_id'])) {
+            $this->sendResponse('Invalid fields', 400);
+        }
+
+        if (!is_array($data['items']) || empty($data['items'])) {
+            $this->sendResponse('Items should be an array and not empty', 400);
+        }
+
+        $data['user_id'] = $_SESSION['user_id'];
+
+        try {
+            $invoice = $this->purchase->updatePurchaseOrder($purchaseId, $data);
+
+            if ($invoice) {
+                $this->sendResponse('success', 200, $invoice);
+            } else {
+                $this->sendResponse('Failed to update purchase', 500);
+            }
+        } catch (\Exception $e) {
+            $this->sendResponse('Error: ' . $e->getMessage(), 500);
+        }
+    }
+
+
+    public function deletePurchaseOrder($purchaseId)
+    {
+        $this->authorizeRequest();
+
+        $deleted = $this->purchase->deletePurchaseOrder($purchaseId);
+
+        if ($deleted) {
+            $this->sendResponse('Purchase Order deleted successfully', 200);
+        } else {
+            $this->sendResponse('Failed to delete Purchase Order', 500);
+        }
+    }
+
+
+    public function updateSales($saleId)
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+
+        if (!$this->validateFields($data['vendor_id'])) {
+            $this->sendResponse('Invalid fields', 400);
+        }
+
+        if (!is_array($data['items']) || empty($data['items'])) {
+            $this->sendResponse('Items should be an array and not empty', 400);
+        }
+
+        $data['user_id'] = $_SESSION['user_id'];
+
+        try {
+            $invoice = $this->sale->updateSale($saleId, $data);
+
+            if ($invoice) {
+                $this->sendResponse('success', 200, $invoice);
+            } else {
+                $this->sendResponse('Failed to update sale', 500);
+            }
+        } catch (\Exception $e) {
+            $this->sendResponse('Error: ' . $e->getMessage(), 500);
+        }
+    }
+
+
+    public function deleteSalesOrder($saleId)
+    {
+        $this->authorizeRequest();
+
+        $deleted = $this->sale->deleteSalesOrder($saleId);
+
+        if ($deleted) {
+            $this->sendResponse('Sales Order deleted successfully', 200);
+        } else {
+            $this->sendResponse('Failed to delete Sales Order', 500);
+        }
+    }
 
     public function markPurchaseAsReceived($purchaseId)
     {

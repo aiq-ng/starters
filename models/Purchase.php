@@ -188,6 +188,21 @@ class Purchase
         return $result;
     }
 
+    public function deletePurchaseOrder($purchaseOrderId)
+    {
+        $query = "
+            DELETE FROM purchase_orders
+            WHERE id = :purchase_order_id
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([':purchase_order_id' => $purchaseOrderId]);
+
+        return $stmt->rowCount() > 0;
+    }
+
+
+
     public function createPurchase($data)
     {
         $this->db->beginTransaction();
@@ -260,6 +275,86 @@ class Purchase
             ]);
         }
     }
+
+    public function updatePurchaseOrder($purchaseOrderId, $data)
+    {
+        $this->db->beginTransaction();
+
+        try {
+            $this->updatePurchaseOrderDetails($purchaseOrderId, $data);
+            $this->updatePurchaseOrderItems($purchaseOrderId, $data['items']);
+
+            $this->db->commit();
+            return $this->getInvoiceDetails($purchaseOrderId);
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
+
+    private function updatePurchaseOrderDetails($purchaseOrderId, $data)
+    {
+        $query = "
+            UPDATE purchase_orders 
+            SET 
+                delivery_date = :delivery_date,
+                vendor_id = :vendor_id,
+                branch_id = :branch_id,
+                payment_term_id = :payment_term_id,
+                subject = :subject,
+                notes = :notes,
+                terms_and_conditions = :terms_and_conditions,
+                discount = :discount,
+                shipping_charge = :shipping_charge,
+                total = :total,
+                processed_by = :processed_by
+            WHERE id = :purchase_order_id;
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([
+            ':purchase_order_id' => $purchaseOrderId,
+            ':delivery_date' => $data['delivery_date'] ?? null,
+            ':vendor_id' => $data['vendor_id'] ?? null,
+            ':branch_id' => $data['branch_id'] ?? null,
+            ':payment_term_id' => $data['payment_term_id'] ?? null,
+            ':subject' => $data['subject'] ?? null,
+            ':notes' => $data['notes'] ?? null,
+            ':terms_and_conditions' => $data['terms_and_conditions'] ?? null,
+            ':discount' => $data['discount'] ?? null,
+            ':shipping_charge' => $data['shipping_charge'] ?? null,
+            ':total' => $data['total'] ?? null,
+            ':processed_by' => $data['user_id'] ?? null,
+        ]);
+    }
+
+    private function updatePurchaseOrderItems($purchaseOrderId, $items)
+    {
+        $query = "
+            UPDATE purchase_order_items 
+            SET 
+                item_id = :item_id,
+                quantity = :quantity,
+                price = :price,
+                tax_id = :tax_id
+            WHERE purchase_order_id = :purchase_order_id AND item_id = :item_id;
+        ";
+
+        $stmt = $this->db->prepare($query);
+
+        foreach ($items as $item) {
+            $filteredItem = array_filter($item, fn ($value) => $value !== "");
+
+            $stmt->execute([
+                ':purchase_order_id' => $purchaseOrderId,
+                ':item_id' => $filteredItem['item_id'] ?? null,
+                ':quantity' => $filteredItem['quantity'] ?? null,
+                ':price' => $filteredItem['price'] ?? null,
+                ':tax_id' => $filteredItem['tax_id'] ?? null,
+            ]);
+        }
+    }
+
 
     public function getInvoiceDetails($purchaseOrderId)
     {

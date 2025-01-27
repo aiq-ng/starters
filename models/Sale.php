@@ -846,6 +846,136 @@ class Sale
         }
     }
 
+    private function insertSalesOrderItem($salesOrderId, $items)
+    {
+        $query = "
+            INSERT INTO sales_order_items (sales_order_id, item_id, quantity, price) 
+            VALUES (:sales_order_id, :item_id, :quantity, :price);
+        ";
+
+        $stmt = $this->db->prepare($query);
+
+        foreach ($items as $item) {
+            $item = array_filter($item, function ($value) {
+                return $value !== "" && $value !== null;
+            });
+
+            if (!empty($item['item_id']) && !empty($item['quantity']) && !empty($item['price'])) {
+                $stmt->execute([
+                    ':sales_order_id' => $salesOrderId,
+                    ':item_id' => $item['item_id'],
+                    ':quantity' => $item['quantity'],
+                    ':price' => $item['price']
+                ]);
+            }
+        }
+    }
+
+    public function updateSale($data)
+    {
+        $this->db->beginTransaction();
+
+        try {
+            $this->updateSalesOrder($data);
+            $this->updateSalesOrderItems($data['sales_order_id'], $data['items']);
+
+            $this->db->commit();
+
+            return $data['sales_order_id'];
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
+
+    private function updateSalesOrder($data)
+    {
+        $query = "
+            UPDATE sales_orders
+            SET 
+                order_type = :order_type,
+                order_title = :order_title,
+                payment_term_id = :payment_term_id,
+                customer_id = :customer_id,
+                payment_method_id = :payment_method_id,
+                delivery_option = :delivery_option,
+                assigned_driver_id = :assigned_driver_id,
+                delivery_date = :delivery_date,
+                delivery_time = :delivery_time,
+                delivery_address = :delivery_address,
+                additional_note = :additional_note,
+                customer_note = :customer_note,
+                discount = :discount,
+                delivery_charge = :delivery_charge,
+                total = :total
+            WHERE id = :sales_order_id
+        ";
+
+        $stmt = $this->db->prepare($query);
+
+        $stmt->execute([
+            ':sales_order_id' => $data['sales_order_id'],
+            ':order_type' => $data['order_type'] ?? null,
+            ':order_title' => $data['order_title'] ?? null,
+            ':payment_term_id' => $data['payment_term_id'] ?? null,
+            ':customer_id' => $data['customer_id'] ?? null,
+            ':payment_method_id' => $data['payment_method_id'] ?? null,
+            ':delivery_option' => $data['delivery_option'] ?? null,
+            ':assigned_driver_id' => $data['assigned_driver_id'] ?? null,
+            ':delivery_date' => $data['delivery_date'] ?? null,
+            ':delivery_time' => $data['delivery_time'] ?? null,
+            ':delivery_address' => $data['delivery_address'] ?? null,
+            ':additional_note' => $data['additional_note'] ?? null,
+            ':customer_note' => $data['customer_note'] ?? null,
+            ':discount' => $data['discount'] ?? null,
+            ':delivery_charge' => $data['delivery_charge'] ?? null,
+            ':total' => $data['total'] ?? null
+        ]);
+    }
+
+    private function updateSalesOrderItems($salesOrderId, $items)
+    {
+        $query = "
+            UPDATE sales_order_items
+            SET 
+                quantity = :quantity,
+                price = :price
+            WHERE sales_order_id = :sales_order_id
+            AND item_id = :item_id
+        ";
+
+        $stmt = $this->db->prepare($query);
+
+        foreach ($items as $item) {
+            $item = array_filter($item, function ($value) {
+                return $value !== "" && $value !== null;
+            });
+
+            if (!empty($item['item_id']) && isset($item['quantity']) && isset($item['price'])) {
+                $stmt->execute([
+                    ':sales_order_id' => $salesOrderId,
+                    ':item_id' => $item['item_id'],
+                    ':quantity' => $item['quantity'],
+                    ':price' => $item['price']
+                ]);
+            }
+        }
+    }
+
+    public function deleteSalesOrder($salesOrderId)
+    {
+        $query = "
+            DELETE FROM sales_orders 
+            WHERE id = :sales_order_id
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([':sales_order_id' => $salesOrderId]);
+
+        return $stmt->rowCount() > 0;
+    }
+
+
     public function patchSalesOrder($orderId, $data)
     {
         $setClauses = [];
@@ -873,31 +1003,6 @@ class Sale
         }
     }
 
-
-    private function insertSalesOrderItem($salesOrderId, $items)
-    {
-        $query = "
-            INSERT INTO sales_order_items (sales_order_id, item_id, quantity, price) 
-            VALUES (:sales_order_id, :item_id, :quantity, :price);
-        ";
-
-        $stmt = $this->db->prepare($query);
-
-        foreach ($items as $item) {
-            $item = array_filter($item, function ($value) {
-                return $value !== "" && $value !== null;
-            });
-
-            if (!empty($item['item_id']) && !empty($item['quantity']) && !empty($item['price'])) {
-                $stmt->execute([
-                    ':sales_order_id' => $salesOrderId,
-                    ':item_id' => $item['item_id'],
-                    ':quantity' => $item['quantity'],
-                    ':price' => $item['price']
-                ]);
-            }
-        }
-    }
 
     public function getInvoiceDetails($salesOrderId)
     {
