@@ -338,21 +338,28 @@ class Purchase
 
     private function updatePurchaseOrderItems($purchaseOrderId, $items)
     {
-        $query = "
+        $updateQuery = "
             UPDATE purchase_order_items 
             SET 
-                item_id = :item_id,
                 quantity = :quantity,
                 price = :price,
                 tax_id = :tax_id
             WHERE purchase_order_id = :purchase_order_id AND item_id = :item_id;
         ";
 
-        $stmt = $this->db->prepare($query);
+        $insertQuery = "
+            INSERT INTO purchase_order_items (
+                purchase_order_id, item_id, quantity, price, tax_id
+            ) VALUES (
+                :purchase_order_id, :item_id, :quantity, :price, :tax_id
+            );
+        ";
 
         foreach ($items as $item) {
             $filteredItem = array_filter($item, fn ($value) => $value !== "");
 
+            // Try updating the item
+            $stmt = $this->db->prepare($updateQuery);
             $stmt->execute([
                 ':purchase_order_id' => $purchaseOrderId,
                 ':item_id' => $filteredItem['item_id'] ?? null,
@@ -360,6 +367,18 @@ class Purchase
                 ':price' => $filteredItem['price'] ?? null,
                 ':tax_id' => $filteredItem['tax_id'] ?? null,
             ]);
+
+            // If no rows were updated, insert the item
+            if ($stmt->rowCount() === 0) {
+                $stmt = $this->db->prepare($insertQuery);
+                $stmt->execute([
+                    ':purchase_order_id' => $purchaseOrderId,
+                    ':item_id' => $filteredItem['item_id'] ?? null,
+                    ':quantity' => $filteredItem['quantity'] ?? null,
+                    ':price' => $filteredItem['price'] ?? null,
+                    ':tax_id' => $filteredItem['tax_id'] ?? null,
+                ]);
+            }
         }
     }
 

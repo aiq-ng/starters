@@ -700,3 +700,8 @@ LINE 23:
 [28-Jan-2025 10:14:55 UTC] Exception: SQLSTATE[42703]: Undefined column: 7 ERROR:  column r.role does not exist
 LINE 35:                                 'role', r.role,
                                                  ^
+[28-Jan-2025 10:24:23 UTC] Exception: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type uuid: ""
+CONTEXT:  unnamed portal parameter $1 = ''
+[28-Jan-2025 10:24:34 UTC] Error: Undefined global variable $_SESSION in /workspace/starters/app/controllers/BaseController.php on line 235
+[28-Jan-2025 10:27:00 UTC] Error: Undefined global variable $_SESSION in /workspace/starters/app/controllers/BaseController.php on line 235
+[28-Jan-2025 10:28:02 UTC] Error: Undefined global variable $_SESSION in /workspace/starters/app/controllers/BaseController.php on line 237

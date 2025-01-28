@@ -640,6 +640,7 @@ class Inventory
                                 'id', c.id,
                                 'user_id', c.user_id,
                                 'name', u.firstname || ' ' || u.lastname,
+                                'avatar', u.avatar_url,
                                 'role', r.name,
                                 'parent_id', c.parent_id,
                                 'comment', c.comment,
