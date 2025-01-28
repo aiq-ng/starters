@@ -694,3 +694,9 @@ LINE 23:
 [28-Jan-2025 09:33:11 UTC] SQLSTATE[42601]: Syntax error: 7 ERROR:  syntax error at end of input
 LINE 23:         
                  ^
+[28-Jan-2025 09:52:08 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[28-Jan-2025 09:53:54 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"DESC","search":""}
+[28-Jan-2025 09:55:33 UTC] Exception: PDOStatement::bindParam(): Argument #2 ($var) could not be passed by reference
+[28-Jan-2025 10:14:55 UTC] Exception: SQLSTATE[42703]: Undefined column: 7 ERROR:  column r.role does not exist
+LINE 35:                                 'role', r.role,
+                                                 ^

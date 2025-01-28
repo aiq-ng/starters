@@ -182,5 +182,20 @@ class InventoryController extends BaseController
         $this->sendResponse('success', 200, $history);
     }
 
+    public function comment($id)
+    {
+        $this->authorizeRequest();
 
+        $data = $this->getRequestData();
+
+        $data['user_id'] = $_SESSION['user_id'];
+
+        $result = $this->inventory->commentOnItemHistory($id, $data);
+
+        if ($result) {
+            $this->sendResponse('Success', 200, ['comment_id' => $result]);
+        } else {
+            $this->sendResponse('Failed to add comment', 500);
+        }
+    }
 }

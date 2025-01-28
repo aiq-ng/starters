@@ -639,6 +639,8 @@ class Inventory
                             jsonb_build_object(
                                 'id', c.id,
                                 'user_id', c.user_id,
+                                'name', u.firstname || ' ' || u.lastname,
+                                'role', r.name,
                                 'parent_id', c.parent_id,
                                 'comment', c.comment,
                                 'created_at', c.created_at
@@ -652,6 +654,8 @@ class Inventory
             LEFT JOIN departments d ON isa.source_department_id = d.id
             LEFT JOIN vendors ON isa.source_type = 'vendor' AND isa.source_id = vendors.id
             LEFT JOIN comments c ON c.entity_id = isa.id AND c.entity_type = 'item_stock_adjustment'
+            LEFT JOIN users u ON c.user_id = u.id
+            LEFT JOIN roles r ON u.role_id = r.id
             WHERE isa.stock_id IN (
                 SELECT id
                 FROM item_stocks
@@ -785,5 +789,27 @@ class Inventory
             error_log($e->getMessage());
             return [];
         }
+    }
+
+    public function commentOnItemHistory($itemStockId, $data)
+    {
+        $sql = "
+            INSERT INTO comments
+            (entity_id, entity_type, user_id, parent_id, comment)
+            VALUES (:entityId, :entityType, :userId, :parentId, :comment)
+            RETURNING id
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        $stmt->bindValue(':entityId', $itemStockId);
+        $stmt->bindValue(':entityType', 'item_stock_adjustment');
+        $stmt->bindValue(':userId', $data['user_id'] ?? null);
+        $stmt->bindValue(':parentId', $data['parent_id'] ?? null);
+        $stmt->bindValue(':comment', $data['comment'] ?? null);
+
+        $stmt->execute();
+
+        return $stmt->fetchColumn();
     }
 }

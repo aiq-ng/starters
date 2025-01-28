@@ -138,6 +138,7 @@ $routes = [
         '/human-resources/employees/leave/([a-fA-F0-9-]{36})/approve' => [$humanResourceController, 'approveLeave'],
         '/inventory/items/([a-fA-F0-9-]{36})' => [$inventoryController, 'updateItem'],
         '/inventory/items/stocks/([a-fA-F0-9-]{36})' => [$inventoryController, 'adjustStock'],
+        '/inventory/history/comment/([a-fA-F0-9-]{36})' => [$inventoryController, 'comment'],
         '/sales/orders/invoice/([a-fA-F0-9-]{36})' => [$tradeController, 'sendSaleInvoice'],
         '/purchases/orders/invoice/([a-fA-F0-9-]{36})' => [$tradeController, 'sendPurchaseInvoice'],
 
