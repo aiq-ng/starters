@@ -158,13 +158,21 @@ class Purchase
     {
         $query = "
             SELECT
-                po.id, 
+                po.id,
+                po.vendor_id,
+                po.branch_id,
+                po.payment_term_id,
+                po.subject,
+                po.notes,
+                po.terms_and_conditions,
                 po.purchase_order_number,
                 po.reference_number, 
                 CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name, 
                 po.created_at::DATE AS order_date, 
                 po.delivery_date, 
                 COALESCE(po.total, 0.00) AS total, 
+                po.discount,
+                po.shipping_charge,
                 po.status,
                 CASE
                     WHEN po.status = 'issued' THEN 'Issued'
