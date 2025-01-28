@@ -230,18 +230,18 @@ class BaseController
 
     public function getNotifications()
     {
+        $this->authorizeRequest();
+
         $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
         $pageSize = isset($_GET['page_size']) ? (int) $_GET['page_size'] : 10;
-        $userId = isset($_GET['user_id']) ? $_GET['user_id'] : null;
-
-        $id = $userId ?? $_SESSION['user_id'];
+        $userId = isset($_GET['user_id']) && !empty($_GET['user_id']) ? $_GET['user_id'] : $_SESSION['user_id'];
 
         $offset = ($page - 1) * $pageSize;
 
         $query = "SELECT * FROM notifications WHERE user_id = :user_id LIMIT :page_size OFFSET :offset";
         $stmt = $this->db->prepare($query);
 
-        $stmt->bindParam(':user_id', $id);
+        $stmt->bindParam(':user_id', $userId);
         $stmt->bindParam(':page_size', $pageSize);
         $stmt->bindParam(':offset', $offset);
 
