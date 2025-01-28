@@ -166,6 +166,10 @@ class Inventory
         $sql = "
             SELECT
                 i.*,
+                isd.department_id,
+                isv.vendor_id,
+                ism.manufacturer_id,
+                isb.branch_id,
                 STRING_AGG(DISTINCT ic.name, ', ') AS category,
                 STRING_AGG(DISTINCT d.name, ', ') AS department,
                 MAX(its.expiry_date) AS expiry_date,
@@ -173,10 +177,14 @@ class Inventory
             FROM item_stocks its
             JOIN items i ON its.item_id = i.id
             LEFT JOIN item_stock_departments isd ON its.id = isd.stock_id
+            LEFT JOIN item_stock_vendors isv ON its.id = isv.stock_id
+            LEFT JOIN item_stock_manufacturers ism ON its.id = ism.stock_id
+            LEFT JOIN item_stock_branches isb ON its.id = isb.stock_id
             LEFT JOIN departments d ON isd.department_id = d.id
             LEFT JOIN item_categories ic ON i.category_id = ic.id
             WHERE its.item_id = :itemId
-            GROUP BY i.id, i.name, i.threshold_value, i.opening_stock, i.media
+            GROUP BY i.id, i.name, i.threshold_value, i.opening_stock, i.media,
+                isd.department_id, isv.vendor_id, ism.manufacturer_id, isb.branch_id
         ";
 
         $stmt = $this->db->prepare($sql);

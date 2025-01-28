@@ -684,3 +684,13 @@ DETAIL:  Key (payment_term_id)=(d8ff9a11-8103-43b4-8cdb-4be1b498b11d) is not pre
 CONTEXT:  unnamed portal parameter $13 = '...'
 [28-Jan-2025 09:11:48 UTC] Exception: Failed to insert sales order: SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "sales_orders" violates foreign key constraint "sales_orders_customer_id_fkey"
 DETAIL:  Key (customer_id)=(fbdd13c5-6064-416c-a5d2-a9b134387592) is not present in table "customers".
+[28-Jan-2025 09:15:10 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[28-Jan-2025 09:32:04 UTC] SQLSTATE[42601]: Syntax error: 7 ERROR:  syntax error at end of input
+LINE 23:         
+                 ^
+[28-Jan-2025 09:32:26 UTC] SQLSTATE[42601]: Syntax error: 7 ERROR:  syntax error at end of input
+LINE 23:         
+                 ^
+[28-Jan-2025 09:33:11 UTC] SQLSTATE[42601]: Syntax error: 7 ERROR:  syntax error at end of input
+LINE 23:         
+                 ^
