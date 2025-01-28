@@ -274,6 +274,15 @@ class Vendor
         $query = "
             SELECT 
                 v.id AS vendor_id,
+                v.salutation,
+                v.first_name,
+                v.last_name,
+                v.company_name,
+                v.address,
+                v.website,
+                v.payment_term_id,
+                v.currency_id,
+                v.category_id,
                 v.display_name,
                 v.email,
                 v.work_phone,
@@ -281,6 +290,7 @@ class Vendor
                 vc.name AS vendor_category,
                 c.code AS default_currency,
                 pt.name AS payment_term,
+                v.social_media,
                 JSONB_BUILD_OBJECT(
                     'currency', c.code,
                     'total_outstanding', COALESCE(
@@ -318,8 +328,10 @@ class Vendor
             LEFT JOIN payment_terms pt ON v.payment_term_id = pt.id
             WHERE v.id = :vendor_id
             GROUP BY 
-                v.id, v.display_name, v.email, v.work_phone,
-                vc.name, c.code, pt.name
+                v.id, v.display_name, v.email, v.work_phone, v.salutation,
+                v.first_name, v.last_name, v.company_name, v.address,
+                v.website, v.social_media, v.payment_term_id, v.currency_id,
+                v.category_id, vc.name, c.code, pt.name
         ";
 
         $stmt = $this->db->prepare($query);
@@ -331,6 +343,7 @@ class Vendor
             if ($result) {
                 $result['receivables'] = json_decode($result['receivables'], true);
                 $result['transactions'] = json_decode($result['transactions'], true);
+                $result['social_media'] = json_decode($result['social_media'], true);
 
             }
 

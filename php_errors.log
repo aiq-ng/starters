@@ -673,3 +673,14 @@ CONTEXT:  unnamed portal parameter $2 = '...'
 [22-Jan-2025 09:41:46 UTC] Sending HTTP request to http://websocket:9091/send-notification/
 [27-Jan-2025 14:50:27 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"DESC","search":"1test"}
 [27-Jan-2025 14:50:40 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"DESC","search":""}
+[28-Jan-2025 08:34:38 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[28-Jan-2025 08:37:54 UTC] Vendor ID: d31e7517-e1e9-4f89-aee2-21ecbc4f84d9
+[28-Jan-2025 08:50:11 UTC] Vendor ID: d31e7517-e1e9-4f89-aee2-21ecbc4f84d9
+[28-Jan-2025 08:51:31 UTC] Vendor ID: d31e7517-e1e9-4f89-aee2-21ecbc4f84d9
+[28-Jan-2025 08:52:01 UTC] Vendor ID: d31e7517-e1e9-4f89-aee2-21ecbc4f84d9
+[28-Jan-2025 08:53:21 UTC] Exception: SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "vendors" violates foreign key constraint "vendors_payment_term_id_fkey"
+DETAIL:  Key (payment_term_id)=(d8ff9a11-8103-43b4-8cdb-4be1b498b11d) is not present in table "payment_terms".
+[28-Jan-2025 09:01:43 UTC] Exception: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type uuid: "1"
+CONTEXT:  unnamed portal parameter $13 = '...'
+[28-Jan-2025 09:11:48 UTC] Exception: Failed to insert sales order: SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "sales_orders" violates foreign key constraint "sales_orders_customer_id_fkey"
+DETAIL:  Key (customer_id)=(fbdd13c5-6064-416c-a5d2-a9b134387592) is not present in table "customers".

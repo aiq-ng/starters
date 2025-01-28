@@ -283,6 +283,14 @@ class Customer
         $query = "
             SELECT 
                 c.id AS customer_id,
+                c.customer_type,
+                c.salutation,
+                c.first_name,
+                c.last_name,
+                c.company_name,
+                c.address,
+                c.payment_term_id,
+                c.currency_id,
                 c.display_name,
                 c.email,
                 c.work_phone,
@@ -290,6 +298,7 @@ class Customer
                 c.customer_type,
                 cu.code AS default_currency,
                 pt.name AS payment_term,
+                c.social_media,
                 JSONB_BUILD_OBJECT(
                     'currency', cu.code,
                     'total_outstanding', COALESCE(
@@ -325,7 +334,9 @@ class Customer
             LEFT JOIN payment_terms pt ON c.payment_term_id = pt.id
             WHERE c.id = :customer_id
             GROUP BY 
-                c.id, c.display_name, c.email, c.work_phone,
+                c.id, c.display_name, c.email, c.work_phone, c.customer_type,
+                c.salutation, c.first_name, c.last_name, c.company_name,
+                c.address, c.payment_term_id, c.currency_id, c.social_media,
                 c.mobile_phone, c.customer_type, c.balance, cu.code, pt.name
         ";
 
@@ -338,6 +349,7 @@ class Customer
             if ($result) {
                 $result['receivables'] = json_decode($result['receivables'], true);
                 $result['transactions'] = json_decode($result['transactions'], true);
+                $result['social_media'] = json_decode($result['social_media'], true);
             }
 
             return $result;
@@ -345,7 +357,4 @@ class Customer
 
         return false;
     }
-
-
-
 }

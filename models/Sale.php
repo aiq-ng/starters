@@ -1012,8 +1012,15 @@ class Sale
                 so.reference_number,
                 so.order_title,
                 so.order_type,
+                c.id AS customer_id,
                 c.display_name AS customer_name,
                 c.email AS customer_email,
+                so.payment_term_id,
+                so.payment_method_id,
+                so.assigned_driver_id,
+                so.delivery_option,
+                so.additional_note,
+                so.customer_note,
                 so.discount,
                 so.delivery_charge,
                 so.delivery_address,
@@ -1034,8 +1041,11 @@ class Sale
             LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
             LEFT JOIN price_lists p ON soi.item_id = p.id
             WHERE so.id = :sales_order_id
-            GROUP BY so.id, c.display_name, so.invoice_number, so.order_title, so.order_type, 
-                     so.discount, so.delivery_charge, so.total, c.email, so.created_at, so.delivery_date;
+        GROUP BY so.id, c.display_name, so.invoice_number, so.order_title,
+                so.order_type, c.id, so.payment_term_id, so.payment_method_id,
+                so.assigned_driver_id, so.delivery_option, so.additional_note,
+                so.customer_note, so.discount, so.delivery_charge, so.total,
+                c.email, so.created_at, so.delivery_date;
         ";
 
         $stmt = $this->db->prepare($query);
