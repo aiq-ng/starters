@@ -206,18 +206,20 @@ class Inventory
         }
     }
 
-    public function deleteItem($itemId)
+    public function deleteItem($itemIds)
     {
-        $sql = "
-            DELETE FROM items
-            WHERE id = :itemId
-        ";
+        if (empty($itemIds)) {
+            return 0;
+        }
 
-        $stmt = $this->db->prepare($sql);
+        $itemIds = is_array($itemIds) ? $itemIds : [$itemIds];
 
-        $stmt->bindParam(':itemId', $itemId);
+        $placeholders = implode(',', array_fill(0, count($itemIds), '?'));
 
-        return $stmt->execute();
+        $stmt = $this->db->prepare("DELETE FROM items WHERE id IN ($placeholders)");
+        $stmt->execute($itemIds);
+
+        return $stmt->rowCount();
     }
 
 

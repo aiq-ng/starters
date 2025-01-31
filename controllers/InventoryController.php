@@ -198,4 +198,20 @@ class InventoryController extends BaseController
             $this->sendResponse('Failed to add comment', 500);
         }
     }
+
+    public function deleteItem()
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+        $ids = isset($data['ids']) ? (array) $data['ids'] : [];
+
+        $result = $this->inventory->deleteItem($ids);
+
+        if ($result) {
+            $this->sendResponse('Success', 200);
+        } else {
+            $this->sendResponse('Failed to delete item', 500);
+        }
+    }
 }

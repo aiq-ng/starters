@@ -159,11 +159,12 @@ $routes = [
         '/purchases/orders' => [$tradeController, 'deletePurchaseOrder'],
         '/sales/orders' => [$tradeController, 'deleteSalesOrder'],
         '/sales/price-list' => [$tradeController, 'deletePriceList'],
+        '/customers' => [$customerController, 'delete'],
+        '/vendors' => [$vendorController, 'delete'],
+        '/inventory/items' => [$inventoryController, 'deleteItem'],
         '/human-resources/employees' => [$humanResourceController, 'deleteEmployee'],
         '/products/([a-fA-F0-9-]{36})' => [$adminController, 'delete'],
         '/employees/([a-fA-F0-9-]{36})' => [$humanResourceController, 'delete'],
-        '/customers' => [$customerController, 'delete'],
-        '/vendors' => [$vendorController, 'delete'],
     ],
 ];
 
