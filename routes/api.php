@@ -162,6 +162,7 @@ $routes = [
         '/customers' => [$customerController, 'delete'],
         '/vendors' => [$vendorController, 'delete'],
         '/inventory/items' => [$inventoryController, 'deleteItem'],
+        '/accounting/expenses' => [$accountingController, 'deleteExpense'],
         '/human-resources/employees' => [$humanResourceController, 'deleteEmployee'],
         '/products/([a-fA-F0-9-]{36})' => [$adminController, 'delete'],
         '/employees/([a-fA-F0-9-]{36})' => [$humanResourceController, 'delete'],

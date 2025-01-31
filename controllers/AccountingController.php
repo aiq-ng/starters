@@ -57,6 +57,22 @@ class AccountingController extends BaseController
         }
     }
 
+    public function deleteExpense()
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+        $ids = isset($data['ids']) ? (array)$data['ids'] : [];
+
+        $result = $this->accounting->deleteExpense($ids);
+
+        if ($result) {
+            $this->sendResponse('Expense deleted successfully', 200);
+        } else {
+            $this->sendResponse('Expense not found', 404);
+        }
+    }
+
     public function getBills()
     {
         $this->authorizeRequest();

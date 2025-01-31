@@ -195,6 +195,20 @@ class Accounting
         }
     }
 
+    public function deleteExpense($expenseIds)
+    {
+        if (empty($expenseIds)) {
+            return 0;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($expenseIds), '?'));
+
+        $stmt = $this->db->prepare("DELETE FROM expenses WHERE expense_id IN ($placeholders)");
+        $stmt->execute($expenseIds);
+
+        return $stmt->rowCount();
+    }
+
     public function getExpenses($filter = [])
     {
         $page = $filter['page'] ?? 1;
