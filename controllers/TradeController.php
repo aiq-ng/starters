@@ -158,11 +158,14 @@ class TradeController extends BaseController
     }
 
 
-    public function deleteSalesOrder($saleId)
+    public function deleteSalesOrder()
     {
         $this->authorizeRequest();
 
-        $deleted = $this->sale->deleteSalesOrder($saleId);
+        $data = $this->getRequestData();
+        $ids = isset($data['ids']) ? (array) $data['ids'] : [];
+
+        $deleted = $this->sale->deleteSalesOrder($ids);
 
         if ($deleted) {
             $this->sendResponse('Sales Order deleted successfully', 200);
@@ -439,11 +442,14 @@ class TradeController extends BaseController
         }
     }
 
-    public function deletePriceList($priceListId)
+    public function deletePriceList()
     {
         $this->authorizeRequest();
 
-        $result = $this->sale->deletePriceList($priceListId);
+        $data = $this->getRequestData();
+        $ids = isset($data['ids']) ? (array) $data['ids'] : [];
+
+        $result = $this->sale->deletePriceList($ids);
 
         if ($result) {
             $this->sendResponse('success', 200);

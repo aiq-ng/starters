@@ -517,12 +517,18 @@ class Sale
         return false;
     }
 
-    public function deletePriceList($id)
+    public function deletePriceList($ids)
     {
-        $query = "DELETE FROM price_lists WHERE id = :id";
+        if (empty($ids)) {
+            return false;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+        $query = "DELETE FROM price_lists WHERE id IN ($placeholders)";
 
         $stmt = $this->db->prepare($query);
-        $stmt->execute(['id' => $id]);
+        $stmt->execute($ids);
 
         return $stmt->rowCount();
     }
@@ -962,19 +968,21 @@ class Sale
         }
     }
 
-    public function deleteSalesOrder($salesOrderId)
+    public function deleteSalesOrder($ids)
     {
-        $query = "
-            DELETE FROM sales_orders 
-            WHERE id = :sales_order_id
-        ";
+        if (empty($ids)) {
+            return false;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+        $query = "DELETE FROM sales_orders WHERE id IN ($placeholders)";
 
         $stmt = $this->db->prepare($query);
-        $stmt->execute([':sales_order_id' => $salesOrderId]);
+        $stmt->execute($ids);
 
-        return $stmt->rowCount() > 0;
+        return $stmt->rowCount();
     }
-
 
     public function patchSalesOrder($orderId, $data)
     {

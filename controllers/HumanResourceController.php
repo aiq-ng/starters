@@ -169,7 +169,7 @@ class HumanResourceController extends BaseController
         }
     }
 
-    public function deleteEmployee($id)
+    public function deleteEmployee()
     {
         $this->authorizeRequest();
 
@@ -177,7 +177,10 @@ class HumanResourceController extends BaseController
             $this->sendResponse('Unauthorized', 403);
         }
 
-        $result = $this->humanResource->deleteEmployee($id);
+        $data = $this->getRequestData();
+        $ids = isset($data['ids']) ? (array) $data['ids'] : [];
+
+        $result = $this->humanResource->deleteEmployee($ids);
 
         if ($result) {
             $this->sendResponse('Employee deleted successfully', 200);

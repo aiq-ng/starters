@@ -157,13 +157,13 @@ $routes = [
     ],
     'DELETE' => [
         '/purchases/orders' => [$tradeController, 'deletePurchaseOrder'],
-        '/sales/orders/([a-fA-F0-9-]{36})' => [$tradeController, 'deleteSalesOrder'],
-        '/sales/price-list/([a-fA-F0-9-]{36})' => [$tradeController, 'deletePriceList'],
-        '/human-resources/employees/([a-fA-F0-9-]{36})' => [$humanResourceController, 'deleteEmployee'],
+        '/sales/orders' => [$tradeController, 'deleteSalesOrder'],
+        '/sales/price-list' => [$tradeController, 'deletePriceList'],
+        '/human-resources/employees' => [$humanResourceController, 'deleteEmployee'],
         '/products/([a-fA-F0-9-]{36})' => [$adminController, 'delete'],
         '/employees/([a-fA-F0-9-]{36})' => [$humanResourceController, 'delete'],
-        '/customers/([a-fA-F0-9-]{36})' => [$customerController, 'delete'],
-        '/vendors/([a-fA-F0-9-]{36})' => [$vendorController, 'delete'],
+        '/customers' => [$customerController, 'delete'],
+        '/vendors' => [$vendorController, 'delete'],
     ],
 ];
 

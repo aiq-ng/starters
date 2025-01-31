@@ -95,14 +95,20 @@ class Customer
         return $stmt->execute();
     }
 
-    public function deleteCustomer($id)
+    public function deleteCustomer($customerIds)
     {
-        $query = "DELETE FROM customers WHERE id = :id";
+        if (empty($customerIds)) {
+            return false;
+        }
 
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':id', $id);
+        $customerIds = is_array($customerIds) ? $customerIds : [$customerIds];
 
-        return $stmt->execute();
+        $placeholders = implode(',', array_fill(0, count($customerIds), '?'));
+
+        $stmt = $this->db->prepare("DELETE FROM customers WHERE id IN ($placeholders)");
+        $stmt->execute($customerIds);
+
+        return $stmt->rowCount();
     }
 
     public function getCustomer($id)

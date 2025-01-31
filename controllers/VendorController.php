@@ -105,11 +105,14 @@ class VendorController extends BaseController
         }
     }
 
-    public function delete($id)
+    public function delete()
     {
         $this->authorizeRequest();
 
-        $result = $this->vendor->deleteVendor($id);
+        $data = $this->getRequestData();
+        $ids = isset($data['ids']) ? (array) $data['ids'] : [];
+
+        $result = $this->vendor->deleteVendor($ids);
 
         if ($result) {
             $this->sendResponse('success', 200);

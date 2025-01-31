@@ -95,14 +95,20 @@ class Vendor
         return $stmt->execute();
     }
 
-    public function deleteVendor($id)
+    public function deleteVendor($vendorIds)
     {
-        $query = "DELETE FROM vendors WHERE id = :id";
+        if (empty($vendorIds)) {
+            return 0;
+        }
 
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':id', $id);
+        $vendorIds = is_array($vendorIds) ? $vendorIds : [$vendorIds];
 
-        return $stmt->execute();
+        $placeholders = implode(',', array_fill(0, count($vendorIds), '?'));
+
+        $stmt = $this->db->prepare("DELETE FROM vendors WHERE id IN ($placeholders)");
+        $stmt->execute($vendorIds);
+
+        return $stmt->rowCount();
     }
 
     public function getVendor($id)

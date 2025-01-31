@@ -294,10 +294,18 @@ class HumanResource
         return $result;
     }
 
-    public function deleteEmployee($employeeId)
+    public function deleteEmployee($employeeIds)
     {
-        $stmt = $this->db->prepare('DELETE FROM users WHERE id = ?');
-        $stmt->execute([$employeeId]);
+        if (empty($employeeIds)) {
+            return false;
+        }
+
+        $employeeIds = is_array($employeeIds) ? $employeeIds : [$employeeIds];
+
+        $placeholders = implode(',', array_fill(0, count($employeeIds), '?'));
+
+        $stmt = $this->db->prepare("DELETE FROM users WHERE id IN ($placeholders)");
+        $stmt->execute($employeeIds);
 
         return $stmt->rowCount();
     }

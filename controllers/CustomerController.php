@@ -108,11 +108,14 @@ class CustomerController extends BaseController
         }
     }
 
-    public function delete($id)
+    public function delete()
     {
         $this->authorizeRequest();
 
-        $result = $this->customer->deleteCustomer($id);
+        $data = $this->getRequestData();
+        $ids = isset($data['ids']) ? (array) $data['ids'] : [];
+
+        $result = $this->customer->deleteCustomer($ids);
 
         if ($result) {
             $this->sendResponse('success', 200);
