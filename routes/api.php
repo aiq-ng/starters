@@ -156,7 +156,7 @@ $routes = [
         '/sales/orders/([a-fA-F0-9-]{36})' => [$tradeController, 'patchSale'],
     ],
     'DELETE' => [
-        '/purchases/orders/([a-fA-F0-9-]{36})' => [$tradeController, 'deletePurchaseOrder'],
+        '/purchases/orders' => [$tradeController, 'deletePurchaseOrder'],
         '/sales/orders/([a-fA-F0-9-]{36})' => [$tradeController, 'deleteSalesOrder'],
         '/sales/price-list/([a-fA-F0-9-]{36})' => [$tradeController, 'deletePriceList'],
         '/human-resources/employees/([a-fA-F0-9-]{36})' => [$humanResourceController, 'deleteEmployee'],

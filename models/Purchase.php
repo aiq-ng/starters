@@ -196,15 +196,21 @@ class Purchase
         return $result;
     }
 
-    public function deletePurchaseOrder($purchaseOrderId)
+    public function deletePurchaseOrder(array $purchaseOrderIds)
     {
+        if (empty($purchaseOrderIds)) {
+            return false;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($purchaseOrderIds), '?'));
+
         $query = "
             DELETE FROM purchase_orders
-            WHERE id = :purchase_order_id
+            WHERE id IN ($placeholders)
         ";
 
         $stmt = $this->db->prepare($query);
-        $stmt->execute([':purchase_order_id' => $purchaseOrderId]);
+        $stmt->execute($purchaseOrderIds);
 
         return $stmt->rowCount() > 0;
     }

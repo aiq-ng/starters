@@ -110,17 +110,21 @@ class TradeController extends BaseController
     }
 
 
-    public function deletePurchaseOrder($purchaseId)
+    public function deletePurchaseOrder()
     {
         $this->authorizeRequest();
 
-        $deleted = $this->purchase->deletePurchaseOrder($purchaseId);
+        $data = $this->getRequestData();
+        $ids = isset($data['ids']) ? (array) $data['ids'] : [];
 
-        if ($deleted) {
-            $this->sendResponse('Purchase Order deleted successfully', 200);
-        } else {
-            $this->sendResponse('Failed to delete Purchase Order', 500);
-        }
+        $deleted = $this->purchase->deletePurchaseOrder($ids);
+
+        $status = $deleted ? 200 : 500;
+        $message = $deleted
+            ? 'Purchase Order deleted successfully'
+            : 'Failed to delete Purchase Order';
+
+        $this->sendResponse($message, $status);
     }
 
 
