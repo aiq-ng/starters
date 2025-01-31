@@ -1041,7 +1041,7 @@ class Sale
                     'item_name', p.item_details,
                     'quantity', soi.quantity,
                     'price', soi.price,
-                    'ammount', soi.quantity * soi.price
+                    'amount', soi.quantity * soi.price
                     )
                 ) AS items
             FROM sales_orders so
