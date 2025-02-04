@@ -74,6 +74,23 @@ class TradeController extends BaseController
         $invoice = $this->purchase->createPurchase($data);
 
         if ($invoice) {
+
+            $userToNotify =  BaseController::getUserByRole('Admin');
+            $user = $this->findRecord('users', $data['user_id']);
+
+            $notification = [
+                'user_id' => $userToNotify['id'],
+                'event' => 'notification',
+                'entity_id' => $invoice['id'],
+                'entity_type' => "purchase_order",
+                'title' => 'New Purchase Order',
+                'body' => $user['name'] . ' has created a new purchase order',
+            ];
+
+            error_log(json_encode($notification));
+
+            $this->notify->sendNotification($notification);
+
             $this->sendResponse('success', 201, $invoice);
         } else {
             $this->sendResponse('Failed to create purchase', 500);

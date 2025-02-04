@@ -80,6 +80,8 @@ class AuthController extends BaseController
 
         if ($adminAccess || password_verify($data['password'], $user['password'])) {
             $_SESSION['user_id'] = $user_id;
+            $_SESSION['role_id'] = $role_id;
+
             $this->sendTokens($user_id, $role_id);
         } else {
             $this->sendResponse('Invalid credentials', 400);

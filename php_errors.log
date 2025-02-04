@@ -722,3 +722,79 @@ DETAIL:  Key (item_details)=(Croissant) already exists.
 [04-Feb-2025 18:11:11 UTC] SQLSTATE[42601]: Syntax error: 7 ERROR:  syntax error at or near "FROM"
 LINE 12:             FROM item_stocks its
                      ^
+[04-Feb-2025 19:27:49 UTC] Sending notification to user 280de5f3-2707-4e3a-bfa5-515bc3c3ba94 via HTTP
+[04-Feb-2025 19:27:49 UTC] Sending HTTP request to http://websocket:9091/send-notification/
+[04-Feb-2025 19:28:16 UTC] Sending notification to user 280de5f3-2707-4e3a-bfa5-515bc3c3ba94 via HTTP
+[04-Feb-2025 19:28:16 UTC] Sending HTTP request to http://websocket:9091/send-notification/
+[04-Feb-2025 19:28:58 UTC] Sending notification to user 280de5f3-2707-4e3a-bfa5-515bc3c3ba94 via HTTP
+[04-Feb-2025 19:28:58 UTC] Sending HTTP request to http://websocket:9091/send-notification/
+[04-Feb-2025 20:13:12 UTC] 23198de3-f806-4952-ba8e-6e8f3c28f2ed
+[04-Feb-2025 20:13:14 UTC] Sending notification to user 5b2b4453-e7a5-42f7-b2df-bfcafb026e74 via HTTP
+[04-Feb-2025 20:13:14 UTC] Sending HTTP request to http://websocket:9091/send-notification/
+[04-Feb-2025 20:14:13 UTC] 23198de3-f806-4952-ba8e-6e8f3c28f2ed
+[04-Feb-2025 20:14:15 UTC] Sending notification to user 5b2b4453-e7a5-42f7-b2df-bfcafb026e74 via HTTP
+[04-Feb-2025 20:14:15 UTC] Sending HTTP request to http://websocket:9091/send-notification/
+[04-Feb-2025 20:15:16 UTC] 23198de3-f806-4952-ba8e-6e8f3c28f2ed
+[04-Feb-2025 20:15:18 UTC] Sending notification to user 5b2b4453-e7a5-42f7-b2df-bfcafb026e74 via HTTP
+[04-Feb-2025 20:15:18 UTC] Sending HTTP request to http://websocket:9091/send-notification/
+[04-Feb-2025 20:16:40 UTC] 23198de3-f806-4952-ba8e-6e8f3c28f2ed
+[04-Feb-2025 20:16:42 UTC] Sending notification to user 5b2b4453-e7a5-42f7-b2df-bfcafb026e74 via HTTP
+[04-Feb-2025 20:16:42 UTC] Sending HTTP request to http://websocket:9091/send-notification/
+[04-Feb-2025 20:17:36 UTC] Exception: SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "purchase_orders" violates foreign key constraint "purchase_orders_vendor_id_fkey"
+DETAIL:  Key (vendor_id)=(d31e7517-e1e9-4f89-aee2-21ecbc4f84d9) is not present in table "vendors".
+[04-Feb-2025 20:21:56 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[04-Feb-2025 20:23:31 UTC] Exception: SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "purchase_orders" violates foreign key constraint "purchase_orders_vendor_id_fkey"
+DETAIL:  Key (vendor_id)=(4d21b6ac-3019-4e89-a487-d22eeddf8284) is not present in table "vendors".
+[04-Feb-2025 20:26:06 UTC] Array
+(
+    [id] => 5b2b4453-e7a5-42f7-b2df-bfcafb026e74
+    [email] => odun@aiq.com
+    [username] => 
+    [password] => password
+    [firstname] => Babanla
+    [lastname] => Odunlami
+    [name] => Babanla Odunlami
+    [avatar_url] => https://i.imgur.com/0GY9tnz.jpeg
+    [date_of_birth] => 1992-08-10
+    [address] => 789 Pine St, Villageville
+    [next_of_kin] => Emily Brown
+    [date_of_employment] => 2019-02-18
+    [department_id] => 89fdce97-0166-4dc3-af44-ef580e7a73df
+    [role_id] => 0a55bff5-a90e-42f7-a7fc-e7566454179c
+    [no_of_working_days_id] => 
+    [salary] => 2800.00
+    [bank_details] => {"bank_name": "Bank LMN", "account_number": "1112233445"}
+    [leave] => 2023-05-15
+    [nin] => https://i.imgur.com/EF3456789E.jpeg
+    [passport] => https://i.imgur.com/C3456789.jpeg
+    [status] => active
+    [created_at] => 2025-02-01 15:02:05.672764+00
+    [updated_at] => 2025-02-01 15:02:05.672764+00
+)
+
+[04-Feb-2025 20:35:56 UTC] Error: Undefined array key "name" in /workspace/starters/app/controllers/TradeController.php on line 79
+[04-Feb-2025 20:37:50 UTC] User: {"id":"280de5f3-2707-4e3a-bfa5-515bc3c3ba94","email":"starters@admin.com","username":null,"password":"password123","firstname":"Starters","lastname":"Admin","name":"Starters Admin","avatar_url":"https:\/\/i.imgur.com\/0GY9tnz.jpeg","date_of_birth":null,"address":null,"next_of_kin":null,"date_of_employment":null,"department_id":null,"role_id":"6eb0b0a2-dcc9-4269-8c06-37b53c66e6b2","no_of_working_days_id":null,"salary":null,"bank_details":null,"leave":null,"nin":"https:\/\/i.imgur.com\/AB1234567C.jpeg","passport":"https:\/\/i.imgur.com\/A1234567.jpeg","status":"active","created_at":"2025-02-01 15:02:05.672764+00","updated_at":"2025-02-01 15:02:05.672764+00"}
+[04-Feb-2025 20:39:06 UTC] Error: Undefined array key "name" in /workspace/starters/app/controllers/TradeController.php on line 79
+[04-Feb-2025 20:46:05 UTC] Error: Undefined array key "name" in /workspace/starters/app/controllers/TradeController.php on line 82
+[04-Feb-2025 20:47:08 UTC] {"user_id":"280de5f3-2707-4e3a-bfa5-515bc3c3ba94","role_id":"6eb0b0a2-dcc9-4269-8c06-37b53c66e6b2"}
+[04-Feb-2025 20:47:13 UTC] Error: Undefined array key "name" in /workspace/starters/app/controllers/TradeController.php on line 81
+[04-Feb-2025 20:48:09 UTC] {"user_id":"280de5f3-2707-4e3a-bfa5-515bc3c3ba94","role_id":"6eb0b0a2-dcc9-4269-8c06-37b53c66e6b2"}
+[04-Feb-2025 20:48:14 UTC] Error: Undefined array key "name" in /workspace/starters/app/controllers/TradeController.php on line 81
+[04-Feb-2025 20:52:52 UTC] {"user_id":"280de5f3-2707-4e3a-bfa5-515bc3c3ba94","role_id":"6eb0b0a2-dcc9-4269-8c06-37b53c66e6b2"}
+[04-Feb-2025 20:52:57 UTC] Error: Undefined array key "name" in /workspace/starters/app/controllers/TradeController.php on line 81
+[04-Feb-2025 20:53:35 UTC] {"user_id":"280de5f3-2707-4e3a-bfa5-515bc3c3ba94","role_id":"6eb0b0a2-dcc9-4269-8c06-37b53c66e6b2"}
+[04-Feb-2025 20:53:41 UTC] Error: Undefined array key "name" in /workspace/starters/app/controllers/TradeController.php on line 81
+[04-Feb-2025 20:54:08 UTC] {"user_id":"280de5f3-2707-4e3a-bfa5-515bc3c3ba94","role_id":"6eb0b0a2-dcc9-4269-8c06-37b53c66e6b2"}
+[04-Feb-2025 20:54:13 UTC] Error: Undefined array key "name" in /workspace/starters/app/controllers/TradeController.php on line 81
+[04-Feb-2025 20:59:06 UTC] {"user_id":"280de5f3-2707-4e3a-bfa5-515bc3c3ba94","role_id":"6eb0b0a2-dcc9-4269-8c06-37b53c66e6b2"}
+[04-Feb-2025 20:59:13 UTC] Error: Undefined array key "name" in /workspace/starters/app/controllers/TradeController.php on line 81
+[04-Feb-2025 21:09:13 UTC] {"user_id":"280de5f3-2707-4e3a-bfa5-515bc3c3ba94","role_id":"6eb0b0a2-dcc9-4269-8c06-37b53c66e6b2"}
+[04-Feb-2025 21:09:18 UTC] Exception: Controllers\BaseController::findRecord(): Argument #2 ($id) must be of type int, string given, called in /workspace/starters/app/controllers/TradeController.php on line 81
+[04-Feb-2025 21:10:00 UTC] {"user_id":"280de5f3-2707-4e3a-bfa5-515bc3c3ba94","role_id":"6eb0b0a2-dcc9-4269-8c06-37b53c66e6b2"}
+[04-Feb-2025 21:10:06 UTC] {"id":"280de5f3-2707-4e3a-bfa5-515bc3c3ba94","email":"starters@admin.com","username":null,"password":"password123","firstname":"Starters","lastname":"Admin","name":"Starters Admin","avatar_url":"https:\/\/i.imgur.com\/0GY9tnz.jpeg","date_of_birth":null,"address":null,"next_of_kin":null,"date_of_employment":null,"department_id":null,"role_id":"6eb0b0a2-dcc9-4269-8c06-37b53c66e6b2","no_of_working_days_id":null,"salary":null,"bank_details":null,"leave":null,"nin":"https:\/\/i.imgur.com\/AB1234567C.jpeg","passport":"https:\/\/i.imgur.com\/A1234567.jpeg","status":"active","created_at":"2025-02-01 15:02:05.672764+00","updated_at":"2025-02-01 15:02:05.672764+00"}
+[04-Feb-2025 21:10:06 UTC] {"user_id":"5b2b4453-e7a5-42f7-b2df-bfcafb026e74","event":"notification","entity_id":"d8671ec8-c8c4-432e-895c-4bce2d977d48","entity_type":"purchase_order","title":"New Purchase Order","body":"Starters Admin has created a new purchase order"}
+[04-Feb-2025 21:10:06 UTC] Sending notification to user 5b2b4453-e7a5-42f7-b2df-bfcafb026e74 via HTTP
+[04-Feb-2025 21:10:06 UTC] Sending HTTP request to http://websocket:9091/send-notification/
+[04-Feb-2025 21:21:29 UTC] {"user_id":"280de5f3-2707-4e3a-bfa5-515bc3c3ba94","event":"notification","entity_id":"692fb56a-ab6c-4b46-8070-801ff1072936","entity_type":"purchase_order","title":"New Purchase Order","body":"Starters Admin has created a new purchase order"}
+[04-Feb-2025 21:21:29 UTC] Sending notification to user 280de5f3-2707-4e3a-bfa5-515bc3c3ba94 via HTTP
+[04-Feb-2025 21:21:29 UTC] Sending HTTP request to http://websocket:9091/send-notification/

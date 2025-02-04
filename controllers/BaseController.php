@@ -280,7 +280,7 @@ class BaseController
     }
 
 
-    protected function findRecord(string $table, int $id)
+    protected function findRecord(string $table, string $id)
     {
         $stmt = $this->db->prepare("SELECT * FROM $table WHERE id = :id");
         $stmt->bindParam(':id', $id, \PDO::PARAM_STR);
