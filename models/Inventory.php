@@ -173,7 +173,7 @@ class Inventory
                 STRING_AGG(DISTINCT ic.name, ', ') AS category,
                 STRING_AGG(DISTINCT d.name, ', ') AS department,
                 MAX(its.expiry_date) AS expiry_date,
-                COALESCE(SUM(its.quantity), 0) AS remaining_stock
+                COALESCE(SUM(its.quantity), 0) AS quantity
             FROM item_stocks its
             JOIN items i ON its.item_id = i.id
             LEFT JOIN item_stock_departments isd ON its.id = isd.stock_id
