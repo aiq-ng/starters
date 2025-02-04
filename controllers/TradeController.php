@@ -430,6 +430,8 @@ class TradeController extends BaseController
         $data = $this->getRequestData();
         $data['id'] = $priceListId;
 
+        error_log(json_encode($data));
+
         if (!isset($data['unit_price'])) {
             return $this->sendResponse('Missing unit price.', 400);
         }

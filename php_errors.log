@@ -712,3 +712,8 @@ CONTEXT:  unnamed portal parameter $1 = ''
 [31-Jan-2025 12:48:44 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
 [31-Jan-2025 15:35:42 UTC] SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type uuid: "2"
 CONTEXT:  unnamed portal parameter $8 = '...'
+[04-Feb-2025 14:32:25 UTC] Exception: SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type uuid: "1"
+CONTEXT:  unnamed portal parameter $5 = '...'
+[04-Feb-2025 14:33:02 UTC] Exception: SQLSTATE[23505]: Unique violation: 7 ERROR:  duplicate key value violates unique constraint "price_lists_item_details_key"
+DETAIL:  Key (item_details)=(Croissant) already exists.
+[04-Feb-2025 14:48:38 UTC] {"item_category_id":"d5942d30-5e1b-4c89-a0dd-c2ac5194d53d","item_details":"Croissant20","unit_price":30.5,"minimum_order":100,"unit_id":"62c7560c-a61e-4408-96e2-ac889efbacbb","id":"4be53e1f-cd72-4692-9a45-694e7281504b"}
