@@ -136,7 +136,6 @@ $routes = [
         '/purchases/orders/received/([a-fA-F0-9-]{36})' => [$tradeController, 'markPurchaseAsReceived'],
         '/accounting/sales-orders/([a-fA-F0-9-]{36})/confirm-payment' => [$accountingController, 'comfirmSalesOrderPayment'],
         '/human-resources/employees/leave/([a-fA-F0-9-]{36})/approve' => [$humanResourceController, 'approveLeave'],
-        '/inventory/items/([a-fA-F0-9-]{36})' => [$inventoryController, 'updateItem'],
         '/inventory/items/stocks/([a-fA-F0-9-]{36})' => [$inventoryController, 'adjustStock'],
         '/inventory/history/comment/([a-fA-F0-9-]{36})' => [$inventoryController, 'comment'],
         '/sales/orders/invoice/([a-fA-F0-9-]{36})' => [$tradeController, 'sendSaleInvoice'],
@@ -151,6 +150,7 @@ $routes = [
         '/vendors/([a-fA-F0-9-]{36})' => [$vendorController, 'update'],
         '/purchases/orders/([a-fA-F0-9-]{36})' => [$tradeController, 'updatePurchase'],
         '/sales/orders/([a-fA-F0-9-]{36})' => [$tradeController, 'updateSales'],
+        '/inventory/items/([a-fA-F0-9-]{36})' => [$inventoryController, 'updateItem'],
     ],
     'PATCH' => [
         '/sales/orders/([a-fA-F0-9-]{36})' => [$tradeController, 'patchSale'],
