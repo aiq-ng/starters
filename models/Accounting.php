@@ -578,6 +578,8 @@ class Accounting extends Kitchen
             $notification = [
                 'user_id' => $userToNotify['id'],
                 'event' => 'update',
+                'title' => 'New Sales Order',
+                'body' => 'New sales order has been placed',
                 'event_data' => $sales['data'],
             ];
 
