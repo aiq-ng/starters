@@ -25,7 +25,7 @@ class KitchenController extends BaseController
             'search' => isset($_GET['search']) ? $_GET['search'] : null,
             'page' => isset($_GET['page']) ? $_GET['page'] : 1,
             'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
-            'status' => isset($_GET['status']) ? $_GET['status'] : null,
+            'status' => isset($_GET['status']) ? $this->convertStatus($_GET['status']) : null,
             'order_type' => isset($_GET['order_type']) ? $_GET['order_type'] : null,
             'date' => !empty($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d'),
         ];
@@ -37,6 +37,19 @@ class KitchenController extends BaseController
         } else {
             $this->sendResponse('Sales not found', 404);
         }
+    }
+
+    private function convertStatus($status)
+    {
+        if ($status === 'new_order') {
+            return 'new order';
+        }
+
+        if ($status === 'in_progress') {
+            return 'in progress';
+        }
+
+        return $status;
     }
 
     public function show($salesId)

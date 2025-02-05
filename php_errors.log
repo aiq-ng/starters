@@ -811,3 +811,9 @@ DETAIL:  Key (vendor_id)=(4d21b6ac-3019-4e89-a487-d22eeddf8284) is not present i
 LINE 8:                 u.first_name || ' ' || u.last_name AS proces...
                         ^
 HINT:  Perhaps you meant to reference the column "u.firstname".
+[05-Feb-2025 16:41:25 UTC] Insert expense failed: SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "expenses" violates foreign key constraint "expenses_payment_method_id_fkey"
+DETAIL:  Key (payment_method_id)=(f7e3b389-adfb-48f3-a5ba-cea0e5d423c9) is not present in table "payment_methods".
+[05-Feb-2025 16:41:27 UTC] Exception: Failed to insert expense.
+[05-Feb-2025 16:42:01 UTC] Insert expense failed: SQLSTATE[23503]: Foreign key violation: 7 ERROR:  insert or update on table "expenses" violates foreign key constraint "expenses_payment_method_id_fkey"
+DETAIL:  Key (payment_method_id)=(f7e3b389-adfb-48f3-a5ba-cea0e5d423c9) is not present in table "payment_methods".
+[05-Feb-2025 16:42:02 UTC] Exception: Failed to insert expense.
