@@ -555,7 +555,7 @@ class Accounting
         try {
             $query = "
                 UPDATE sales_orders
-                SET status = 'paid',
+                SET status = 'new order',
                     sent_to_kitchen = TRUE
                 WHERE id = :order_id
             ";
@@ -587,7 +587,7 @@ class Accounting
         $countQuery = "
             SELECT COUNT(*) 
             FROM sales_orders
-            WHERE status = 'paid'
+            WHERE status = 'new order'
         ";
 
         $countStmt = $this->db->prepare($countQuery);
