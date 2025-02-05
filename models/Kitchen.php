@@ -230,7 +230,7 @@ class Kitchen
             LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
             LEFT JOIN price_lists p ON soi.item_id = p.id
             LEFT JOIN users u ON ca.chef_id = u.id
-            WHERE ca.chef_id = :chef_id
+            WHERE ca.chef_id = :chef_id AND so.id IS NOT NULL
             GROUP BY so.id, so.order_id, so.delivery_date, so.delivery_time,
                      u.firstname
             ORDER BY so.created_at DESC
