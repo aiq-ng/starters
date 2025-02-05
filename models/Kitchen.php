@@ -45,6 +45,7 @@ class Kitchen
         $orderType = $filters['order_type'] ?? null;
         $sortBy = $filters['sort_by'] ?? 'delivery_date';
         $order = $filters['order'] ?? 'DESC';
+        $sentToKitchen = $filters['sent_to_kitchen'] ?? null;
 
         $offset = ($page - 1) * $pageSize;
 
@@ -104,6 +105,11 @@ class Kitchen
         if ($orderType) {
             $conditions[] = "so.order_type = :order_type";
             $params[':order_type'] = $orderType;
+        }
+
+        if ($sentToKitchen !== null) {
+            $conditions[] = "so.sent_to_kitchen = :sent_to_kitchen";
+            $params[':sent_to_kitchen'] = $sentToKitchen ? 'true' : 'false';
         }
 
         // Append conditions to query

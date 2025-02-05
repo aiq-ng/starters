@@ -3,15 +3,19 @@
 namespace Controllers;
 
 use Models\Accounting;
+use Models\Kitchen;
+use Services\NotificationService;
 
 class AccountingController extends BaseController
 {
     private $accounting;
+    private $kitchen;
 
     public function __construct()
     {
         parent::__construct();
         $this->accounting = new Accounting();
+        $this->kitchen = new Kitchen();
     }
 
     public function createExpense()

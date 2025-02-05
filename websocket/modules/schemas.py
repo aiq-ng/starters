@@ -10,6 +10,7 @@ class NotificationRequest(BaseModel):
     entity_type: Optional[str] = None
     title: str
     body: str
+    event_data: Optional[dict] = []
 
 
 class NotificationAllRequest(BaseModel):

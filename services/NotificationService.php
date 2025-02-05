@@ -15,7 +15,7 @@ class NotificationService
         $this->db = Database::getInstance()->getConnection();
     }
 
-    public function sendNotification(array $data)
+    public function sendNotification(array $data, $save = true)
     {
         error_log("Sending notification to user {$data["user_id"]} via HTTP");
 
@@ -29,7 +29,9 @@ class NotificationService
             json_encode($data)
         );
 
-        $this->saveNotificationToDatabase($data);
+        if ($save) {
+            $this->saveNotificationToDatabase($data);
+        }
 
         return $responseData;
     }

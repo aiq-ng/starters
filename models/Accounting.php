@@ -6,12 +6,13 @@ use Database\Database;
 use Services\NotificationService;
 use Controllers\BaseController;
 
-class Accounting
+class Accounting extends Kitchen
 {
     private $db;
 
     public function __construct()
     {
+        parent::__construct();
         $this->db = Database::getInstance()->getConnection();
     }
 
@@ -553,10 +554,11 @@ class Accounting
     public function confirmSalesOrderPayment($orderId)
     {
         try {
+            $this->db->beginTransaction();
+
             $query = "
                 UPDATE sales_orders
-                SET status = 'new order',
-                    sent_to_kitchen = TRUE
+                SET status = 'new order'
                 WHERE id = :order_id
             ";
 
@@ -564,24 +566,57 @@ class Accounting
             $stmt->bindValue('order_id', $orderId);
             $stmt->execute();
 
-            if ($this->countPaidSalesOrders() >= 10) {
-                error_log("10 sales orders have been paid. Marking as received.");
-                $ids = $this->getSalesOrdersToKitchen();
+            $filters = [
+                'status' => 'new order',
+                'sent_to_kitchen' => false,
+            ];
+            $userToNotify = BaseController::getUserByRole('Admin');
 
-                error_log("Sales orders to mark as received: " . json_encode($ids));
+            $sales = $this->getNewOrders($filters);
 
-                if (empty($ids)) {
-                    return;
-                }
-                $this->markAsReceived($ids);
-            }
+            $notification = [
+                'user_id' => $userToNotify['id'],
+                'event' => 'update',
+                'event_data' => $sales,
+            ];
+
+            error_log("Sending notification to admin: " . json_encode($notification));
+
+            (new NotificationService())->sendNotification($notification, false);
+
+            $this->updateSentToKitchen($orderId);
+
+            $this->db->commit();
 
         } catch (\PDOException $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log("Database error in confirmSalesOrderPayment: " . $e->getMessage());
+            throw new \Exception("An error occurred while confirming sales order payment.");
+        } catch (\Exception $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
             error_log("Error in confirmSalesOrderPayment: " . $e->getMessage());
             throw new \Exception("An error occurred while confirming sales order payment.");
         }
     }
 
+    private function updateSentToKitchen($orderId)
+    {
+        try {
+            $query = "UPDATE sales_orders SET sent_to_kitchen = TRUE WHERE id = :order_id";
+
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':order_id', $orderId);
+            $stmt->execute();
+
+        } catch (\PDOException $e) {
+            error_log("Database error in updateSentToKitchen: " . $e->getMessage());
+            throw new \Exception("An error occurred while updating sent_to_kitchen status.");
+        }
+    }
     private function countPaidSalesOrders()
     {
         $countQuery = "
