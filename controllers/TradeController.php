@@ -201,20 +201,16 @@ class TradeController extends BaseController
 
         if ($result) {
 
-            $userToNotify =  BaseController::getUserByRole('Accountant');
-            if (is_string($result)) {
-                $vendorName = $result;
-            } else {
-                $vendorName = 'a vendor';
-            }
+            $userToNotify =  BaseController::getUserByRole('Admin');
+            $puchase = $this->findRecord('purchase_orders', $purchaseId);
 
             $notification = [
                 'user_id' => $userToNotify['id'],
                 'event' => 'notification',
                 'entity_id' => $purchaseId,
                 'entity_type' => "purchase_order",
-                'title' => 'New Purchase Order',
-                'body' => 'Purchase order from ' . $vendorName . ' has been received',
+                'title' => 'Purchase Order Received',
+                'body' => 'Purchase order ' . $puchase['reference_number'] . ' has been marked as received',
             ];
 
             $this->notify->sendNotification($notification);

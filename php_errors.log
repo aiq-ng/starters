@@ -798,3 +798,16 @@ DETAIL:  Key (vendor_id)=(4d21b6ac-3019-4e89-a487-d22eeddf8284) is not present i
 [04-Feb-2025 21:21:29 UTC] {"user_id":"280de5f3-2707-4e3a-bfa5-515bc3c3ba94","event":"notification","entity_id":"692fb56a-ab6c-4b46-8070-801ff1072936","entity_type":"purchase_order","title":"New Purchase Order","body":"Starters Admin has created a new purchase order"}
 [04-Feb-2025 21:21:29 UTC] Sending notification to user 280de5f3-2707-4e3a-bfa5-515bc3c3ba94 via HTTP
 [04-Feb-2025 21:21:29 UTC] Sending HTTP request to http://websocket:9091/send-notification/
+[04-Feb-2025 21:31:37 UTC] {"user_id":"280de5f3-2707-4e3a-bfa5-515bc3c3ba94","event":"notification","entity_id":"e9c0593b-e1fd-4d4e-b61e-69d6f5a2f75c","entity_type":"purchase_order","title":"New Purchase Order","body":"Starters Admin has created a new purchase order"}
+[04-Feb-2025 21:31:37 UTC] Sending notification to user 280de5f3-2707-4e3a-bfa5-515bc3c3ba94 via HTTP
+[04-Feb-2025 21:31:37 UTC] Sending HTTP request to http://websocket:9091/send-notification/
+[05-Feb-2025 07:05:26 UTC] 23198de3-f806-4952-ba8e-6e8f3c28f2ed
+[05-Feb-2025 07:05:33 UTC] Error: Undefined array key "reference" in /workspace/starters/app/controllers/TradeController.php on line 213
+[05-Feb-2025 07:06:36 UTC] 23198de3-f806-4952-ba8e-6e8f3c28f2ed
+[05-Feb-2025 07:06:43 UTC] Sending notification to user 280de5f3-2707-4e3a-bfa5-515bc3c3ba94 via HTTP
+[05-Feb-2025 07:06:43 UTC] Sending HTTP request to http://websocket:9091/send-notification/
+[05-Feb-2025 09:09:20 UTC] Exception: User with identifier 'john.doe@example.com' not found.
+[05-Feb-2025 10:18:19 UTC] Exception: SQLSTATE[42703]: Undefined column: 7 ERROR:  column u.first_name does not exist
+LINE 8:                 u.first_name || ' ' || u.last_name AS proces...
+                        ^
+HINT:  Perhaps you meant to reference the column "u.firstname".

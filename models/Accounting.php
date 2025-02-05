@@ -243,7 +243,8 @@ class Accounting
 
         $totalItems = $this->countExpenses($conditions, $params);
 
-        $sql = "SELECT 
+        $sql = "SELECT
+                e.id, 
                 e.expense_id,
                 e.expense_title,
                 e.date_of_expense, 
@@ -295,6 +296,40 @@ class Accounting
             error_log('Fetch expenses failed: ' . $e->getMessage());
             throw new \Exception('Failed to fetch expenses.');
         }
+    }
+
+    public function getExpense($expenseId)
+    {
+        $query = "
+            SELECT 
+                e.*,
+                pm.name AS payment_method,
+                ec.name AS expense_category,
+                d.name AS department,
+                pt.name AS payment_term,
+                u.firstname || ' ' || u.lastname AS processed_by
+            FROM 
+                expenses e
+            LEFT JOIN 
+                payment_methods pm ON e.payment_method_id = pm.id
+            LEFT JOIN 
+                payment_terms pt ON e.payment_term_id = pt.id
+            LEFT JOIN
+                users u ON e.processed_by = u.id
+            LEFT JOIN
+                expenses_categories ec ON e.expense_category = ec.id
+            LEFT JOIN 
+                departments d ON e.department_id = d.id
+            WHERE 
+                e.id = :expense_id
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':expense_id', $expenseId);
+
+        $stmt->execute();
+
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 
     private function countExpenses($conditions, $params)
@@ -364,7 +399,8 @@ class Accounting
         $totalItems = $this->countBills($conditions, $params);
 
         // Base query
-        $sql = "SELECT 
+        $sql = "SELECT
+            po.id, 
             po.reference_number AS ref_id,
             po.purchase_order_number AS po_number,
             po.created_at AS date, 

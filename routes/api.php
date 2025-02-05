@@ -85,6 +85,7 @@ $routes = [
         '/products/([a-fA-F0-9-]{36})' => [$adminController, 'show'],
         '/sales/price-list/([a-fA-F0-9-]{36})' => [$tradeController, 'getAPriceList'],
         '/accounting/sales-orders/([a-fA-F0-9-]{36})' => [$accountingController, 'getSalesOrder'],
+        '/accounting/expenses/([a-fA-F0-9-]{36})' => [$accountingController, 'getExpense'],
         '/human-resources/employees/([a-fA-F0-9-]{36})' => [$humanResourceController, 'showEmployee'],
         '/purchases/orders/([a-fA-F0-9-]{36})' => [$tradeController, 'showPurchase'],
         '/inventory/history/([a-fA-F0-9-]{36})' => [$inventoryController, 'inventoryHistory'],
