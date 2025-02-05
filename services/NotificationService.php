@@ -19,6 +19,8 @@ class NotificationService
     {
         error_log("Sending notification to user {$data["user_id"]} via HTTP");
 
+        error_log("Notification data: " . json_encode($data));
+
         $url = '/send-notification/';
         $responseData = $this->httpClientService->post(
             $url,

@@ -510,6 +510,7 @@ class Accounting extends Kitchen
                 so.created_at::DATE AS date,
                 so.total AS amount,
                 so.status,
+                so.sent_to_kitchen,
                 (
                     SELECT JSON_AGG(
                         JSON_BUILD_OBJECT(
@@ -568,7 +569,7 @@ class Accounting extends Kitchen
 
             $filters = [
                 'status' => 'new order',
-                'sent_to_kitchen' => false,
+                'sent_to_kitchen' => 0,
             ];
             $userToNotify = BaseController::getUserByRole('Admin');
 
@@ -577,10 +578,8 @@ class Accounting extends Kitchen
             $notification = [
                 'user_id' => $userToNotify['id'],
                 'event' => 'update',
-                'event_data' => $sales,
+                'event_data' => $sales['data'],
             ];
-
-            error_log("Sending notification to admin: " . json_encode($notification));
 
             (new NotificationService())->sendNotification($notification, false);
 

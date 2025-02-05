@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel
 
@@ -8,9 +8,9 @@ class NotificationRequest(BaseModel):
     event: str
     entity_id: Optional[str] = None
     entity_type: Optional[str] = None
-    title: str
-    body: str
-    event_data: Optional[dict] = []
+    title: Optional[str] = None
+    body: Optional[str] = None
+    event_data: Optional[Any] = None
 
 
 class NotificationAllRequest(BaseModel):

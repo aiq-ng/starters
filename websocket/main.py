@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-
 from modules.schemas import NotificationAllRequest, NotificationRequest
 from modules.websocket.router import manager, ws
 
@@ -27,7 +26,10 @@ async def send_notification(request: NotificationRequest):
             "entity_type": request.entity_type,
             "title": request.title,
             "body": request.body,
+            "event_data": request.event_data,
         }
+
+        print(f"Data: {data}")
 
         await manager.send_message(data)
         return JSONResponse(
