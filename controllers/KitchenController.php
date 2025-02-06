@@ -127,10 +127,12 @@ class KitchenController extends BaseController
         $this->authorizeRequest();
 
         $chefId = isset($_GET['chef_id']) ? $_GET['chef_id'] : null;
+        $page = isset($_GET['page']) ? $_GET['page'] : 1;
+        $page_size = isset($_GET['page_size']) ? $_GET['page_size'] : 100;
 
         $id = $chefId ? $chefId : $_SESSION['user_id'];
 
-        $orders = $this->kitchen->getAssignedOrders($id);
+        $orders = $this->kitchen->getAssignedOrders($id, $page, $page_size);
 
         if (!empty($orders)) {
             $this->sendResponse('success', 200, $orders);
@@ -138,5 +140,22 @@ class KitchenController extends BaseController
             $this->sendResponse('Orders not found', 404);
         }
     }
+
+    public function getAllChefOrders()
+    {
+        $this->authorizeRequest();
+
+        $page = isset($_GET['page']) ? $_GET['page'] : 1;
+        $page_size = isset($_GET['page_size']) ? $_GET['page_size'] : 100;
+
+        $orders = $this->kitchen->getAllAssignedOrders($page, $page_size);
+
+        if (!empty($orders)) {
+            $this->sendResponse('success', 200, $orders);
+        } else {
+            $this->sendResponse('Orders not found', 404);
+        }
+    }
+
 
 }

@@ -1572,7 +1572,7 @@ VALUES
 ((SELECT id FROM users WHERE email = 'chef1@admin.com'), 
  (SELECT id FROM sales_orders WHERE customer_note = 'Confirm new order3')),
 ((SELECT id FROM users WHERE email = 'chef@admin.com'), 
- (SELECT id FROM sales_orders WHERE customer_note = 'Confirm in progress')),
+ (SELECT id FROM sales_orders WHERE customer_note = 'Confirm in progress3')),
 ((SELECT id FROM users WHERE email = 'chef@admin.com'), 
  (SELECT id FROM sales_orders WHERE customer_note = 'Confirm completed3')),
 ((SELECT id FROM users WHERE email = 'chef1@admin.com'), 
@@ -1580,7 +1580,16 @@ VALUES
 ((SELECT id FROM users WHERE email = 'chef@admin.com'), 
  (SELECT id FROM sales_orders WHERE customer_note = 'Confirm in progress4')),
 ((SELECT id FROM users WHERE email = 'chef@admin.com'), 
- (SELECT id FROM sales_orders WHERE customer_note = 'Confirm completed4'));
+ (SELECT id FROM sales_orders WHERE customer_note = 'Confirm completed4')),
+((SELECT id FROM users WHERE email = 'chef1@admin.com'), 
+ (SELECT id FROM sales_orders WHERE customer_note = 'Confirm new order5')),
+((SELECT id FROM users WHERE email = 'chef@admin.com'), 
+ (SELECT id FROM sales_orders WHERE customer_note = 'Confirm in progress5')),
+((SELECT id FROM users WHERE email = 'chef1@admin.com'), 
+ (SELECT id FROM sales_orders WHERE customer_note = 'Confirm completed5')),
+((SELECT id FROM users WHERE email = 'chef1@admin.com'), 
+ (SELECT id FROM sales_orders WHERE customer_note = 'Confirm new order6'));
+
 
 -- Insert into item_stock_adjustments
 INSERT INTO item_stock_adjustments (

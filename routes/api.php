@@ -78,6 +78,7 @@ $routes = [
         '/accounting/graph' => [$accountingController, 'revenueAndExpensesGraph'],
         '/inventory' => [$inventoryController, 'index'],
         '/kitchen/chef/orders' => [$kitchenController, 'getChefOrders'],
+        '/kitchen/chefs/orders' => [$kitchenController, 'getAllChefOrders'],
         '/kitchen/orders/([a-fA-F0-9-]{36})' => [$kitchenController, 'show'],
         '/inventory/graph/([a-fA-F0-9-]{36})' => [$inventoryController, 'graph'],
         '/vendors/([a-fA-F0-9-]{36})' => [$vendorController, 'show'],

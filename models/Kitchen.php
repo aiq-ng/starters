@@ -217,8 +217,39 @@ class Kitchen
         }
     }
 
-    public function getAssignedOrders($chefId)
+    public function getAssignedOrders($chefId, $page = 1, $pageSize = 100)
     {
+        return $this->getChefAssignedOrders($chefId, $page, $pageSize);
+    }
+
+    public function getAllAssignedOrders($page = 1, $pageSize = 100)
+    {
+        return $this->getChefAssignedOrders(null, $page, $pageSize);
+    }
+
+    public function getChefAssignedOrders($chefId = null, $page = 1, $pageSize = 100)
+    {
+        $offset = ($page - 1) * $pageSize;
+
+        $condition = $chefId
+            ? "WHERE ca.chef_id = :chef_id AND so.id IS NOT NULL"
+            : "WHERE so.id IS NOT NULL";
+
+        // Query to get total count before applying pagination
+        $countQuery = "
+        SELECT COUNT(DISTINCT so.id) AS total_items
+        FROM chef_assignments ca
+        LEFT JOIN sales_orders so ON so.id = ca.order_id
+        {$condition}
+    ";
+
+        $countStmt = $this->db->prepare($countQuery);
+        if ($chefId) {
+            $countStmt->bindValue(':chef_id', $chefId, \PDO::PARAM_INT);
+        }
+        $countStmt->execute();
+        $totalItems = $countStmt->fetchColumn();
+
         $query = "
             SELECT so.id,
                    so.order_id,
@@ -236,16 +267,22 @@ class Kitchen
             LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
             LEFT JOIN price_lists p ON soi.item_id = p.id
             LEFT JOIN users u ON ca.chef_id = u.id
-            WHERE ca.chef_id = :chef_id AND so.id IS NOT NULL
-            GROUP BY so.id, so.order_id, so.delivery_date, so.delivery_time,
+            {$condition}
+            GROUP BY so.id, so.order_id, so.delivery_date, so.delivery_time, 
                      u.firstname
             ORDER BY so.created_at DESC
+            LIMIT :page_size OFFSET :offset
         ";
 
         $stmt = $this->db->prepare($query);
 
         try {
-            $stmt->bindValue(':chef_id', $chefId);
+            if ($chefId) {
+                $stmt->bindValue(':chef_id', $chefId);
+            }
+            $stmt->bindValue(':page_size', $pageSize);
+            $stmt->bindValue(':offset', $offset);
+
             $stmt->execute();
             $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -253,11 +290,23 @@ class Kitchen
                 $row['items'] = json_decode($row['items'], true);
             }
 
-            return $result;
+            // Pagination meta
+            $meta = [
+                'total_data' => (int) $totalItems,
+                'total_pages' => ceil($totalItems / $pageSize),
+                'page_size' => (int) $pageSize,
+                'previous_page' => $page > 1 ? $page - 1 : null,
+                'current_page' => (int) $page,
+                'next_page' => $page * $pageSize < $totalItems ? $page + 1 : null,
+            ];
+
+            return [
+                'data' => $result,
+                'meta' => $meta
+            ];
         } catch (\Exception $e) {
             error_log("Failed to fetch assigned orders: " . $e->getMessage());
             throw new \Exception("Failed to fetch assigned orders.");
         }
     }
-
 }
