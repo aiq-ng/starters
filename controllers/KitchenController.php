@@ -71,7 +71,7 @@ class KitchenController extends BaseController
 
         try {
 
-            $status = isset($_GET['status']) ? $_GET['status'] : null;
+            $status = isset($_GET['status']) ? $this->convertStatus($_GET['status']) : null;
 
             if (empty($status)) {
                 $this->sendResponse('Status is required', 400);
