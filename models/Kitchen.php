@@ -222,8 +222,11 @@ class Kitchen
         return $this->getChefAssignedOrders($chefId, $page, $pageSize);
     }
 
-    public function getAllAssignedOrders($page = 1, $pageSize = 100)
+    public function getAllAssignedOrders($chefId = null, $page = 1, $pageSize = 100)
     {
+        if ($chefId !== null) {
+            return $this->getChefAssignedOrders($chefId, $page, $pageSize);
+        }
         return $this->getChefAssignedOrders(null, $page, $pageSize);
     }
 

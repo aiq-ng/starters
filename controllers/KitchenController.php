@@ -147,8 +147,9 @@ class KitchenController extends BaseController
 
         $page = isset($_GET['page']) ? $_GET['page'] : 1;
         $page_size = isset($_GET['page_size']) ? $_GET['page_size'] : 100;
+        $chefId = isset($_GET['chef_id']) ? $_GET['chef_id'] : null;
 
-        $orders = $this->kitchen->getAllAssignedOrders($page, $page_size);
+        $orders = $this->kitchen->getAllAssignedOrders($chefId, $page, $page_size);
 
         if (!empty($orders)) {
             $this->sendResponse('success', 200, $orders['data'], $orders['meta']);
