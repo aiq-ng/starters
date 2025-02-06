@@ -449,7 +449,7 @@ CREATE TABLE purchase_order_items (
     quantity INT NOT NULL,
     price DECIMAL(20, 2),
     tax_id UUID REFERENCES taxes(id) ON DELETE SET NULL,
-    total DECIMAL(20, 2) GENERATED ALWAYS AS (quantity * price) STORED,
+    total DECIMAL(20, 2) NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -513,7 +513,8 @@ CREATE TABLE sales_order_items (
     item_id UUID REFERENCES price_lists(id) ON DELETE SET NULL,
     quantity INT NOT NULL,
     price DECIMAL(20, 2) NOT NULL,
-    total DECIMAL(20, 2) GENERATED ALWAYS AS (quantity * price) STORED,
+    tax_id UUID REFERENCES taxes(id) ON DELETE SET NULL,
+    total DECIMAL(20, 2) NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -604,6 +605,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION calculate_purchase_order_items_price()
+RETURNS TRIGGER AS $$
+DECLARE
+    tax_rate DECIMAL(5,2);
+BEGIN
+    SELECT COALESCE(rate, 0) INTO tax_rate FROM taxes 
+    WHERE id = NEW.tax_id;
+
+    NEW.total := NEW.quantity * NEW.price * (1 + tax_rate / 100);
+    NEW.updated_at := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION calculate_sales_order_items_price()
+RETURNS TRIGGER AS $$
+DECLARE
+    tax_rate DECIMAL(5,2);
+BEGIN
+    SELECT COALESCE(rate, 0) INTO tax_rate FROM taxes 
+    WHERE id = NEW.tax_id;
+
+    NEW.total := NEW.quantity * NEW.price * (1 + tax_rate / 100);
+    NEW.updated_at := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION update_purchase_order_total()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -646,6 +675,14 @@ CREATE TRIGGER check_overdue_status
 BEFORE UPDATE ON purchase_orders
 FOR EACH ROW
 EXECUTE FUNCTION set_status_to_overdue();
+
+CREATE TRIGGER trigger_calculate_purchase_order_items_price
+BEFORE INSERT OR UPDATE ON purchase_order_items
+FOR EACH ROW EXECUTE FUNCTION calculate_purchase_order_items_price();
+
+CREATE TRIGGER trigger_calculate_sales_order_items_price
+BEFORE INSERT OR UPDATE ON sales_order_items
+FOR EACH ROW EXECUTE FUNCTION calculate_sales_order_items_price();
 
 CREATE TRIGGER trigger_update_purchase_order_total
 AFTER INSERT OR UPDATE OR DELETE ON purchase_order_items

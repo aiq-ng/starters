@@ -855,11 +855,13 @@ class Sale
     private function insertSalesOrderItem($salesOrderId, $items)
     {
         $query = "
-            INSERT INTO sales_order_items (sales_order_id, item_id, quantity, price) 
-            VALUES (:sales_order_id, :item_id, :quantity, :price);
+            INSERT INTO sales_order_items (sales_order_id, item_id, quantity, price, tax_id) 
+            VALUES (:sales_order_id, :item_id, :quantity, :price, :tax_id);
         ";
 
         $stmt = $this->db->prepare($query);
+
+        $taxId = $this->getTaxId('VAT (7.50)');
 
         foreach ($items as $item) {
             $item = array_filter($item, function ($value) {
@@ -871,10 +873,21 @@ class Sale
                     ':sales_order_id' => $salesOrderId,
                     ':item_id' => $item['item_id'],
                     ':quantity' => $item['quantity'],
-                    ':price' => $item['price']
+                    ':price' => $item['price'],
+                    ':tax_id' => $item['tax_id'] ?? $taxId
                 ]);
             }
         }
+    }
+
+    private function getTaxId($taxName)
+    {
+        $query = "SELECT id FROM taxes WHERE name = :name";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute(['name' => $taxName]);
+
+        return $stmt->fetchColumn();
     }
 
     public function updateSale($data)
@@ -945,12 +958,15 @@ class Sale
             UPDATE sales_order_items
             SET 
                 quantity = :quantity,
-                price = :price
+                price = :price,
+                tax_id = :tax_id
             WHERE sales_order_id = :sales_order_id
             AND item_id = :item_id
         ";
 
         $stmt = $this->db->prepare($query);
+
+        $taxId = $this->getTaxId('VAT (7.50)');
 
         foreach ($items as $item) {
             $item = array_filter($item, function ($value) {
@@ -962,7 +978,8 @@ class Sale
                     ':sales_order_id' => $salesOrderId,
                     ':item_id' => $item['item_id'],
                     ':quantity' => $item['quantity'],
-                    ':price' => $item['price']
+                    ':price' => $item['price'],
+                    ':tax_id' => $item['tax_id'] ?? $taxId
                 ]);
             }
         }
@@ -1041,7 +1058,7 @@ class Sale
                     'item_name', p.item_details,
                     'quantity', soi.quantity,
                     'price', soi.price,
-                    'amount', soi.quantity * soi.price
+                    'amount', soi.total
                     )
                 ) AS items
             FROM sales_orders so
