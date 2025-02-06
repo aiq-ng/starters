@@ -135,7 +135,7 @@ class KitchenController extends BaseController
         $orders = $this->kitchen->getAssignedOrders($id, $page, $page_size);
 
         if (!empty($orders)) {
-            $this->sendResponse('success', 200, $orders);
+            $this->sendResponse('success', 200, $orders['data'], $orders['meta']);
         } else {
             $this->sendResponse('Orders not found', 404);
         }
