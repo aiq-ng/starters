@@ -604,6 +604,38 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION update_purchase_order_total()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE purchase_orders
+    SET total = COALESCE((
+        SELECT SUM(total) 
+        FROM purchase_order_items 
+        WHERE purchase_order_id = NEW.purchase_order_id
+    ), 0) - COALESCE(discount, 0) + COALESCE(shipping_charge, 0)
+    WHERE id = NEW.purchase_order_id;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_sales_order_total()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE sales_orders
+    SET total = COALESCE((
+        SELECT SUM(total) 
+        FROM sales_order_items 
+        WHERE sales_order_id = NEW.sales_order_id
+    ), 0) - COALESCE(discount, 0) + COALESCE(delivery_charge, 0)
+    WHERE id = NEW.sales_order_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
 CREATE TRIGGER trigger_update_item_availability
 AFTER INSERT OR UPDATE OR DELETE
 ON item_stocks
@@ -614,3 +646,12 @@ CREATE TRIGGER check_overdue_status
 BEFORE UPDATE ON purchase_orders
 FOR EACH ROW
 EXECUTE FUNCTION set_status_to_overdue();
+
+CREATE TRIGGER trigger_update_purchase_order_total
+AFTER INSERT OR UPDATE OR DELETE ON purchase_order_items
+FOR EACH ROW EXECUTE FUNCTION update_purchase_order_total();
+
+CREATE TRIGGER trigger_update_sales_order_total
+AFTER INSERT OR UPDATE OR DELETE ON sales_order_items
+FOR EACH ROW EXECUTE FUNCTION update_sales_order_total();
+
