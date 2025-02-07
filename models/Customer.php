@@ -353,9 +353,9 @@ class Customer
             $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             if ($result) {
-                $result['receivables'] = json_decode($result['receivables'], true);
-                $result['transactions'] = json_decode($result['transactions'], true);
-                $result['social_media'] = json_decode($result['social_media'], true);
+                $result['receivables'] = json_decode($result['receivables'] ?? '[]', true);
+                $result['transactions'] = json_decode($result['transactions'] ?? '[]', true);
+                $result['social_media'] = json_decode($result['social_media'] ?? '[]', true);
             }
 
             return $result;
