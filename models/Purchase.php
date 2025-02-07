@@ -219,6 +219,9 @@ class Purchase
 
     public function createPurchase($data)
     {
+        error_log('Creating purchase order...');
+        error_log(json_encode($data));
+
         $this->db->beginTransaction();
 
         try {
