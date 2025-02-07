@@ -250,7 +250,7 @@ class BaseController
         $notifications = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         if (empty($notifications)) {
-            $this->sendResponse('No notifications found', 404);
+            $this->sendResponse('No notifications found', 200);
         } else {
             $this->sendResponse('success', 200, $notifications);
         }
