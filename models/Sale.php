@@ -809,15 +809,14 @@ class Sale
     {
         $query = "
             INSERT INTO sales_orders (
-                order_type, order_title, payment_term_id, customer_id,
-                payment_method_id, delivery_option, 
-                assigned_driver_id, delivery_date, delivery_time, delivery_address,
+                order_type, order_title, payment_term_id, customer_id, delivery_option
+                , delivery_date, delivery_time, delivery_address,
                 additional_note, customer_note, discount, delivery_charge, total
             ) 
             VALUES (
                 :order_type, :order_title, :payment_term_id, :customer_id,
-                :payment_method_id, :delivery_option, 
-                :assigned_driver_id, :delivery_date, :delivery_time, :delivery_address, 
+                :delivery_option, 
+                :delivery_date, :delivery_time, :delivery_address, 
                 :additional_note, :customer_note, :discount, :delivery_charge,
                 :total 
             ) 
@@ -833,9 +832,9 @@ class Sale
                 ':order_title' => $data['order_title'] ?? null,
                 ':payment_term_id' => $data['payment_term_id'] ?? null,
                 ':customer_id' => $data['customer_id'] ?? null,
-                ':payment_method_id' => $data['payment_method_id'] ?? null,
+                //':payment_method_id' => $data['payment_method_id'] ?? null,
                 ':delivery_option' => $data['delivery_option'] ?? null,
-                ':assigned_driver_id' => $data['assigned_driver_id'] ?? null,
+                //':assigned_driver_id' => $data['assigned_driver_id'] ?? null,
                 ':delivery_date' => $data['delivery_date'] ?? null,
                 ':delivery_time' => $data['delivery_time'] ?? null,
                 ':delivery_address' => $data['delivery_address'] ?? null,
