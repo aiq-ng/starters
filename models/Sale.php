@@ -788,6 +788,7 @@ class Sale
 
     public function createSale($data)
     {
+        error_log(json_encode($data));
 
         $this->db->beginTransaction();
 
