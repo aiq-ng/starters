@@ -788,7 +788,6 @@ class Sale
 
     public function createSale($data)
     {
-        error_log(json_encode($data));
 
         $this->db->beginTransaction();
 
@@ -810,13 +809,14 @@ class Sale
     {
         $query = "
             INSERT INTO sales_orders (
-                order_type, order_title, payment_term_id, customer_id, delivery_option
-                , delivery_date, delivery_time, delivery_address,
+                order_type, order_title, payment_term_id, customer_id,
+                payment_method_id, delivery_option, 
+                delivery_date, delivery_time, delivery_address,
                 additional_note, customer_note, discount, delivery_charge, total
             ) 
             VALUES (
                 :order_type, :order_title, :payment_term_id, :customer_id,
-                :delivery_option, 
+                :payment_method_id, :delivery_option, 
                 :delivery_date, :delivery_time, :delivery_address, 
                 :additional_note, :customer_note, :discount, :delivery_charge,
                 :total 
@@ -833,9 +833,8 @@ class Sale
                 ':order_title' => $data['order_title'] ?? null,
                 ':payment_term_id' => $data['payment_term_id'] ?? null,
                 ':customer_id' => $data['customer_id'] ?? null,
-                //':payment_method_id' => $data['payment_method_id'] ?? null,
+                ':payment_method_id' => $data['payment_method_id'] ?? null,
                 ':delivery_option' => $data['delivery_option'] ?? null,
-                //':assigned_driver_id' => $data['assigned_driver_id'] ?? null,
                 ':delivery_date' => $data['delivery_date'] ?? null,
                 ':delivery_time' => $data['delivery_time'] ?? null,
                 ':delivery_address' => $data['delivery_address'] ?? null,
@@ -855,13 +854,13 @@ class Sale
     private function insertSalesOrderItem($salesOrderId, $items)
     {
         $query = "
-            INSERT INTO sales_order_items (sales_order_id, item_id, quantity, price) 
-            VALUES (:sales_order_id, :item_id, :quantity, :price);
+            INSERT INTO sales_order_items (sales_order_id, item_id, quantity, price, tax_id) 
+            VALUES (:sales_order_id, :item_id, :quantity, :price, :tax_id);
         ";
 
         $stmt = $this->db->prepare($query);
 
-        //$taxId = $this->getTaxId('VAT (7.50)');
+        $taxId = $this->getTaxId('VAT (7.50)');
 
         foreach ($items as $item) {
             $item = array_filter($item, function ($value) {
@@ -873,8 +872,8 @@ class Sale
                     ':sales_order_id' => $salesOrderId,
                     ':item_id' => $item['item_id'],
                     ':quantity' => $item['quantity'],
-                    ':price' => $item['price']
-                    //':tax_id' => $item['tax_id'] ?? $taxId
+                    ':price' => $item['price'],
+                    ':tax_id' => $item['tax_id'] ?? $taxId
                 ]);
             }
         }
@@ -918,7 +917,6 @@ class Sale
                 customer_id = :customer_id,
                 payment_method_id = :payment_method_id,
                 delivery_option = :delivery_option,
-                assigned_driver_id = :assigned_driver_id,
                 delivery_date = :delivery_date,
                 delivery_time = :delivery_time,
                 delivery_address = :delivery_address,
@@ -940,7 +938,6 @@ class Sale
             ':customer_id' => $data['customer_id'] ?? null,
             ':payment_method_id' => $data['payment_method_id'] ?? null,
             ':delivery_option' => $data['delivery_option'] ?? null,
-            ':assigned_driver_id' => $data['assigned_driver_id'] ?? null,
             ':delivery_date' => $data['delivery_date'] ?? null,
             ':delivery_time' => $data['delivery_time'] ?? null,
             ':delivery_address' => $data['delivery_address'] ?? null,
@@ -1058,7 +1055,7 @@ class Sale
                     'item_name', p.item_details,
                     'quantity', soi.quantity,
                     'price', soi.price,
-                    'amount', soi.total
+                    'amount', soi.quantity * soi.price
                     )
                 ) AS items
             FROM sales_orders so
@@ -1097,7 +1094,8 @@ class Sale
         $offset = ($page - 1) * $pageSize;
 
         $query = "
-            SELECT 
+            SELECT
+                pl.id, 
                 pl.item_details AS name,
                 SUM(soi.quantity) AS total_quantity,
                 pl.unit_price AS price,

@@ -175,7 +175,6 @@ class Dashboard
 
     public function getBusinessOverview($filters = [])
     {
-        $month = $filters['month'] ?? date('n');
         $year = $filters['year'] ?? date('Y');
 
         try {
@@ -184,7 +183,7 @@ class Dashboard
             SELECT 
                 COALESCE((SELECT SUM(total) 
                           FROM sales_orders 
-                          WHERE status IN ('completed') 
+                          WHERE status IN ('delivered') 
                           AND DATE_PART('year', created_at) = :year), 0) AS total_income,
                 COALESCE((SELECT SUM(total) 
                           FROM purchase_orders 
