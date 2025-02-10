@@ -11,6 +11,7 @@ return array(
     'Psr\\Http\\Message\\' => array($vendorDir . '/psr/http-factory/src', $vendorDir . '/psr/http-message/src'),
     'Psr\\Http\\Client\\' => array($vendorDir . '/psr/http-client/src'),
     'Predis\\' => array($vendorDir . '/predis/predis/src'),
+    'Picqer\\Barcode\\' => array($vendorDir . '/picqer/php-barcode-generator/src'),
     'Monolog\\' => array($vendorDir . '/monolog/monolog/src/Monolog'),
     'Models\\' => array($baseDir . '/models'),
     'GuzzleHttp\\Psr7\\' => array($vendorDir . '/guzzlehttp/psr7/src'),
@@ -19,4 +20,6 @@ return array(
     'Firebase\\JWT\\' => array($vendorDir . '/firebase/php-jwt/src'),
     'Database\\' => array($baseDir . '/database'),
     'Controllers\\' => array($baseDir . '/controllers'),
+    'BarcodeBakery\\Common\\' => array($vendorDir . '/barcode-bakery/barcode-common/src'),
+    'BarcodeBakery\\Barcode\\' => array($vendorDir . '/barcode-bakery/barcode-1d/src'),
 );

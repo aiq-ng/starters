@@ -23,6 +23,7 @@ class ComposerStaticInit13a010eeb9c62b39957764b337e058f5
             'Psr\\Http\\Message\\' => 17,
             'Psr\\Http\\Client\\' => 16,
             'Predis\\' => 7,
+            'Picqer\\Barcode\\' => 15,
         ),
         'M' => 
         array (
@@ -47,6 +48,11 @@ class ComposerStaticInit13a010eeb9c62b39957764b337e058f5
         array (
             'Controllers\\' => 12,
         ),
+        'B' => 
+        array (
+            'BarcodeBakery\\Common\\' => 21,
+            'BarcodeBakery\\Barcode\\' => 22,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
@@ -70,6 +76,10 @@ class ComposerStaticInit13a010eeb9c62b39957764b337e058f5
         'Predis\\' => 
         array (
             0 => __DIR__ . '/..' . '/predis/predis/src',
+        ),
+        'Picqer\\Barcode\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/picqer/php-barcode-generator/src',
         ),
         'Monolog\\' => 
         array (
@@ -102,6 +112,14 @@ class ComposerStaticInit13a010eeb9c62b39957764b337e058f5
         'Controllers\\' => 
         array (
             0 => __DIR__ . '/../..' . '/controllers',
+        ),
+        'BarcodeBakery\\Common\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/barcode-bakery/barcode-common/src',
+        ),
+        'BarcodeBakery\\Barcode\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/barcode-bakery/barcode-1d/src',
         ),
     );
 

@@ -4,14 +4,17 @@ namespace Models;
 
 use Database\Database;
 use Services\Utils;
+use Services\BarcodeService;
 
 class Inventory
 {
     private $db;
+    private $barcodeService;
 
     public function __construct()
     {
         $this->db = Database::getInstance()->getConnection();
+        $this->barcodeService = new BarcodeService();
 
     }
 
@@ -46,7 +49,8 @@ class Inventory
                 CONCAT(i.threshold_value, ' ', u.abbreviation) AS threshold_value,
                 i.price AS buying_price, 
                 MAX(item_stocks.expiry_date) AS expiry_date,
-                i.sku, 
+                i.sku,
+                i.barcode,
                 i.availability, 
                 i.media
             FROM item_stocks
@@ -101,6 +105,11 @@ class Inventory
 
         foreach ($results as &$item) {
             $item['media'] = !empty($item['media']) ? json_decode($item['media'], true) : null;
+            if (empty($item['barcode'])) {
+                $item['barcode'] = $this->barcodeService->generateBarcode($item['sku'], $item['id']);
+                $this->barcodeService->updateItemBarcodeInDb($item['id'], $item['barcode']);
+            }
+            $item['barcode'] = json_decode($item['barcode'], true);
         }
 
         $totalItems = $this->countInventory($filter);
@@ -229,36 +238,36 @@ class Inventory
             $this->db->beginTransaction();
 
             $sql = "
-                INSERT INTO items
-                (name, description, unit_id, category_id,
-                price, threshold_value, media, opening_stock)
-                VALUES (:name, :description, :unitId, :categoryId,
-                :price, :threshold, :media, :openingStock)
-                RETURNING id
-            ";
+            INSERT INTO items
+            (name, description, unit_id, category_id,
+            price, threshold_value, media, opening_stock, sku)
+            VALUES (:name, :description, :unitId, :categoryId,
+            :price, :threshold, :media, :openingStock, :sku)
+            RETURNING id
+        ";
 
             $mediaLinks = json_encode($mediaLinks);
 
             $stmt = $this->db->prepare($sql);
 
-            $stmt->bindParam(':name', $data['name']);
-            $stmt->bindParam(':description', $data['description']);
-            $stmt->bindParam(':unitId', $data['unit_id']);
-            $stmt->bindParam(':categoryId', $data['category_id']);
-            $stmt->bindParam(':price', $data['price']);
-            $stmt->bindParam(':threshold', $data['threshold_value']);
-            $stmt->bindParam(':media', $mediaLinks);
-            $stmt->bindParam(':openingStock', $data['quantity']);
+            $stmt->bindValue(':name', $data['name'] ?? null);
+            $stmt->bindValue(':description', $data['description'] ?? null);
+            $stmt->bindValue(':unitId', $data['unit_id'] ?? null);
+            $stmt->bindValue(':categoryId', $data['category_id'] ?? null);
+            $stmt->bindValue(':price', $data['price'] ?? null);
+            $stmt->bindValue(':threshold', $data['threshold_value'] ?? null);
+            $stmt->bindValue(':media', $mediaLinks);
+            $stmt->bindValue(':openingStock', $data['quantity'] ?? null);
+            $stmt->bindValue(':sku', $data['sku'] ?? null);
 
             if (!$stmt->execute()) {
                 throw new \Exception('Failed to insert item.');
             }
 
-            $itemId = $itemId = $stmt->fetchColumn();
+            $itemId = $stmt->fetchColumn();
 
             if (!$this->createItemStock($itemId, $data)) {
                 throw new \Exception('Failed to insert item stock.');
-                return false;
             }
 
             $this->db->commit();

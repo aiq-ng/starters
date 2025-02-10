@@ -49,6 +49,6 @@ class MediaHandler
 
     private function isValidFile($file)
     {
-        return isset($file) && is_uploaded_file($file['tmp_name']) && $file['error'] === UPLOAD_ERR_OK;
+        return isset($file['tmp_name']) && file_exists($file['tmp_name']) && is_readable($file['tmp_name']);
     }
 }

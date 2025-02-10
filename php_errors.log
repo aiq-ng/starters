@@ -972,3 +972,65 @@ LINE 19:             WHERE ca.chef_id = $1
 LINE 18:             so.id IS NOT NULL
                      ^
 [06-Feb-2025 14:55:18 UTC] Exception: Failed to fetch assigned orders.
+[10-Feb-2025 13:45:53 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[10-Feb-2025 13:45:53 UTC] Error: file_put_contents(/workspace/starters/app/services/../temp/DAI-EGG-0007.png): Failed to open stream: No such file or directory in /workspace/starters/app/services/BarcodeService.php on line 28
+[10-Feb-2025 13:48:19 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[10-Feb-2025 13:48:19 UTC] Invalid file provided for upload: DAI-EGG-0007.png
+[10-Feb-2025 13:48:20 UTC] Exception: Failed to upload barcode image to cloud.
+[10-Feb-2025 13:50:40 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[10-Feb-2025 13:50:40 UTC] Invalid file provided for upload: DAI-EGG-0007.png
+[10-Feb-2025 13:50:40 UTC] Error generating or uploading barcode: Failed to upload barcode image to cloud.
+[10-Feb-2025 13:50:41 UTC] Exception: An error occurred while generating or uploading the barcode.
+[10-Feb-2025 13:52:00 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[10-Feb-2025 13:52:01 UTC] Invalid file provided for upload: DAI-EGG-0007.png
+[10-Feb-2025 13:52:01 UTC] Error generating or uploading barcode: Failed to upload barcode image to cloud.
+[10-Feb-2025 13:52:01 UTC] Exception: An error occurred while generating or uploading the barcode.
+[10-Feb-2025 14:11:40 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[10-Feb-2025 14:11:41 UTC] Error generating or uploading barcode: The character 'I' is not allowed.
+[10-Feb-2025 14:11:41 UTC] Exception: An error occurred while generating or uploading the barcode.
+[10-Feb-2025 14:17:42 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[10-Feb-2025 14:17:43 UTC] Error generating or uploading barcode: Font file not found.
+[10-Feb-2025 14:17:43 UTC] Exception: An error occurred while generating or uploading the barcode.
+[10-Feb-2025 14:21:18 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[10-Feb-2025 14:21:18 UTC] Invalid file provided for upload: DAI-EGG-0007.png
+[10-Feb-2025 14:21:18 UTC] Error generating or uploading barcode: Failed to upload barcode image to cloud.
+[10-Feb-2025 14:21:19 UTC] Exception: An error occurred while generating or uploading the barcode.
+[10-Feb-2025 14:29:06 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[10-Feb-2025 14:29:06 UTC] Invalid file provided for upload: DAI-EGG-0007.png
+[10-Feb-2025 14:29:06 UTC] Error generating or uploading barcode: Failed to upload barcode image to cloud.
+[10-Feb-2025 14:29:07 UTC] Exception: An error occurred while generating or uploading the barcode.
+[10-Feb-2025 14:29:43 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[10-Feb-2025 14:29:44 UTC] Invalid file provided for upload: DAI-EGG-0007.png
+[10-Feb-2025 14:29:44 UTC] Error generating or uploading barcode: Failed to upload barcode image to cloud.
+[10-Feb-2025 14:29:44 UTC] Exception: An error occurred while generating or uploading the barcode.
+[10-Feb-2025 14:33:24 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[10-Feb-2025 14:33:24 UTC] Invalid file provided for upload: DAI-EGG-0007.png
+[10-Feb-2025 14:33:24 UTC] Error generating or uploading barcode: Failed to upload barcode image to cloud.
+[10-Feb-2025 14:33:25 UTC] Exception: An error occurred while generating or uploading the barcode.
+[10-Feb-2025 14:46:57 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[10-Feb-2025 14:46:58 UTC] Invalid file provided for upload: DAI-EGG-0007.png
+[10-Feb-2025 14:46:58 UTC] Error generating or uploading barcode: Failed to upload barcode image to cloud.
+[10-Feb-2025 14:46:58 UTC] Exception: An error occurred while generating or uploading the barcode.
+[10-Feb-2025 14:48:03 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[10-Feb-2025 14:48:04 UTC] Invalid file provided for upload: DAI-EGG-0007.png
+[10-Feb-2025 14:48:04 UTC] Error generating or uploading barcode: Failed to upload barcode image to cloud.
+[10-Feb-2025 14:48:04 UTC] Exception: An error occurred while generating or uploading the barcode.
+[10-Feb-2025 14:49:51 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[10-Feb-2025 14:49:58 UTC] Database error: SQLSTATE[22001]: String data, right truncated: 7 ERROR:  value too long for type character varying(100)
+[10-Feb-2025 14:49:58 UTC] Exception: Database operation failed: SQLSTATE[22001]: String data, right truncated: 7 ERROR:  value too long for type character varying(100)
+[10-Feb-2025 14:52:43 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[10-Feb-2025 14:53:23 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[10-Feb-2025 14:58:33 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[10-Feb-2025 14:58:35 UTC] Error: Array to string conversion in /workspace/starters/app/services/BarcodeService.php on line 63
+[10-Feb-2025 14:59:27 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}
+[10-Feb-2025 14:59:31 UTC] Barcode uploaded successfully: https://res.cloudinary.com/dsueaitln/image/upload/v1739199570/media/adbvhwjaxbgiefzbd23w.png
+[10-Feb-2025 14:59:33 UTC] Barcode uploaded successfully: https://res.cloudinary.com/dsueaitln/image/upload/v1739199572/media/nc4taybwx5jdkoursffk.png
+[10-Feb-2025 14:59:35 UTC] Barcode uploaded successfully: https://res.cloudinary.com/dsueaitln/image/upload/v1739199574/media/znptdutfdxirkihpy2uv.png
+[10-Feb-2025 14:59:37 UTC] Barcode uploaded successfully: https://res.cloudinary.com/dsueaitln/image/upload/v1739199576/media/rbioa3t9zo4xqbqd2bpp.png
+[10-Feb-2025 14:59:38 UTC] Barcode uploaded successfully: https://res.cloudinary.com/dsueaitln/image/upload/v1739199578/media/hgmcwztaci72v1ty0q87.png
+[10-Feb-2025 14:59:40 UTC] Barcode uploaded successfully: https://res.cloudinary.com/dsueaitln/image/upload/v1739199579/media/uywxw2pf4ojzpykm4ika.png
+[10-Feb-2025 14:59:41 UTC] Barcode uploaded successfully: https://res.cloudinary.com/dsueaitln/image/upload/v1739199581/media/oqqzdxkzpefmjsvz2qyu.png
+[10-Feb-2025 14:59:43 UTC] Barcode uploaded successfully: https://res.cloudinary.com/dsueaitln/image/upload/v1739199582/media/ncoc1swzb2uijfedsstz.png
+[10-Feb-2025 14:59:44 UTC] Barcode uploaded successfully: https://res.cloudinary.com/dsueaitln/image/upload/v1739199584/media/e7dmuqk6lnpjxd2ubzef.png
+[10-Feb-2025 14:59:46 UTC] Barcode uploaded successfully: https://res.cloudinary.com/dsueaitln/image/upload/v1739199585/media/kyd9vspiabwfd2yyd1ub.png
+[10-Feb-2025 15:00:10 UTC] {"availability":null,"page":1,"page_size":10,"order":null,"sort":"ASC","search":""}

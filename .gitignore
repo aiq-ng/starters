@@ -4,3 +4,4 @@ php_errors.log
 .env
 env
 **dc.logs
+**vendor

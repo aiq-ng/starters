@@ -336,9 +336,8 @@ CREATE TABLE items (
     order_sequence BIGSERIAL UNIQUE,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    sku VARCHAR(100) GENERATED ALWAYS AS (
-        UPPER(SUBSTRING(name FROM 1 FOR 3)) || '-' || LPAD(order_sequence::TEXT, 4, '0')
-    ) STORED,
+    sku VARCHAR(100),
+    barcode VARCHAR(255),
     unit_id UUID REFERENCES units(id) ON DELETE SET NULL,
     category_id UUID REFERENCES item_categories(id) ON DELETE SET NULL,
     price DECIMAL(20, 2),
@@ -489,7 +488,7 @@ CREATE TABLE sales_orders (
     total DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'pending' 
         -- upcoming for services
-        CHECK (status IN ('pending', 'cancelled', 'completed', 'sent', 'new order', 'in progress', 'paid', 'upcoming')), 
+        CHECK (status IN ('pending', 'cancelled', 'new order', 'in progress', 'in delivery', 'delivered')), 
     sent_to_kitchen BOOLEAN DEFAULT FALSE,
     processed_by UUID REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -571,6 +570,20 @@ CREATE TABLE notifications (
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE OR REPLACE FUNCTION generate_sku()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.sku IS NULL THEN
+        NEW.sku := UPPER(SUBSTRING((SELECT name FROM item_categories WHERE id = NEW.category_id) FROM 1 FOR 3)) || '-' || 
+                   UPPER(SUBSTRING(NEW.name FROM 1 FOR 3)) || '-' || 
+                   LPAD(NEW.order_sequence::TEXT, 4, '0');
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
 
 CREATE OR REPLACE FUNCTION update_item_availability()
 RETURNS TRIGGER AS $$
@@ -664,6 +677,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+CREATE TRIGGER before_insert_update_items
+BEFORE INSERT OR UPDATE ON items
+FOR EACH ROW
+EXECUTE FUNCTION generate_sku();
 
 CREATE TRIGGER trigger_update_item_availability
 AFTER INSERT OR UPDATE OR DELETE

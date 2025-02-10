@@ -49,6 +49,10 @@ class KitchenController extends BaseController
             return 'in progress';
         }
 
+        if ($status === 'in_delivery') {
+            return 'in delivery';
+        }
+
         return $status;
     }
 
