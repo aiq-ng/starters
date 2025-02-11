@@ -36,13 +36,6 @@ class HumanResourceController extends BaseController
 
         $data = $this->getRequestData();
 
-        if (!$this->validateFields(
-            $data['name'],
-            $data['salary_type'],
-        )) {
-            $this->sendResponse('Invalid input data', 400);
-        }
-
         $this->humanResource->createDepartment($data);
 
         $this->sendResponse('Department created successfully', 201);
@@ -56,17 +49,6 @@ class HumanResourceController extends BaseController
 
         $formData = $data['form_data'] ?? [];
         $mediaFiles = $data['files'] ?? [];
-
-        if (!$this->validateFields(
-            $formData['email'],
-            $formData['firstname'],
-            $formData['lastname'],
-            $formData['department_id'],
-            $formData['role_id'],
-            $formData['no_of_working_days_id'],
-        )) {
-            $this->sendResponse('Invalid input data', 400);
-        }
 
         $mediaLinks = [];
         $mediaTypes = ['nin', 'passport', 'avatar_url'];

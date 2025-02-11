@@ -43,18 +43,6 @@ class CustomerController extends BaseController
 
         $data = $this->getRequestData();
 
-        if (!$this->validateFields(
-            $data['customer_type'],
-            $data['first_name'],
-            $data['last_name'],
-            $data['company_name'],
-            $data['email'],
-            $data['currency_id'],
-            $data['payment_term_id'],
-        )) {
-            $this->sendResponse('Invalid input data', 400);
-        }
-
         $data['social_media'] = isset($data['social_media']) ? json_encode($data['social_media']) : null;
 
         $result = $this->customer->create($data);
@@ -84,18 +72,6 @@ class CustomerController extends BaseController
         $this->authorizeRequest();
 
         $data = $this->getRequestData();
-
-        if (!$this->validateFields(
-            $data['customer_type'],
-            $data['first_name'],
-            $data['last_name'],
-            $data['company_name'],
-            $data['email'],
-            $data['currency_id'],
-            $data['payment_term_id'],
-        )) {
-            $this->sendResponse('Invalid input data', 400);
-        }
 
         $data['social_media'] = isset($data['social_media']) ? json_encode($data['social_media']) : null;
 

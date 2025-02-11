@@ -15,7 +15,6 @@ class InventoryController extends BaseController
         $this->inventory = new Inventory();
     }
 
-
     public function index()
     {
         $this->authorizeRequest();

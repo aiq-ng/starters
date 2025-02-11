@@ -24,17 +24,6 @@ class AccountingController extends BaseController
 
         $data = $this->getRequestData();
 
-        if (!$this->validateFields(
-            $data['expense_title'],
-            $data['expense_category'],
-            $data['payment_method_id'],
-            $data['department_id'],
-            $data['amount'],
-            $data['date_of_expense'],
-        )) {
-            $this->sendResponse('Invalid input data', 400);
-        }
-
         $data['processed_by'] = $_SESSION['user_id'];
 
         $this->accounting->insertExpense($data);

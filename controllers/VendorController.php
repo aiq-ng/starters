@@ -43,14 +43,6 @@ class VendorController extends BaseController
 
         $data = $this->getRequestData();
 
-        if (!$this->validateFields(
-            $data['first_name'],
-            $data['last_name'],
-            $data['email'],
-        )) {
-            $this->sendResponse('Invalid input data', 400);
-        }
-
         $data['social_media'] = isset($data['social_media']) ? json_encode($data['social_media']) : null;
 
         $result = $this->vendor->create($data);

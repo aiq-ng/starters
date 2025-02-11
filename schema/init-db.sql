@@ -135,7 +135,7 @@ CREATE TABLE cash_accounts (
 -- Departments
 CREATE TABLE departments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) UNIQUE NOT NULL,
+    name VARCHAR(100) UNIQUE,
     salary_type VARCHAR(50) CHECK (salary_type IN ('fixed', 'base')),
     base_type_id UUID REFERENCES base_pay_types(id) ON DELETE SET NULL,
     base_rate DECIMAL(20, 2), -- rate per hour or delivery
