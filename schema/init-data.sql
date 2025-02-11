@@ -1590,6 +1590,20 @@ VALUES
 ((SELECT id FROM users WHERE email = 'chef1@admin.com'), 
  (SELECT id FROM sales_orders WHERE customer_note = 'Confirm new order6'));
 
+INSERT INTO order_ratings (order_id, name, rating, review)
+VALUES
+((SELECT id FROM sales_orders WHERE customer_note = 'Confirm with team'), 
+ 'AdeyemiFarms', 4, 'Good service'),
+
+((SELECT id FROM sales_orders WHERE customer_note = 'Knock loudly'), 
+ 'AdeyemiFarms', 3, 'Late delivery'),
+
+((SELECT id FROM sales_orders WHERE customer_note = 'Contact HR'), 
+ 'AdeyemiFarms', 5, 'Excellent service'),
+
+((SELECT id FROM sales_orders WHERE customer_note = 'Ensure delivery by noon'), 
+ 'AdeyemiFarms', 4, 'Good service');
+
 
 -- Insert into item_stock_adjustments
 INSERT INTO item_stock_adjustments (

@@ -256,6 +256,45 @@ class BaseController
         }
     }
 
+    public function rateOrder($id)
+    {
+        $data = $this->getRequestData();
+
+        $query = " 
+            INSERT INTO order_ratings (order_id, name, rating, review)
+            VALUES (:order_id, :name, :rating, :review)
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bindValue(':order_id', $id);
+        $stmt->bindValue(':name', $data["name"] ?? "Anonymous");
+        $stmt->bindValue(':rating', $data["rating"] ?? 0);
+        $stmt->bindValue(':review', $data["review"] ?? "");
+
+        $status = $stmt->execute()
+            ? ['Order rated successfully', 201]
+            : ['Failed to rate order', 500];
+
+        $this->sendResponse(...$status);
+    }
+
+    public function convertStatus($status)
+    {
+        if ($status === 'new_order') {
+            return 'new order';
+        }
+
+        if ($status === 'in_progress') {
+            return 'in progress';
+        }
+
+        if ($status === 'in_delivery') {
+            return 'in delivery';
+        }
+
+        return $status;
+    }
+
     public static function getUserByRole($roleName)
     {
         $db = Database::getInstance()->getConnection();

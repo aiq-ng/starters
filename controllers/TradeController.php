@@ -264,7 +264,7 @@ class TradeController extends BaseController
             'search' => isset($_GET['search']) ? $_GET['search'] : null,
             'page' => isset($_GET['page']) ? $_GET['page'] : 1,
             'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
-            'status' => isset($_GET['status']) ? $_GET['status'] : null,
+            'status' => isset($_GET['status']) ? $this->convertStatus($_GET['status']) : null,
             'order_type' => isset($_GET['order_type']) ? $_GET['order_type'] : null,
             'start_date' => !empty($_GET['start_date']) ? $_GET['start_date'] : null,
             'end_date' => !empty($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d'),

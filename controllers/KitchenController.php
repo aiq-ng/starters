@@ -39,23 +39,6 @@ class KitchenController extends BaseController
         }
     }
 
-    private function convertStatus($status)
-    {
-        if ($status === 'new_order') {
-            return 'new order';
-        }
-
-        if ($status === 'in_progress') {
-            return 'in progress';
-        }
-
-        if ($status === 'in_delivery') {
-            return 'in delivery';
-        }
-
-        return $status;
-    }
-
     public function show($salesId)
     {
         $this->authorizeRequest();

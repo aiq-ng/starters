@@ -142,6 +142,7 @@ $routes = [
         '/inventory/history/comment/([a-fA-F0-9-]{36})' => [$inventoryController, 'comment'],
         '/sales/orders/invoice/([a-fA-F0-9-]{36})' => [$tradeController, 'sendSaleInvoice'],
         '/purchases/orders/invoice/([a-fA-F0-9-]{36})' => [$tradeController, 'sendPurchaseInvoice'],
+        '/rate/([a-fA-F0-9-]{36})' => [$tradeController, 'rateOrder'],
 
     ],
     'PUT' => [

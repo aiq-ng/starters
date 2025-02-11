@@ -495,6 +495,16 @@ CREATE TABLE sales_orders (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE order_ratings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id UUID REFERENCES sales_orders(id) ON DELETE CASCADE,
+    name VARCHAR(255),
+    rating INT NOT NULL,
+    review TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Chef Assignments
 CREATE TABLE chef_assignments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
