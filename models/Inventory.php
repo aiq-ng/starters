@@ -104,12 +104,28 @@ class Inventory
         $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         foreach ($results as &$item) {
-            $item['media'] = !empty($item['media']) ? json_decode($item['media'], true) : null;
-            if (empty($item['barcode'])) {
-                $item['barcode'] = $this->barcodeService->generateBarcode($item['sku'], $item['id']);
-                $this->barcodeService->updateItemBarcodeInDb($item['id'], $item['barcode']);
+            $item['media'] = !empty($item['media'])
+                ? json_decode($item['media'], true)
+                : null;
+
+            if (empty($item['barcode']) && !empty($item['sku'])) {
+                try {
+                    $barcode = $this->barcodeService->generateBarcode(
+                        $item['sku'],
+                        $item['id']
+                    );
+                    $this->barcodeService->updateItemBarcodeInDb(
+                        $item['id'],
+                        $barcode
+                    );
+                    $item['barcode'] = json_decode($barcode, true);
+                } catch (\Throwable $e) {
+                    error_log('Barcode generation failed: ' . $e->getMessage());
+                    $item['barcode'] = null; // Fallback
+                }
+            } elseif (!empty($item['barcode'])) {
+                $item['barcode'] = json_decode($item['barcode'], true);
             }
-            $item['barcode'] = json_decode($item['barcode'], true);
         }
 
         $totalItems = $this->countInventory($filter);

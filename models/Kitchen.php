@@ -3,6 +3,8 @@
 namespace Models;
 
 use Database\Database;
+use Services\NotificationService;
+use Controllers\BaseController;
 
 class Kitchen
 {
@@ -196,6 +198,23 @@ class Kitchen
                 ':id' => $id,
                 ':status' => $status,
             ]);
+
+            $userToNotify = BaseController::getUserByRole('Admin');
+
+            $notification = [
+                'user_id' => $userToNotify['id'],
+                'event' => 'status_update',
+                'entity_type' => 'sales_order',
+                'title' => 'Order Status Update',
+                'body' => 'Order status has been updated to ' . $status,
+                'event_data' => [
+                    'order_id' => $id,
+                    'status' => $status,
+                ],
+            ];
+
+            (new NotificationService())->sendNotification($notification, false);
+
         } catch (\Exception $e) {
             throw new \Exception("Failed to update order status: " . $e->getMessage());
         }

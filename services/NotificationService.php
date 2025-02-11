@@ -7,12 +7,14 @@ use Database\Database;
 class NotificationService
 {
     private HttpClientService $httpClientService;
+    private $emailService;
     private $db;
 
     public function __construct()
     {
         $this->httpClientService = new HttpClientService();
         $this->db = Database::getInstance()->getConnection();
+        $this->emailService = new EmailService();
     }
 
     public function sendNotification(array $data, $save = true)
@@ -36,6 +38,21 @@ class NotificationService
         }
 
         return $responseData;
+    }
+
+    public function sendEmailNotification(array $data)
+    {
+        $templateVariables = [
+            'title' => $data['title'],
+            'body' => $data['body'],
+        ];
+
+        $this->emailService->sendEmailNotification(
+            'notification',
+            $data['email'],
+            $data['name'],
+            $templateVariables
+        );
     }
 
     private function saveNotificationToDatabase(array $data)

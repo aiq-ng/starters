@@ -92,7 +92,7 @@ class HumanResourceController extends BaseController
         if ($formData['username'] && $formData['password']) {
             $templateVariables = [
                 'name' => $formData['firstname'] . ' ' . $formData['lastname'],
-                'email' => $formData['username'],
+                'email' => $formData['email'],
                 'password' => $formData['password'],
                 'login_link' => getenv('APP_URL') . '/login',
             ];

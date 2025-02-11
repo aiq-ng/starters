@@ -66,6 +66,16 @@ class EmailService
         );
     }
 
+    public function sendEmailNotification($recipientEmail, $recipientName, $templateVariables)
+    {
+        return $this->sendEmail(
+            $this->templates->emailNotification,
+            $recipientEmail,
+            $recipientName,
+            $templateVariables
+        );
+    }
+
     private function processAttachment($attachment)
     {
         if (empty($attachment['tmp_name']) || empty($attachment['name']) || empty($attachment['type'])) {

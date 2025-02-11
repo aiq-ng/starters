@@ -35,7 +35,7 @@ class KitchenController extends BaseController
         if (!empty($sales['data'])) {
             $this->sendResponse('success', 200, $sales['data'], $sales['meta']);
         } else {
-            $this->sendResponse('Sales not found', 404);
+            $this->sendResponse('Sales not found', 200);
         }
     }
 
