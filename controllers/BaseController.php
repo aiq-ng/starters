@@ -238,7 +238,11 @@ class BaseController
 
         $offset = ($page - 1) * $pageSize;
 
-        $query = "SELECT * FROM notifications WHERE user_id = :user_id LIMIT :page_size OFFSET :offset";
+        $query = "
+            SELECT * FROM notifications WHERE user_id = :user_id
+            ORDER BY created_at DESC
+            LIMIT :page_size OFFSET :offset
+        ";
         $stmt = $this->db->prepare($query);
 
         $stmt->bindParam(':user_id', $userId);
