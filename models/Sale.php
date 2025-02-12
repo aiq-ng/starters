@@ -854,28 +854,32 @@ class Sale
     private function insertSalesOrderItem($salesOrderId, $items)
     {
         $query = "
-            INSERT INTO sales_order_items (sales_order_id, item_id, quantity, price, tax_id) 
-            VALUES (:sales_order_id, :item_id, :quantity, :price, :tax_id);
-        ";
+        INSERT INTO sales_order_items 
+        (sales_order_id, item_id, quantity, price, tax_id) 
+        VALUES (:sales_order_id, :item_id, :quantity, :price, :tax_id);
+    ";
 
         $stmt = $this->db->prepare($query);
-
         $taxId = $this->getTaxId('VAT (7.50)');
 
-        foreach ($items as $item) {
-            $item = array_filter($item, function ($value) {
-                return $value !== "" && $value !== null;
-            });
+        try {
+            foreach ($items as $item) {
+                $item = array_filter($item, function ($value) {
+                    return $value !== "" && $value !== null;
+                });
 
-            if (!empty($item['item_id']) && !empty($item['quantity']) && !empty($item['price'])) {
-                $stmt->execute([
-                    ':sales_order_id' => $salesOrderId,
-                    ':item_id' => $item['item_id'],
-                    ':quantity' => $item['quantity'],
-                    ':price' => $item['price'] ?? $this->getPrice($item['item_id']),
-                    ':tax_id' => $item['tax_id'] ?? $taxId
-                ]);
+                if (!empty($item['item_id']) && !empty($item['quantity'])) {
+                    $stmt->execute([
+                        ':sales_order_id' => $salesOrderId,
+                        ':item_id' => $item['item_id'],
+                        ':quantity' => $item['quantity'],
+                        ':price' => $item['price'] ?? $this->getPrice($item['item_id']),
+                        ':tax_id' => $item['tax_id'] ?? $taxId
+                    ]);
+                }
             }
+        } catch (\Exception $e) {
+            error_log("Error inserting sales order items: " . $e->getMessage());
         }
     }
 
