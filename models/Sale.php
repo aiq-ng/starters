@@ -854,9 +854,9 @@ class Sale
     private function insertSalesOrderItem($salesOrderId, $items)
     {
         $query = "
-        INSERT INTO sales_order_items 
-        (sales_order_id, item_id, quantity, price, tax_id) 
-        VALUES (:sales_order_id, :item_id, :quantity, :price, :tax_id);
+    INSERT INTO sales_order_items 
+    (sales_order_id, item_id, quantity, price, tax_id) 
+    VALUES (:sales_order_id, :item_id, :quantity, :price, :tax_id);
     ";
 
         $stmt = $this->db->prepare($query);
@@ -873,8 +873,12 @@ class Sale
                         ':sales_order_id' => $salesOrderId,
                         ':item_id' => $item['item_id'],
                         ':quantity' => $item['quantity'],
-                        ':price' => $item['price'] ?? $this->getPrice($item['item_id']),
-                        ':tax_id' => $item['tax_id'] ?? $taxId
+                        ':price' => isset($item['price']) && $item['price'] > 0
+                            ? $item['price']
+                            : $this->getPrice($item['item_id']),
+                        ':tax_id' => isset($item['tax_id']) && $item['tax_id'] > 0
+                            ? $item['tax_id']
+                            : $taxId
                     ]);
                 }
             }
