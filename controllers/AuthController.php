@@ -156,16 +156,29 @@ class AuthController extends BaseController
         $accessToken = $this->generateToken($userId, $roleId, 'access', $accessExpiry);
         $refreshToken = $this->generateToken($userId, $roleId, 'refresh', $refreshExpiry);
 
+        $firstTimer = $this->isFirstTimeUser($userId);
+
         $this->storeRefreshToken($userId, $refreshToken);
 
         $this->sendResponse('Login Successful', 200, [
             'user_id' => $userId,
             'role_id' => $roleId,
+            'first_timer' => $firstTimer,
             'token' => $accessToken,
             'refresh_token' => $refreshToken,
             'access_expires_in' => $accessExpiry,
-            'refresh_expires_in' => $refreshExpiry,
+            'refresh_expires_in' => $refreshExpiry
         ]);
+    }
+
+    private function isFirstTimeUser($userId)
+    {
+        $sql = "SELECT COUNT(*) FROM refresh_tokens WHERE user_id = :userId";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':userId', $userId, \PDO::PARAM_STR);
+        $stmt->execute();
+
+        return $stmt->fetchColumn() == 0;
     }
 
     private function generateToken($userId, $roleId, $claim, $expiry)
