@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/bootstrap.php';
 require_once __DIR__ . '/loadenv.php';
+require_once __DIR__ . '/error_handler.php';
 
 loadEnv(__DIR__ . "/.env");
 

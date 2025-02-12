@@ -311,11 +311,30 @@ class TradeController extends BaseController
 
         $data['user_id'] = $_SESSION['user_id'];
 
+        error_log(json_encode($data));
+
         $saleId = $this->sale->createSale($data);
 
         if (!$saleId) {
             $this->sendResponse('Failed to create sale', 500);
         }
+
+        $userToNotify =  BaseController::getUserByRole('Admin');
+        $user = $this->findRecord('users', $data['user_id']);
+
+        $notification = [
+            'user_id' => $userToNotify['id'],
+            'event' => 'notification',
+            'entity_id' => $saleId,
+            'entity_type' => "sales_order",
+            'title' => 'New Sales Order',
+            'body' => $user['name'] . ' has created a new sales order',
+        ];
+
+        error_log(json_encode($notification));
+
+        $this->notify->sendNotification($notification);
+
         $this->sendResponse('success', 201, ['sale_id' => $saleId]);
     }
 
