@@ -183,7 +183,7 @@ class Dashboard
             SELECT 
                 COALESCE((SELECT SUM(total) 
                           FROM sales_orders 
-                          WHERE status IN ('delivered') 
+                          WHERE status IN ('delivered', 'new order') 
                           AND DATE_PART('year', created_at) = :year), 0) AS total_income,
                 COALESCE((SELECT SUM(total) 
                           FROM purchase_orders 
@@ -192,7 +192,7 @@ class Dashboard
                 +
                 COALESCE((SELECT SUM(amount) 
                           FROM expenses 
-                          WHERE status IN ('paid') 
+                          WHERE status IN ('paid', 'pending') 
                           AND DATE_PART('year', date_of_expense) = :year), 0) AS total_expenses,
                 COALESCE((SELECT COUNT(*) 
                           FROM vendors), 0) AS total_vendors,
