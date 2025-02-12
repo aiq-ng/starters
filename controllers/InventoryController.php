@@ -58,30 +58,24 @@ class InventoryController extends BaseController
         $this->authorizeRequest();
 
         $data = $this->getRequestData();
-
         $formData = $data['form_data'];
-        $mediaFiles = $data['files']['media'] ?? [];
 
-        $requiredFields = [
-            'name', 'department_id', 'category_id', 'manufacturer_id',
-            'date_received', 'expiry_date', 'quantity', 'unit_id'
-        ];
-
-        $dataToValidate = array_intersect_key($formData, array_flip($requiredFields));
-
-        if (!$this->validateFields(...array_values($dataToValidate))) {
-            $this->sendResponse('Invalid input data', 400);
-        }
-
-        // Handle media files using MediaHandler
         $mediaLinks = [];
-        if (!empty($mediaFiles)) {
-            $mediaLinks = $this->mediaHandler->handleMediaFiles($mediaFiles);
+        if (!empty($formData['image_url'])) {
+            $mediaLinks = is_array($formData['image_url'])
+                ? $formData['image_url']
+                : [$formData['image_url']];
+        } else {
+            $mediaFiles = $data['files']['media'] ?? [];
 
-            if ($mediaLinks === false) {
-                $this->sendResponse('Error uploading media files', 500);
+            // Handle media files using MediaHandler
+            if (!empty($mediaFiles)) {
+                $mediaLinks = $this->mediaHandler->handleMediaFiles($mediaFiles);
+
+                if ($mediaLinks === false) {
+                    $this->sendResponse('Error uploading media files', 500);
+                }
             }
-
         }
 
         $result = $this->inventory->createItem($formData, $mediaLinks);
