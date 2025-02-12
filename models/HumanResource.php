@@ -152,7 +152,7 @@ class HumanResource
         $conditions = [];
         $params = [':adminId' => $adminId];
 
-        if (!empty($filters['department'])) {
+        if (!empty($filters['department']) && strtolower($filters['department']) !== 'all') {
             $conditions[] = "d.name = :department";
             $params[':department'] = $filters['department'];
         }

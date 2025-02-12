@@ -117,17 +117,18 @@ class HumanResourceController extends BaseController
         $this->authorizeRequest();
 
         $filters = [
-            'page' => isset($_GET['page']) ? $_GET['page'] : 1,
-            'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
-            'department' => isset($_GET['department']) ? $_GET['department'] : null,
-            'search' => isset($_GET['search']) ? $_GET['search'] : null,
+            'page' => $_GET['page'] ?? 1,
+            'page_size' => $_GET['page_size'] ?? 10,
+            'department' => isset($_GET['department'])
+                ? $this->formatDepartment($_GET['department'])
+                : null,
+            'search' => $_GET['search'] ?? null,
         ];
 
         $adminId = $this->getRoleIdByName('Admin');
         if ($adminId) {
             $filters['role_id'] = $adminId;
         }
-
 
         $employees = $this->humanResource->getEmployees($filters);
 
@@ -136,6 +137,11 @@ class HumanResourceController extends BaseController
         } else {
             $this->sendResponse('Employees not found', 404);
         }
+    }
+
+    private function formatDepartment($department)
+    {
+        return ucwords(str_replace('_', ' ', $department));
     }
 
     public function showEmployee($id)
