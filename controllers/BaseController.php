@@ -152,6 +152,18 @@ class BaseController
         }
     }
 
+    public function getGallery()
+    {
+        $this->authorizeRequest();
+
+        $images = $this->mediaHandler->getImagesFromFolder('starters-gallery');
+        if ($images) {
+            $this->sendResponse('success', 200, $images);
+        } else {
+            $this->sendResponse('Failed to retrieve images', 500);
+        }
+    }
+
     protected function isUserActive($userId)
     {
         $query = "SELECT status FROM users WHERE id = :id";

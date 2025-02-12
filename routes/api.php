@@ -51,6 +51,7 @@ $routes = [
         '/taxes' => [$adminController, 'getTaxes'],
         '/customers' => [$customerController, 'index'],
         '/chefs' => [$kitchenController, 'getChefs'],
+        '/gallery' => [$kitchenController, 'getGallery'],
         '/notifications/' => [$adminController, 'getNotifications'],
         '/work_leave_qualifications' => [$humanResourceController, 'getWorkLeaveQualifications'],
         '/dashboard/business' => [$dashboardController, 'businessOverview'],
