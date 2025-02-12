@@ -27,8 +27,6 @@ class InventoryController extends BaseController
             'search' => isset($_GET['search']) ? $_GET['search'] : null,
         ];
 
-        error_log(json_encode($params));
-
         $inventory = $this->inventory->getInventory($params);
 
         if (empty($inventory)) {

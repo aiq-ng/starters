@@ -872,11 +872,22 @@ class Sale
                     ':sales_order_id' => $salesOrderId,
                     ':item_id' => $item['item_id'],
                     ':quantity' => $item['quantity'],
-                    ':price' => $item['price'],
+                    ':price' => $item['price'] ?? $this->getPrice($item['item_id']),
                     ':tax_id' => $item['tax_id'] ?? $taxId
                 ]);
             }
         }
+    }
+
+    private function getPrice($itemId)
+    {
+        $query = "SELECT unit_price FROM price_lists WHERE id = :itemId";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute(['itemId' => $itemId]);
+
+        return $stmt->fetchColumn();
+
     }
 
     private function getTaxId($taxName)
