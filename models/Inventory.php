@@ -594,10 +594,10 @@ class Inventory
                     $logStmt->bindValue(':stockId', $stockId);
                     $logStmt->bindValue(':quantity', $subtractAmount);
                     $logStmt->bindValue(':adjustmentType', $data['adjustment_type']);
-                    $logStmt->bindValue(':description', $data['description']);
-                    $logStmt->bindValue(':source_id', $data['source_id']);
-                    $logStmt->bindValue(':source_department_id', $data['source_department_id']);
-                    $logStmt->bindValue(':manager_id', $data['manager_id']);
+                    $logStmt->bindValue(':description', $data['description'] ?? null);
+                    $logStmt->bindValue(':source_id', $data['source_id'] ?? null);
+                    $logStmt->bindValue(':source_department_id', $data['source_department_id'] ?? null);
+                    $logStmt->bindValue(':manager_id', $data['manager_id'] ?? null);
 
                     if (!$logStmt->execute()) {
                         throw new \Exception('Failed to log stock adjustment.');
