@@ -131,27 +131,27 @@ class Vendor
         $offset = ($page - 1) * $pageSize;
 
         $query = "
-            SELECT 
-                v.id,
-                v.salutation || ' ' || v.first_name || ' ' || v.last_name AS name,
-                vc.name AS category,
-                v.email,
-                v.work_phone,
-                v.address,
-                COALESCE(SUM(t.amount), 0) AS total_transaction,
-                v.balance,
-                v.status
-            FROM 
-                vendors v
-            LEFT JOIN 
-                vendor_transactions t 
-            ON 
-                v.id = t.vendor_id
-            LEFT JOIN 
-                vendor_categories vc
-            ON 
-                v.category_id = vc.id
-        ";
+        SELECT 
+            v.id,
+            v.salutation || ' ' || v.first_name || ' ' || v.last_name AS name,
+            vc.name AS category,
+            v.email,
+            v.work_phone,
+            v.address,
+            COALESCE(SUM(t.amount), 0) AS total_transaction,
+            v.balance,
+            v.status
+        FROM 
+            vendors v
+        LEFT JOIN 
+            vendor_transactions t 
+        ON 
+            v.id = t.vendor_id
+        LEFT JOIN 
+            vendor_categories vc
+        ON 
+            v.category_id = vc.id
+    ";
 
         $conditions = [];
         $params = [];
@@ -168,17 +168,17 @@ class Vendor
 
         if (!empty($filters['search'])) {
             $conditions[] = "
-        (
-            v.first_name ILIKE :search OR 
-            v.last_name ILIKE :search OR 
-            v.company_name ILIKE :search OR 
-            v.display_name ILIKE :search OR 
-            v.email ILIKE :search OR 
-            v.address ILIKE :search OR 
-            v.website ILIKE :search OR 
-            v.social_media::TEXT ILIKE :search
-        )
-    ";
+            (
+                v.first_name ILIKE :search OR 
+                v.last_name ILIKE :search OR 
+                v.company_name ILIKE :search OR 
+                v.display_name ILIKE :search OR 
+                v.email ILIKE :search OR 
+                v.address ILIKE :search OR 
+                v.website ILIKE :search OR 
+                v.social_media::TEXT ILIKE :search
+            )
+        ";
             $params['search'] = '%' . $filters['search'] . '%';
         }
 
@@ -187,10 +187,15 @@ class Vendor
         }
 
         // Validate and sanitize sorting
-        $allowedSortFields = ['v.id', 'name', 'category', 'v.email', 'total_transaction', 'v.balance', 'v.status'];
-        $sortBy = in_array($filters['sort_by'] ?? 'v.id', $allowedSortFields)
-            ? $filters['sort_by']
-            : 'v.id';
+        $allowedSortFields = [
+            'v.id', 'name', 'category', 'v.email',
+            'total_transaction', 'v.balance', 'v.status'
+        ];
+
+        $sortBy = $filters['sort_by'] ?? 'v.id';
+        if (!in_array($sortBy, $allowedSortFields)) {
+            $sortBy = 'v.id';
+        }
 
         $sortOrder = strtoupper($filters['sort_order'] ?? 'DESC');
         if (!in_array($sortOrder, ['ASC', 'DESC'])) {
@@ -198,10 +203,10 @@ class Vendor
         }
 
         $query .= "
-            GROUP BY v.id, vc.name
-            ORDER BY {$sortBy} {$sortOrder}
-            LIMIT :pageSize OFFSET :offset
-        ";
+        GROUP BY v.id, vc.name
+        ORDER BY {$sortBy} {$sortOrder}
+        LIMIT :pageSize OFFSET :offset
+    ";
 
         $params['pageSize'] = $pageSize;
         $params['offset'] = $offset;
