@@ -168,17 +168,17 @@ class Vendor
 
         if (!empty($filters['search'])) {
             $conditions[] = "
-            (
-                v.first_name ILIKE :search OR 
-                v.last_name ILIKE :search OR 
-                v.company_name ILIKE :search OR 
-                v.display_name ILIKE :search OR 
-                v.email ILIKE :search OR 
-                v.address ILIKE :search OR 
-                v.website ILIKE :search OR 
-                v.social_media::TEXT ILIKE :search
-            )
-        ";
+        (
+            v.first_name ILIKE :search OR 
+            v.last_name ILIKE :search OR 
+            v.company_name ILIKE :search OR 
+            v.display_name ILIKE :search OR 
+            v.email ILIKE :search OR 
+            v.address ILIKE :search OR 
+            v.website ILIKE :search OR 
+            v.social_media::TEXT ILIKE :search
+        )
+    ";
             $params['search'] = '%' . $filters['search'] . '%';
         }
 
@@ -186,9 +186,13 @@ class Vendor
             $query .= " WHERE " . implode(" AND ", $conditions);
         }
 
-        $sortBy = $filters['sort_by'] ?? 'v.id';
-        $sortOrder = strtoupper($filters['sort_order'] ?? 'DESC');
+        // Validate and sanitize sorting
+        $allowedSortFields = ['v.id', 'name', 'category', 'v.email', 'total_transaction', 'v.balance', 'v.status'];
+        $sortBy = in_array($filters['sort_by'] ?? 'v.id', $allowedSortFields)
+            ? $filters['sort_by']
+            : 'v.id';
 
+        $sortOrder = strtoupper($filters['sort_order'] ?? 'DESC');
         if (!in_array($sortOrder, ['ASC', 'DESC'])) {
             $sortOrder = 'DESC';
         }
