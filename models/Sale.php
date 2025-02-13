@@ -829,7 +829,7 @@ class Sale
             $stmt = $this->db->prepare($query);
 
             $stmt->execute([
-                ':order_type' => $data['order_type'] ?? null,
+                ':order_type' => $data['order_type'] ?? 'order',
                 ':order_title' => $data['order_title'] ?? null,
                 ':payment_term_id' => $data['payment_term_id'] ?? null,
                 ':customer_id' => $data['customer_id'] ?? null,

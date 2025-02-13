@@ -305,10 +305,6 @@ class TradeController extends BaseController
 
         $data = $this->getRequestData();
 
-        if (!$this->validateFields($data['order_type'])) {
-            $this->sendResponse('Invalid fields', 400);
-        }
-
         $data['user_id'] = $_SESSION['user_id'];
 
         error_log(json_encode($data));

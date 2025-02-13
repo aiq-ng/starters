@@ -505,6 +505,8 @@ class Inventory
             throw new \Exception('Invalid operation, must be add or subtract');
         }
 
+        error_log("Stock Adjustment Data". json_encode($data));
+
         $quantity = $data['quantity'];
         $affectedStockIds = [];
 
