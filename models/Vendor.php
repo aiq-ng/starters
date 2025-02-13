@@ -124,6 +124,8 @@ class Vendor
 
     public function getVendors($filters = [])
     {
+        error_log(json_encode($filters));
+
         $page = $filters['page'] ?? 1;
         $pageSize = $filters['page_size'] ?? 10;
         $offset = ($page - 1) * $pageSize;
@@ -347,10 +349,17 @@ class Vendor
             $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             if ($result) {
-                $result['receivables'] = json_decode($result['receivables'], true);
-                $result['transactions'] = json_decode($result['transactions'], true);
-                $result['social_media'] = json_decode($result['social_media'], true);
+                $result['receivables'] = !empty($result['receivables'])
+                    ? json_decode($result['receivables'], true)
+                    : [];
 
+                $result['transactions'] = !empty($result['transactions'])
+                    ? json_decode($result['transactions'], true)
+                    : [];
+
+                $result['social_media'] = !empty($result['social_media'])
+                    ? json_decode($result['social_media'], true)
+                    : [];
             }
 
             return $result;

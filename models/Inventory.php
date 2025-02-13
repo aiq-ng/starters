@@ -521,19 +521,21 @@ class Inventory
                 $query = "
                     INSERT INTO item_stock_adjustments
                     (stock_id, quantity, adjustment_type,
-                    description, source_id, source_department_id, manager_id, source_type)
+                    description, source_id, source_department_id, 
+                    manager_id, source_type)
                     VALUES (:stockId, :quantity, :adjustmentType,
-                    :description, :source_id, :source_department_id, :manager_id, 'vendor')
+                    :description, :source_id, :source_department_id, 
+                    :manager_id, 'vendor')
                 ";
                 $stmt = $this->db->prepare($query);
 
                 $stmt->bindValue(':stockId', $newStockId);
                 $stmt->bindValue(':quantity', $quantity);
                 $stmt->bindValue(':adjustmentType', $data['adjustment_type']);
-                $stmt->bindValue(':description', $data['description']);
-                $stmt->bindValue(':source_id', $data['source_id']);
-                $stmt->bindValue(':source_department_id', $data['source_department_id']);
-                $stmt->bindValue(':manager_id', $data['manager_id']);
+                $stmt->bindValue(':description', $data['description'] ?? null);
+                $stmt->bindValue(':source_id', $data['source_id'] ?? null);
+                $stmt->bindValue(':source_department_id', $data['source_department_id'] ?? null);
+                $stmt->bindValue(':manager_id', $data['manager_id'] ?? null);
 
                 if (!$stmt->execute()) {
                     throw new \Exception('Failed to log stock adjustment for addition.');
