@@ -547,7 +547,8 @@ class Sale
                 so.created_at::DATE AS date, 
                 so.order_type, 
                 COALESCE(SUM(so.total), 0.00) AS amount,
-                so.status
+                so.status,
+                so.payment_status
             FROM 
                 sales_orders so
             LEFT JOIN 

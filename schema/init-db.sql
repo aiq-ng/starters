@@ -488,7 +488,9 @@ CREATE TABLE sales_orders (
     total DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'pending' 
         -- upcoming for services
-        CHECK (status IN ('pending', 'cancelled', 'new order', 'in progress', 'in delivery', 'delivered')), 
+        CHECK (status IN ('pending', 'cancelled', 'new order', 'in progress', 'in delivery', 'delivered')),
+    payment_status VARCHAR(50) DEFAULT 'unpaid' 
+        CHECK (payment_status IN ('paid', 'unpaid')),
     sent_to_kitchen BOOLEAN DEFAULT FALSE,
     processed_by UUID REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
