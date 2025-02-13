@@ -308,6 +308,18 @@ class BaseController
             return 'in delivery';
         }
 
+        if ($status === 'in_stock') {
+            return 'in stock';
+        }
+
+        if ($status === 'out_of_stock') {
+            return 'out of stock';
+        }
+
+        if ($status === 'low_stock') {
+            return 'low stock';
+        }
+
         return $status;
     }
 

@@ -42,7 +42,7 @@ class Purchase
         $conditions = [];
         $params = [];
 
-        if (!empty($filters['status'])) {
+        if (!empty($filters['status']) && strtolower($filters['status']) !== 'all') {
             $conditions[] = "po.status = :status";
             $params['status'] = $filters['status'];
         }
@@ -113,7 +113,7 @@ class Purchase
         $conditions = [];
         $params = [];
 
-        if (!empty($filters['status'])) {
+        if (!empty($filters['status']) && strtolower($filters['status']) !== 'all') {
             $conditions[] = "po.status = :status";
             $params['status'] = $filters['status'];
         }

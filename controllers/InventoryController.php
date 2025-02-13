@@ -19,7 +19,7 @@ class InventoryController extends BaseController
     {
         $this->authorizeRequest();
         $params = [
-            'availability' => isset($_GET['availability']) ? $_GET['availability'] : null,
+            'availability' => isset($_GET['availability']) ? $this->convertStatus($_GET['availability']) : null,
             'page' => isset($_GET['page']) ? (int)$_GET['page'] : 1,
             'page_size' => isset($_GET['page_size']) ? (int)$_GET['page_size'] : 10,
             'order' => isset($_GET['order']) ? $_GET['order'] : null,

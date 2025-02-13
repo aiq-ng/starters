@@ -561,7 +561,7 @@ class Sale
         $conditions = [];
         $params = [];
 
-        if (!empty($filters['status'])) {
+        if (!empty($filters['status']) && strtolower($filters['status']) !== 'all') {
             $conditions[] = "so.status = :status";
             $params['status'] = $filters['status'];
         }

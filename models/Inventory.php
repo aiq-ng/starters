@@ -61,7 +61,7 @@ class Inventory
         $conditions = [];
         $params = [];
 
-        if (!empty($filter['availability'])) {
+        if (!empty($filter['availability']) && strtolower($filter['availability']) !== 'all') {
             $conditions[] = "i.availability = :filterAvailability";
             $params['filterAvailability'] = $filter['availability'];
         }
@@ -91,7 +91,7 @@ class Inventory
         $stmt->bindValue(':pageSize', $params['pageSize'], \PDO::PARAM_INT);
         $stmt->bindValue(':offset', $params['offset'], \PDO::PARAM_INT);
 
-        if (!empty($filter['availability'])) {
+        if (!empty($filter['availability']) && strtolower($filter['availability']) !== 'all') {
             $stmt->bindValue(':filterAvailability', $params['filterAvailability'], \PDO::PARAM_STR);
         }
 

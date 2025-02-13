@@ -150,7 +150,7 @@ class Customer
         $conditions = [];
         $params = [];
 
-        if (!empty($filters['status'])) {
+        if (!empty($filters['status']) && strtolower($filters['status']) !== 'all') {
             $conditions[] = "c.status = :status";
             $params['status'] = $filters['status'];
         }
@@ -242,7 +242,7 @@ class Customer
         $conditions = [];
         $params = [];
 
-        if (!empty($filters['status'])) {
+        if (!empty($filters['status']) && strtolower($filters['status']) !== 'all') {
             $conditions[] = "c.status = :status";
             $params['status'] = $filters['status'];
         }

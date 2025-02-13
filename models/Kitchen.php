@@ -87,7 +87,7 @@ class Kitchen
         $params = [];
         $conditions = [];
 
-        if ($status) {
+        if ($status && strtolower($status) !== 'all') {
             $conditions[] = "so.status = :status";
             $params[':status'] = $status;
         } else {

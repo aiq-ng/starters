@@ -53,7 +53,7 @@ class Dashboard
                 SUM(so.total) AS total_sales
             FROM sales_orders so
             WHERE EXTRACT(YEAR FROM so.delivery_date) = :year
-            AND so.status = 'paid'
+            AND so.status IN ('delivered', 'new order')
             GROUP BY EXTRACT(MONTH FROM so.delivery_date)
         ),
         purchase_outflow AS (
@@ -62,7 +62,7 @@ class Dashboard
                 SUM(po.total) AS total_purchase
             FROM purchase_orders po
             WHERE EXTRACT(YEAR FROM po.delivery_date) = :year
-            AND po.status = 'paid'
+            AND po.status IN ('paid')
             GROUP BY EXTRACT(MONTH FROM po.delivery_date)
         ),
         expenses_outflow AS (
@@ -71,7 +71,7 @@ class Dashboard
                 SUM(e.amount + COALESCE(e.bank_charges, 0)) AS total_expenses
             FROM expenses e
             WHERE EXTRACT(YEAR FROM e.date_of_expense) = :year
-            AND e.status = 'paid'
+            AND e.status IN ('paid', 'pending')
             GROUP BY EXTRACT(MONTH FROM e.date_of_expense)
         ),
         cash_flows AS (

@@ -159,7 +159,7 @@ class Vendor
             $params['category_id'] = $filters['category_id'];
         }
 
-        if (!empty($filters['status'])) {
+        if (!empty($filters['status']) && strtolower($filters['status']) !== 'all') {
             $conditions[] = "v.status = :status";
             $params['status'] = $filters['status'];
         }
@@ -241,7 +241,7 @@ class Vendor
             $params['category_id'] = $filters['category_id'];
         }
 
-        if (!empty($filters['status'])) {
+        if (!empty($filters['status']) && strtolower($filters['status']) !== 'all') {
             $conditions[] = "v.status = :status";
             $params['status'] = $filters['status'];
         }
