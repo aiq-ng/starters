@@ -94,7 +94,7 @@ class Kitchen
             $conditions[] = "so.status = :status";
             $params[':status'] = $status;
         } else {
-            $conditions[] = "so.status IN ('new order', 'in progress', 'completed')";
+            $conditions[] = "so.status IN ('pending', 'cancelled', 'new order', 'in progress', 'in delivery', 'delivered')";
         }
 
 
