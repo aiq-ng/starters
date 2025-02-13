@@ -808,30 +808,32 @@ class Sale
     private function insertSalesOrder($data)
     {
         $query = "
-        INSERT INTO sales_orders (
-            order_type, order_title, payment_term_id, customer_id,
-            payment_method_id, delivery_option, delivery_date,
-            delivery_time, delivery_address, additional_note,
-            customer_note, discount, delivery_charge, total
-        ) 
-        VALUES (
-            :order_type, :order_title, :payment_term_id, :customer_id,
-            :payment_method_id, :delivery_option, :delivery_date,
-            :delivery_time, :delivery_address, :additional_note,
-            :customer_note, :discount, :delivery_charge, :total
-        ) 
-        RETURNING id;
-    ";
+            INSERT INTO sales_orders (
+                order_type, order_title, payment_term_id, customer_id,
+                payment_method_id, delivery_option, 
+                delivery_date, delivery_time, delivery_address,
+                additional_note, customer_note, discount, delivery_charge, total
+            ) 
+            VALUES (
+                :order_type, :order_title, :payment_term_id, :customer_id,
+                :payment_method_id, :delivery_option, 
+                :delivery_date, :delivery_time, :delivery_address, 
+                :additional_note, :customer_note, :discount, :delivery_charge,
+                :total 
+            ) 
+            RETURNING id;
+        ";
 
         try {
+
             $stmt = $this->db->prepare($query);
 
             $stmt->execute([
                 ':order_type' => $data['order_type'] ?? 'order',
                 ':order_title' => $data['order_title'] ?? null,
-                ':payment_term_id' => $this->sanitizeId($data['payment_term_id'] ?? null),
-                ':customer_id' => $this->sanitizeId($data['customer_id'] ?? null),
-                ':payment_method_id' => $this->sanitizeId($data['payment_method_id'] ?? null),
+                ':payment_term_id' => $data['payment_term_id'] ?? null,
+                ':customer_id' => $data['customer_id'] ?? null,
+                ':payment_method_id' => $data['payment_method_id'] ?? null,
                 ':delivery_option' => $data['delivery_option'] ?? null,
                 ':delivery_date' => $data['delivery_date'] ?? null,
                 ':delivery_time' => $data['delivery_time'] ?? null,
@@ -849,18 +851,13 @@ class Sale
         }
     }
 
-    private function sanitizeId($id)
-    {
-        return isset($id) && $id != 0 ? $id : null;
-    }
-
     private function insertSalesOrderItem($salesOrderId, $items)
     {
         $query = "
-            INSERT INTO sales_order_items 
-            (sales_order_id, item_id, quantity, price, tax_id) 
-            VALUES (:sales_order_id, :item_id, :quantity, :price, :tax_id);
-        ";
+    INSERT INTO sales_order_items 
+    (sales_order_id, item_id, quantity, price, tax_id) 
+    VALUES (:sales_order_id, :item_id, :quantity, :price, :tax_id);
+    ";
 
         $stmt = $this->db->prepare($query);
         $taxId = $this->getTaxId('VAT (7.50)');
@@ -873,13 +870,15 @@ class Sale
 
                 if (!empty($item['item_id']) && !empty($item['quantity'])) {
                     $stmt->execute([
-                        ':sales_order_id' => $this->sanitizeId($salesOrderId),
-                        ':item_id' => $this->sanitizeId($item['item_id'] ?? null),
+                        ':sales_order_id' => $salesOrderId,
+                        ':item_id' => $item['item_id'],
                         ':quantity' => $item['quantity'],
                         ':price' => isset($item['price']) && $item['price'] > 0
                             ? $item['price']
                             : $this->getPrice($item['item_id']),
-                        ':tax_id' => $this->sanitizeId($item['tax_id'] ?? $taxId)
+                        ':tax_id' => isset($item['tax_id']) && $item['tax_id'] > 0
+                            ? $item['tax_id']
+                            : $taxId
                     ]);
                 }
             }
