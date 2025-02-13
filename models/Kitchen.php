@@ -63,7 +63,8 @@ class Kitchen
                 so.order_id,
                 so.order_title,
                 c.display_name AS customer_name,
-                so.processed_by AS sales_rep,
+		so.processed_by AS sales_rep,
+		CONCAT(u.firstname, ' ', u.lastname) AS sales_rep_name,
                 so.order_type,
                 so.created_at AS arrival_time,
                 CONCAT(so.delivery_date, ' ', so.delivery_time) AS delivery_time,
@@ -76,11 +77,13 @@ class Kitchen
                         'quantity', soi.quantity,
                         'amount', soi.quantity * soi.price
                     )
-                ) AS items
+		) AS items,
+		so.created_at
             FROM sales_orders so
             LEFT JOIN customers c ON so.customer_id = c.id
             LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
-            LEFT JOIN price_lists p ON soi.item_id = p.id
+	    LEFT JOIN price_lists p ON soi.item_id = p.id
+	    LEFT JOIN users u ON so.processed_by = u.id
             WHERE 1=1
         ";
 
@@ -94,10 +97,6 @@ class Kitchen
             $conditions[] = "so.status IN ('new order', 'in progress', 'completed')";
         }
 
-        if ($date) {
-            $conditions[] = "DATE(so.created_at) = :date";
-            $params[':date'] = $date;
-        }
 
         if ($search) {
             $conditions[] = "(so.order_title ILIKE :search OR so.reference_number ILIKE :search OR c.display_name ILIKE :search)";
@@ -121,7 +120,7 @@ class Kitchen
 
         $query .= "
             GROUP BY so.id, c.display_name, c.email, so.order_id, so.order_title,
-                    so.order_type, so.discount, so.delivery_charge, so.total, 
+                    so.order_type, so.discount, so.delivery_charge, so.total, u.firstname, u.lastname, 
                     so.created_at, so.delivery_date, so.status, so.processed_by
             ORDER BY so.$sortBy $order
             LIMIT :page_size OFFSET :offset

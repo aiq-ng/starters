@@ -150,7 +150,7 @@ class AuthController extends BaseController
 
     private function sendTokens($userId, $roleId)
     {
-        $accessExpiry = 30 * 60; // 30 mins
+        $accessExpiry = 60 * 60; // 60 mins
         $refreshExpiry = 30 * 24 * 60 * 60; // 30 days
 
         $accessToken = $this->generateToken($userId, $roleId, 'access', $accessExpiry);
