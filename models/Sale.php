@@ -829,9 +829,9 @@ class Sale
             $stmt->execute([
                 ':order_type' => $data['order_type'] ?? 'order',
                 ':order_title' => $data['order_title'] ?? null,
-                ':payment_term_id' => $this->sanitizeId($data['payment_term_id']),
-                ':customer_id' => $this->sanitizeId($data['customer_id']),
-                ':payment_method_id' => $this->sanitizeId($data['payment_method_id']),
+                ':payment_term_id' => $this->sanitizeId($data['payment_term_id'] ?? null),
+                ':customer_id' => $this->sanitizeId($data['customer_id'] ?? null),
+                ':payment_method_id' => $this->sanitizeId($data['payment_method_id'] ?? null),
                 ':delivery_option' => $data['delivery_option'] ?? null,
                 ':delivery_date' => $data['delivery_date'] ?? null,
                 ':delivery_time' => $data['delivery_time'] ?? null,
@@ -851,7 +851,7 @@ class Sale
 
     private function sanitizeId($id)
     {
-        return !empty($id) && $id != 0 ? $id : null;
+        return isset($id) && $id != 0 ? $id : null;
     }
 
     private function insertSalesOrderItem($salesOrderId, $items)
@@ -874,7 +874,7 @@ class Sale
                 if (!empty($item['item_id']) && !empty($item['quantity'])) {
                     $stmt->execute([
                         ':sales_order_id' => $this->sanitizeId($salesOrderId),
-                        ':item_id' => $this->sanitizeId($item['item_id']),
+                        ':item_id' => $this->sanitizeId($item['item_id'] ?? null),
                         ':quantity' => $item['quantity'],
                         ':price' => isset($item['price']) && $item['price'] > 0
                             ? $item['price']
