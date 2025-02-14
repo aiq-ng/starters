@@ -323,27 +323,29 @@ class BaseController
         return $status;
     }
 
-    public static function getUserByRole($roleName)
+    public static function getUserByRole($roleNames)
     {
         $db = Database::getInstance()->getConnection();
 
-        $roleQuery = "SELECT id FROM roles WHERE name = :name";
-        $stmtRole = $db->prepare($roleQuery);
-        $stmtRole->bindParam(':name', $roleName);
-        $stmtRole->execute();
-        $roleId = $stmtRole->fetch(\PDO::FETCH_ASSOC)['id'];
+        if (!is_array($roleNames)) {
+            $roleNames = [$roleNames];
+        }
 
-        if (!$roleId) {
+        $roleQuery = "SELECT id FROM roles WHERE name IN (" . implode(',', array_fill(0, count($roleNames), '?')) . ")";
+        $stmtRole = $db->prepare($roleQuery);
+        $stmtRole->execute($roleNames);
+
+        $roleIds = $stmtRole->fetchAll(\PDO::FETCH_COLUMN);
+
+        if (empty($roleIds)) {
             return null;
         }
 
-        $userQuery = "SELECT * FROM users WHERE role_id = :role_id LIMIT 1";
+        $userQuery = "SELECT id FROM users WHERE role_id IN (" . implode(',', array_fill(0, count($roleIds), '?')) . ")";
         $stmtUser = $db->prepare($userQuery);
-        $stmtUser->bindParam(':role_id', $roleId);
-        $stmtUser->execute();
+        $stmtUser->execute($roleIds);
 
-        $user = $stmtUser->fetch(\PDO::FETCH_ASSOC);
-        return $user;
+        return $stmtUser->fetchAll(\PDO::FETCH_ASSOC);
     }
 
 

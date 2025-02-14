@@ -166,26 +166,4 @@ class AccountingController extends BaseController
         }
     }
 
-    public function markAsReceived()
-    {
-        $this->authorizeRequest();
-
-        try {
-            $data = $this->getRequestData();
-
-            if (empty($data['ids'])) {
-                $this->sendResponse('Sales IDs are required', 400);
-            }
-
-            $ids = is_array($data['ids']) ? $data['ids'] : [$data['ids']];
-
-            $this->accounting->markAsReceived($ids);
-
-            $this->sendResponse('Sales marked as received', 200);
-
-        } catch (\Exception $e) {
-            $this->sendResponse('An error occurred: ' . $e->getMessage(), 500);
-        }
-    }
-
 }

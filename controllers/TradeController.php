@@ -197,23 +197,31 @@ class TradeController extends BaseController
 
         $result = $this->purchase->markAsReceived($purchaseId);
 
-        error_log($result);
-
         if ($result) {
 
-            $userToNotify =  BaseController::getUserByRole('Admin');
-            $puchase = $this->findRecord('purchase_orders', $purchaseId);
+            $purchase = $this->findRecord('purchase_orders', $purchaseId);
+            $usersToNotify = BaseController::getUserByRole(['Admin', 'Accountant']);
 
-            $notification = [
-                'user_id' => $userToNotify['id'],
-                'event' => 'notification',
-                'entity_id' => $purchaseId,
-                'entity_type' => "purchase_order",
-                'title' => 'Purchase Order Received',
-                'body' => 'Purchase order ' . $puchase['reference_number'] . ' has been marked as received',
-            ];
+            if (empty($usersToNotify)) {
+                throw new \Exception("No Admin user found for notification.");
+            }
 
-            $this->notify->sendNotification($notification);
+            foreach ($usersToNotify as $userToNotify) {
+                if (!isset($userToNotify['id'])) {
+                    continue;
+                }
+
+                $notification = [
+                    'user_id' => $userToNotify['id'],
+                    'event' => 'notification',
+                    'entity_id' => $purchaseId,
+                    'entity_type' => "purchase_order",
+                    'title' => 'Purchase Order Received',
+                    'body' => 'Purchase order ' . $purchase['reference_number'] . ' has been marked as received',
+                ];
+
+                $this->notify->sendNotification($notification);
+            }
 
             $this->sendResponse('success', 200);
         } else {
@@ -315,21 +323,30 @@ class TradeController extends BaseController
             $this->sendResponse('Failed to create sale', 500);
         }
 
-        $userToNotify =  BaseController::getUserByRole('Admin');
         $user = $this->findRecord('users', $data['user_id']);
+        $usersToNotify = BaseController::getUserByRole('Admin');
 
-        $notification = [
-            'user_id' => $userToNotify['id'],
-            'event' => 'notification',
-            'entity_id' => $saleId,
-            'entity_type' => "sales_order",
-            'title' => 'New Sales Order',
-            'body' => $user['name'] . ' has created a new sales order',
-        ];
+        if (empty($usersToNotify)) {
+            throw new \Exception("No Admin user found for notification.");
+        }
 
-        error_log(json_encode($notification));
+        foreach ($usersToNotify as $userToNotify) {
+            if (!isset($userToNotify['id'])) {
+                continue;
+            }
 
-        $this->notify->sendNotification($notification);
+            $notification = [
+                'user_id' => $userToNotify['id'],
+                'event' => 'notification',
+                'entity_id' => $saleId,
+                'entity_type' => "sales_order",
+                'title' => 'New Sales Order',
+                'body' => $user['name'] . ' has created a new sales order',
+            ];
+
+            $this->notify->sendNotification($notification);
+        }
+
 
         $this->sendResponse('success', 201, ['sale_id' => $saleId]);
     }

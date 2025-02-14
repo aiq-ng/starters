@@ -148,8 +148,8 @@ class InventoryController extends BaseController
         $data = $this->getRequestData();
 
         $data['manager_id'] = $_SESSION['user_id'];
-        $data['source_id'] = $data['collector_id'] ?? $data['vendor_id'];
-        $data['source_department_id'] = $data['collector_department_id'] ?? $data['receiving_department_id'];
+        $data['source_id'] = $data['collector_id'] ?? $data['vendor_id'] ?? null;
+        $data['source_department_id'] = $data['collector_department_id'] ?? $data['receiving_department_id'] ?? null;
 
         $result = $this->inventory->adjustStock($id, $data);
 

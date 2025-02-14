@@ -5,6 +5,8 @@ namespace Models;
 use Database\Database;
 use Services\Utils;
 use Services\BarcodeService;
+use Services\NotificationService;
+use Controllers\BaseController;
 
 class Inventory
 {
@@ -512,8 +514,6 @@ class Inventory
             throw new \Exception('Invalid operation, must be add or subtract');
         }
 
-        error_log("Stock Adjustment Data". json_encode($data));
-
         $quantity = $data['quantity'];
         $affectedStockIds = [];
 
@@ -527,28 +527,16 @@ class Inventory
             if ($data['adjustment_type'] === 'addition') {
                 $newStockId = $this->createItemStock($itemId, $data);
 
-                $query = "
-                    INSERT INTO item_stock_adjustments
-                    (stock_id, quantity, adjustment_type,
-                    description, source_id, source_department_id, 
-                    manager_id, source_type)
-                    VALUES (:stockId, :quantity, :adjustmentType,
-                    :description, :source_id, :source_department_id, 
-                    :manager_id, 'vendor')
-                ";
-                $stmt = $this->db->prepare($query);
-
-                $stmt->bindValue(':stockId', $newStockId);
-                $stmt->bindValue(':quantity', $quantity);
-                $stmt->bindValue(':adjustmentType', $data['adjustment_type']);
-                $stmt->bindValue(':description', $data['description'] ?? null);
-                $stmt->bindValue(':source_id', $data['source_id'] ?? null);
-                $stmt->bindValue(':source_department_id', $data['source_department_id'] ?? null);
-                $stmt->bindValue(':manager_id', $data['manager_id'] ?? null);
-
-                if (!$stmt->execute()) {
-                    throw new \Exception('Failed to log stock adjustment for addition.');
-                }
+                $this->insertStockAdjustment(
+                    $itemId,
+                    $newStockId,
+                    $quantity,
+                    $data['adjustment_type'],
+                    $data['description'] ?? null,
+                    $data['source_id'] ?? null,
+                    $data['source_department_id'] ?? null,
+                    $data['manager_id'] ?? null
+                );
 
                 $affectedStockIds[] = $newStockId;
             }
@@ -592,25 +580,16 @@ class Inventory
                 if ($updateStmt->execute()) {
                     $affectedStockIds[] = $stockId;
 
-                    $logSql = "
-                        INSERT INTO item_stock_adjustments
-                        (stock_id, quantity, adjustment_type,
-                        description, source_id, source_department_id, manager_id, source_type)
-                        VALUES (:stockId, :quantity, :adjustmentType,
-                        :description, :source_id, :source_department_id, :manager_id, 'user')
-                    ";
-                    $logStmt = $this->db->prepare($logSql);
-                    $logStmt->bindValue(':stockId', $stockId);
-                    $logStmt->bindValue(':quantity', $subtractAmount);
-                    $logStmt->bindValue(':adjustmentType', $data['adjustment_type']);
-                    $logStmt->bindValue(':description', $data['description'] ?? null);
-                    $logStmt->bindValue(':source_id', $data['source_id'] ?? null);
-                    $logStmt->bindValue(':source_department_id', $data['source_department_id'] ?? null);
-                    $logStmt->bindValue(':manager_id', $data['manager_id'] ?? null);
-
-                    if (!$logStmt->execute()) {
-                        throw new \Exception('Failed to log stock adjustment.');
-                    }
+                    $this->insertStockAdjustment(
+                        $itemId,
+                        $stockId,
+                        $subtractAmount,
+                        $data['adjustment_type'],
+                        $data['description'] ?? null,
+                        $data['source_id'] ?? null,
+                        $data['source_department_id'] ?? null,
+                        $data['manager_id'] ?? null
+                    );
                 }
             }
         }
@@ -620,6 +599,64 @@ class Inventory
         }
 
         return $affectedStockIds;
+    }
+
+    private function insertStockAdjustment(
+        $itemId,
+        $stockId,
+        $quantity,
+        $adjustmentType,
+        $description,
+        $sourceId,
+        $sourceDepartmentId,
+        $managerId
+    ) {
+        $query = "
+        INSERT INTO item_stock_adjustments
+        (stock_id, quantity, adjustment_type,
+        description, source_id, source_department_id, 
+        manager_id, source_type)
+        VALUES (:stockId, :quantity, :adjustmentType,
+        :description, :source_id, :source_department_id, 
+        :manager_id, 'user')
+    ";
+        $stmt = $this->db->prepare($query);
+
+        $stmt->bindValue(':stockId', $stockId);
+        $stmt->bindValue(':quantity', $quantity);
+        $stmt->bindValue(':adjustmentType', $adjustmentType);
+        $stmt->bindValue(':description', $description);
+        $stmt->bindValue(':source_id', $sourceId);
+        $stmt->bindValue(':source_department_id', $sourceDepartmentId);
+        $stmt->bindValue(':manager_id', $managerId);
+
+        if (!$stmt->execute()) {
+            throw new \Exception('Failed to log stock adjustment.');
+        }
+
+        $item = $this->getItem($itemId);
+        $usersToNotify = BaseController::getUserByRole('Admin');
+
+        if (empty($usersToNotify)) {
+            throw new \Exception("No Admin user found for notification.");
+        }
+
+        foreach ($usersToNotify as $userToNotify) {
+            if (!isset($userToNotify['id'])) {
+                continue;
+            }
+
+            $notificationData = [
+                'user_id' => $userToNotify['id'],
+                'event' => 'notification',
+                'entity_id' => $stockId,
+                'entity_type' => 'items',
+                'title' => 'Stock Adjustment',
+                'body' => $item['name'] . ' stock has been adjusted',
+            ];
+
+            (new NotificationService())->sendNotification($notificationData);
+        }
     }
 
     private function getStocksByItemId($itemId)

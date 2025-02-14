@@ -575,21 +575,28 @@ class Accounting extends Kitchen
                 throw new \Exception("Sales order not found or update failed.");
             }
 
-            $userToNotify = BaseController::getUserByRole('Admin');
-            if (!$userToNotify || !isset($userToNotify['id'])) {
+            $usersToNotify = BaseController::getUserByRole(['Admin']);
+
+            if (empty($usersToNotify)) {
                 throw new \Exception("Admin user not found for notification.");
             }
 
-            $notification = [
-                'user_id' => $userToNotify['id'],
-                'event' => 'update',
-                'entity_id' => $sales['id'] ?? null,
-                'entity_type' => "sales_order",
-                'title' => 'Sales Order Payment Confirmed',
-                'body' => $sales['order_id'] . ' payment has been confirmed'
-            ];
+            foreach ($usersToNotify as $userToNotify) {
+                if (!isset($userToNotify['id'])) {
+                    continue;
+                }
 
-            (new NotificationService())->sendNotification($notification);
+                $notification = [
+                    'user_id' => $userToNotify['id'],
+                    'event' => 'update',
+                    'entity_id' => $sales['id'] ?? null,
+                    'entity_type' => "sales_order",
+                    'title' => 'Sales Order Payment Confirmed',
+                    'body' => $sales['order_id'] . ' payment has been confirmed'
+                ];
+
+                (new NotificationService())->sendNotification($notification);
+            }
 
             $this->db->commit();
 
@@ -630,36 +637,4 @@ class Accounting extends Kitchen
         }
     }
 
-    public function markAsReceived(array $ids)
-    {
-        try {
-            $placeholders = implode(',', array_fill(0, count($ids), '?'));
-
-            $query = "UPDATE sales_orders SET status = 'received' WHERE id IN ($placeholders)";
-            $stmt = $this->db->prepare($query);
-
-            $stmt->execute($ids);
-
-            $userToNotify =  BaseController::getUserByRole('Chef');
-            $totalMarked = $stmt->rowCount();
-
-            if ($totalMarked > 0) {
-                $notification = [
-                    'user_id' => $userToNotify['id'],
-                    'event' => 'notification',
-                    'entity_id' => $ids[0],
-                    'entity_type' => "sales_order",
-                    'title' => 'Sales Order Received',
-                    'body' => "{$totalMarked} sales order(s) have been accepted",
-                ];
-
-                (new NotificationService())->sendNotification($notification);
-
-            }
-
-        } catch (\PDOException $e) {
-            error_log("Error in markAsReceived: " . $e->getMessage());
-            throw new \Exception("An error occurred while marking sales orders as received.");
-        }
-    }
 }

@@ -400,7 +400,7 @@ CREATE TABLE item_stock_adjustments (
     manager_id UUID REFERENCES users(id) ON DELETE SET NULL,
     source_type VARCHAR(10) NOT NULL 
         CHECK (source_type IN ('user', 'vendor')),
-    source_id UUID NOT NULL,
+    source_id UUID,
     source_department_id UUID REFERENCES departments(id) ON DELETE SET NULL,
     quantity INT NOT NULL,
     adjustment_type VARCHAR(50) 

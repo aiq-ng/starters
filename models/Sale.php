@@ -1177,19 +1177,29 @@ class Sale extends Kitchen
                 'status' => 'new order',
                 'sent_to_kitchen' => 0,
             ];
-            $userToNotify = BaseController::getUserByRole('Admin');
 
             $sales = $this->getNewOrders($filters);
+            $usersToNotify = BaseController::getUserByRole('Admin');
 
-            $notification = [
-                'user_id' => $userToNotify['id'],
-                'event' => 'update',
-                'title' => 'New Sales Order',
-                'body' => 'New sales order has been placed',
-                'event_data' => $sales['data'],
-            ];
+            if (empty($usersToNotify)) {
+                throw new \Exception("Admin user not found for notification.");
+            }
 
-            (new NotificationService())->sendNotification($notification, false);
+            foreach ($usersToNotify as $userToNotify) {
+                if (!isset($userToNotify['id'])) {
+                    continue;
+                }
+
+                $notification = [
+                    'user_id' => $userToNotify['id'],
+                    'event' => 'update',
+                    'title' => 'New Sales Order',
+                    'body' => 'New sales order has been placed',
+                    'event_data' => $sales['data'],
+                ];
+
+                (new NotificationService())->sendNotification($notification, false);
+            }
 
             $this->updateSentToKitchen($orderId);
 
