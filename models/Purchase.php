@@ -399,44 +399,61 @@ class Purchase
                 po.subject,
                 v.display_name AS vendor_name,
                 v.email AS vendor_email,
+                v.address AS vendor_address,
+                v.mobile_phone AS vendor_phone,
+                v.balance AS vendor_balance,
                 po.invoice_number,
                 po.purchase_order_number, 
                 po.reference_number,
                 po.discount,
                 po.shipping_charge,
+                po.notes,
                 COALESCE(po.total, 0.00) AS total,
                 po.created_at::DATE AS order_date,
                 po.delivery_date,
                 json_agg(
                     json_build_object(
-                'item_id', poi.item_id,
-                'item_name', i.name,
-                'item_description', i.description,
+                        'item_id', poi.item_id,
+                        'item_name', i.name,
+                        'item_description', i.description,
                         'quantity', poi.quantity,
                         'price', poi.price,
                         'amount', poi.quantity * poi.price,
-                        'tax_id', poi.tax_id
+                        'tax_id', poi.tax_id,
+                        'tax_rate', tr.rate
                     )
                 ) AS items
             FROM purchase_orders po
             LEFT JOIN vendors v ON po.vendor_id = v.id
             LEFT JOIN purchase_order_items poi ON poi.purchase_order_id = po.id
+            LEFT JOIN taxes tr ON poi.tax_id = tr.id
             LEFT JOIN items i ON poi.item_id = i.id
             WHERE po.id = :purchase_order_id
             GROUP BY po.id, po.purchase_order_number, po.reference_number,
-            v.display_name, v.email, i.name, i.description;
+                v.display_name, v.email, v.address, v.mobile_phone, v.balance, 
+                po.discount, po.shipping_charge, po.notes, po.total, 
+                po.created_at, po.delivery_date;
         ";
 
         $stmt = $this->db->prepare($query);
-        $stmt->execute([':purchase_order_id' => $purchaseOrderId]);
 
-        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        try {
+            $stmt->execute([':purchase_order_id' => $purchaseOrderId]);
 
-        if (!empty($result['items'])) {
-            $result['items'] = json_decode($result['items'], true);
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if ($result) {
+                if (!empty($result['items'])) {
+                    $result['items'] = json_decode($result['items'], true);
+                } else {
+                    $result['items'] = [];
+                }
+                return $result;
+            }
+
+        } catch (\Exception $e) {
+            throw new \Exception("Failed to fetch purchase order details: " . $e->getMessage());
         }
-
-        return $result;
     }
 
     public function markAsReceived($purchaseOrderId)

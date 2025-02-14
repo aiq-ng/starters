@@ -401,41 +401,72 @@ class BaseController
         return $result && $result['role_id'] === $adminRoleId;
     }
 
-    public function sendInvoiceEmail($id, $type, $attachment)
+    public function sendInvoiceEmail($id, $type, $attachment = null)
     {
-        if ($type === 'sales_orders') {
-            $salesInvoice = (new Sale())->getInvoiceDetails($id);
-            $name = $salesInvoice['customer_name'];
-            $email = $salesInvoice['customer_email'];
+        $invoiceData = $this->getInvoiceData($id, $type);
 
-        } elseif ($type === 'purchase_orders') {
-            $purchaseInvoice = (new Purchase())->getInvoiceDetails($id);
-            $name = $purchaseInvoice['vendor_name'];
-            $email = $purchaseInvoice['vendor_email'];
-
-        } else {
+        if (!$invoiceData) {
             throw new \Exception("Invalid record type '$type'.");
         }
 
-        $templateVariables = [
-                'name' => $name,
-                'email' => $email,
-                'invoice_link' => getenv('APP_URL') . '/login',
-            ];
+        $templateVariables = array_merge([
+            "orgAddress" => trim(getenv('ORG_ADDRESS'), '"'),
+            "orgName" => trim(getenv('ORG_NAME'), '"'),
+            "orgName" => trim(getenv('ORG_NAME'), '"'),
+            "orgEmail" => trim(getenv('ORG_EMAIL'), '"'),
+            "orgPhone" => trim(getenv('ORG_PHONE'), '"'),
+            "orgWebsite" => trim(getenv('ORG_WEBSITE'), '"'),
+        ], $invoiceData);
 
         try {
             $this->emailService->sendInvoice(
-                $email,
-                $templateVariables['name'],
+                $invoiceData['billedToEmail'],
+                $invoiceData['billedTo'],
                 $templateVariables,
                 $attachment
             );
 
         } catch (\Exception $e) {
             error_log("Error sending email: " . $e->getMessage());
-            $this->sendResponse('Failed to send Invoice', 500);
+            return $this->sendResponse('Failed to send Invoice', 500);
         }
-        $this->sendResponse('Invoice sent successfully', 200);
+
+        return $this->sendResponse('Invoice sent successfully', 200);
+    }
+
+    private function getInvoiceData($id, $type)
+    {
+        if ($type === 'sales_orders') {
+            $invoice = (new Sale())->getInvoiceDetails($id);
+            return $this->mapInvoiceData($invoice, 'customer');
+        }
+
+        if ($type === 'purchase_orders') {
+            $invoice = (new Purchase())->getInvoiceDetails($id);
+            return $this->mapInvoiceData($invoice, 'vendor');
+        }
+
+        return null;
+    }
+
+    private function mapInvoiceData($invoice, $prefix)
+    {
+        return [
+            "invoiceNumber" => $invoice['invoice_number'] ?? "",
+            "reference" => $invoice['reference_number'] ?? "",
+            "issueDate" => $invoice[$prefix === 'customer' ? 'invoice_date' : 'order_date'] ?? "",
+            "dueDate" => $invoice['delivery_date'] ?? "",
+            "billedTo" => $invoice["{$prefix}_name"] ?? "",
+            "billedToAddress" => $invoice["{$prefix}_address"] ?? "",
+            "billedToEmail" => $invoice["{$prefix}_email"] ?? "",
+            "billedToPhone" => $invoice["{$prefix}_phone"] ?? "",
+            "balanceDue" => $invoice["{$prefix}_balance"] ?? "",
+            "discount" => $invoice['discount'] ?? "",
+            "shipping" => $invoice[$prefix === 'customer' ? 'delivery_charge' : 'shipping_charge'] ?? "",
+            "total" => $invoice['total'] ?? "",
+            "items" => $invoice['items'] ?? [],
+            "notes" => $invoice[$prefix === 'customer' ? 'customer_note' : 'notes'] ?? "",
+        ];
     }
 
     protected function fetchData(

@@ -53,16 +53,14 @@ class EmailService
         );
     }
 
-    public function sendInvoice($recipientEmail, $recipientName, $templateVariables, $attachment = null)
+    public function sendInvoice($recipientEmail, $recipientName, $templateVariables)
     {
-        $processedAttachment = $attachment ? $this->processAttachment($attachment) : null;
 
         return $this->sendEmail(
             $this->templates->invoice,
             $recipientEmail,
             $recipientName,
             $templateVariables,
-            $processedAttachment
         );
     }
 
@@ -74,24 +72,6 @@ class EmailService
             $recipientName,
             $templateVariables
         );
-    }
-
-    private function processAttachment($attachment)
-    {
-        if (empty($attachment['tmp_name']) || empty($attachment['name']) || empty($attachment['type'])) {
-            throw new \Exception('Invalid attachment details.');
-        }
-
-        $fileData = file_get_contents($attachment['tmp_name']);
-        if ($fileData === false) {
-            throw new \Exception('Failed to read file content.');
-        }
-
-        return [
-            'file_name' => $attachment['name'],
-            'content' => base64_encode($fileData),
-            'content_type' => $attachment['type'],
-        ];
     }
 
     private function sendEmail(
