@@ -75,21 +75,30 @@ class TradeController extends BaseController
 
         if ($invoice) {
 
-            $userToNotify =  BaseController::getUserByRole('Admin');
             $user = $this->findRecord('users', $data['user_id']);
+            $usersToNotify = BaseController::getUserByRole('Admin');
 
-            $notification = [
-                'user_id' => $userToNotify['id'],
-                'event' => 'notification',
-                'entity_id' => $invoice['id'],
-                'entity_type' => "purchase_order",
-                'title' => 'New Purchase Order',
-                'body' => $user['name'] . ' has created a new purchase order',
-            ];
+            if (empty($usersToNotify)) {
+                throw new \Exception("No Admin user found for notification.");
+            }
 
-            error_log(json_encode($notification));
+            foreach ($usersToNotify as $userToNotify) {
+                if (!isset($userToNotify['id'])) {
+                    continue;
+                }
 
-            $this->notify->sendNotification($notification);
+
+                $notification = [
+                    'user_id' => $userToNotify['id'],
+                    'event' => 'notification',
+                    'entity_id' => $invoice['id'],
+                    'entity_type' => "purchase_order",
+                    'title' => 'New Purchase Order',
+                    'body' => $user['name'] . ' has created a new purchase order',
+                ];
+
+                $this->notify->sendNotification($notification);
+            }
 
             $this->sendResponse('success', 201, $invoice);
         } else {
