@@ -186,7 +186,7 @@ class Accounting extends Kitchen
             $stmt->bindValue(':bank_charges', $data['bank_charges'] ?? null);
             $stmt->bindValue(':date_of_expense', $data['date_of_expense'] ?? null);
             $stmt->bindValue(':notes', $data['notes'] ?? null);
-            $stmt->bindValue(':status', $data['status'] ?? null);
+            $stmt->bindValue(':status', $data['status'] ?? 'paid');
             $stmt->bindValue(':processed_by', $data['processed_by'] ?? null);
 
             $stmt->execute();

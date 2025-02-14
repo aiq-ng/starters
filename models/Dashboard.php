@@ -183,11 +183,11 @@ class Dashboard
             SELECT 
                 COALESCE((SELECT SUM(total) 
                           FROM sales_orders 
-                          WHERE status IN ('delivered', 'new order') 
+                          WHERE payment_status = 'paid' 
                           AND DATE_PART('year', created_at) = :year), 0) AS total_income,
                 COALESCE((SELECT SUM(total) 
                           FROM purchase_orders 
-                          WHERE status IN ('paid') 
+                          WHERE status = 'paid' 
                           AND DATE_PART('year', created_at) = :year), 0) 
                 +
                 COALESCE((SELECT SUM(amount) 
