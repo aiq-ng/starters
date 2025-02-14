@@ -334,6 +334,20 @@ class TradeController extends BaseController
         $this->sendResponse('success', 201, ['sale_id' => $saleId]);
     }
 
+    public function sendToKitchen($orderId)
+    {
+        $this->authorizeRequest();
+
+        try {
+            $this->sale->sendToKitchen($orderId);
+        } catch (\Exception $e) {
+            $this->sendResponse($e->getMessage(), 400);
+        }
+
+        $this->sendResponse('Order sent to kitchen', 200);
+    }
+
+
     public function patchSale($saleId)
     {
         $this->authorizeRequest();

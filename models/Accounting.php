@@ -559,33 +559,35 @@ class Accounting extends Kitchen
 
             $query = "
                 UPDATE sales_orders
-                SET status = 'new order'
+                SET payment_status = 'paid'
                 WHERE id = :order_id
+                RETURNING *
             ";
 
             $stmt = $this->db->prepare($query);
-            $stmt->bindValue('order_id', $orderId);
+            $stmt->bindValue(':order_id', $orderId);
             $stmt->execute();
 
-            $filters = [
-                'status' => 'new order',
-                'sent_to_kitchen' => 0,
-            ];
-            $userToNotify = BaseController::getUserByRole('Admin');
+            $sales = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if (!$sales) {
+                throw new \Exception("Sales order not found or update failed.");
+            }
 
-            $sales = $this->getNewOrders($filters);
+            $userToNotify = BaseController::getUserByRole('Admin');
+            if (!$userToNotify || !isset($userToNotify['id'])) {
+                throw new \Exception("Admin user not found for notification.");
+            }
 
             $notification = [
                 'user_id' => $userToNotify['id'],
                 'event' => 'update',
-                'title' => 'New Sales Order',
-                'body' => 'New sales order has been placed',
-                'event_data' => $sales['data'],
+                'entity_id' => $sales['id'] ?? null,
+                'entity_type' => "sales_order",
+                'title' => 'Sales Order Payment Confirmed',
+                'body' => $sales['order_title'] . ' payment has been confirmed'
             ];
 
             (new NotificationService())->sendNotification($notification, false);
-
-            $this->updateSentToKitchen($orderId);
 
             $this->db->commit();
 
@@ -602,35 +604,6 @@ class Accounting extends Kitchen
             error_log("Error in confirmSalesOrderPayment: " . $e->getMessage());
             throw new \Exception("An error occurred while confirming sales order payment.");
         }
-    }
-
-    private function updateSentToKitchen($orderId)
-    {
-        try {
-            $query = "UPDATE sales_orders SET sent_to_kitchen = TRUE WHERE id = :order_id";
-
-            $stmt = $this->db->prepare($query);
-            $stmt->bindValue(':order_id', $orderId);
-            $stmt->execute();
-
-        } catch (\PDOException $e) {
-            error_log("Database error in updateSentToKitchen: " . $e->getMessage());
-            throw new \Exception("An error occurred while updating sent_to_kitchen status.");
-        }
-    }
-    private function countPaidSalesOrders()
-    {
-        $countQuery = "
-            SELECT COUNT(*) 
-            FROM sales_orders
-            WHERE status = 'new order'
-        ";
-
-        $countStmt = $this->db->prepare($countQuery);
-        $countStmt->execute();
-
-        return $countStmt->fetchColumn();
-
     }
 
 

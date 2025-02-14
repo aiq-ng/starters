@@ -119,7 +119,7 @@ class AccountingController extends BaseController
         }
     }
 
-    public function comfirmSalesOrderPayment($orderId)
+    public function confirmSalesOrderPayment($orderId)
     {
         $this->authorizeRequest();
 

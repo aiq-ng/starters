@@ -133,7 +133,7 @@ class Vendor
         $query = "
         SELECT 
             v.id,
-            v.salutation || ' ' || v.first_name || ' ' || v.last_name AS name,
+            CONCAT(v.first_name, ' ', v.last_name) AS name,
             vc.name AS category,
             v.email,
             v.work_phone,

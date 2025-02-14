@@ -3,8 +3,10 @@
 namespace Models;
 
 use Database\Database;
+use Services\NotificationService;
+use Controllers\BaseController;
 
-class Sale
+class Sale extends Kitchen
 {
     private $db;
 
@@ -1154,4 +1156,72 @@ class Sale
             ],
         ];
     }
+
+    public function sendToKitchen($orderId)
+    {
+        try {
+            $this->db->beginTransaction();
+
+            $query = "
+                UPDATE sales_orders
+                SET status = 'new order'
+                WHERE id = :order_id
+            ";
+
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue('order_id', $orderId);
+            $stmt->execute();
+
+            $filters = [
+                'status' => 'new order',
+                'sent_to_kitchen' => 0,
+            ];
+            $userToNotify = BaseController::getUserByRole('Admin');
+
+            $sales = $this->getNewOrders($filters);
+
+            $notification = [
+                'user_id' => $userToNotify['id'],
+                'event' => 'update',
+                'title' => 'New Sales Order',
+                'body' => 'New sales order has been placed',
+                'event_data' => $sales['data'],
+            ];
+
+            (new NotificationService())->sendNotification($notification, false);
+
+            $this->updateSentToKitchen($orderId);
+
+            $this->db->commit();
+
+        } catch (\PDOException $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log("Database error in sendToKitchen: " . $e->getMessage());
+            throw new \Exception("An error occurred while confirming sales order payment.");
+        } catch (\Exception $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log("Error in sendToKitchen: " . $e->getMessage());
+            throw new \Exception("An error occurred while confirming sales order payment.");
+        }
+    }
+
+    private function updateSentToKitchen($orderId)
+    {
+        try {
+            $query = "UPDATE sales_orders SET sent_to_kitchen = TRUE WHERE id = :order_id";
+
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':order_id', $orderId);
+            $stmt->execute();
+
+        } catch (\PDOException $e) {
+            error_log("Database error in updateSentToKitchen: " . $e->getMessage());
+            throw new \Exception("An error occurred while updating sent_to_kitchen status.");
+        }
+    }
+
 }

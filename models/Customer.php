@@ -32,7 +32,7 @@ class Customer
 
         $stmt = $this->db->prepare($query);
 
-        $stmt->bindValue(':customer_type', $data['customer_type'] ?? null);
+        $stmt->bindValue(':customer_type', $data['customer_type'] ?? 'individual');
         $stmt->bindValue(':salutation', $data['salutation'] ?? null);
         $stmt->bindValue(':first_name', $data['first_name'] ?? null);
         $stmt->bindValue(':last_name', $data['last_name'] ?? null);
@@ -133,7 +133,7 @@ class Customer
         $query = "
             SELECT 
                 c.id,
-                c.salutation || ' ' || c.first_name || ' ' || c.last_name AS name,
+                CONCAT(c.first_name, ' ', c.last_name) AS name,
                 c.company_name,
                 c.email,
                 c.work_phone,
