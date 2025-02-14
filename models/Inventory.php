@@ -197,19 +197,26 @@ class Inventory
                 isb.branch_id,
                 STRING_AGG(DISTINCT ic.name, ', ') AS category,
                 STRING_AGG(DISTINCT d.name, ', ') AS department,
-                MAX(its.expiry_date) AS expiry_date,
-                COALESCE(SUM(its.quantity), 0) AS quantity
-            FROM item_stocks its
-            JOIN items i ON its.item_id = i.id
+                stock_data.expiry_date,
+                COALESCE(stock_data.total_quantity, 0) AS quantity
+            FROM items i
+            LEFT JOIN (
+                SELECT item_id, MAX(expiry_date) AS expiry_date, SUM(quantity) AS total_quantity
+                FROM item_stocks
+                WHERE item_id = :itemId
+                GROUP BY item_id
+            ) stock_data ON i.id = stock_data.item_id
+            LEFT JOIN item_stocks its ON i.id = its.item_id
             LEFT JOIN item_stock_departments isd ON its.id = isd.stock_id
             LEFT JOIN item_stock_vendors isv ON its.id = isv.stock_id
             LEFT JOIN item_stock_manufacturers ism ON its.id = ism.stock_id
             LEFT JOIN item_stock_branches isb ON its.id = isb.stock_id
             LEFT JOIN departments d ON isd.department_id = d.id
             LEFT JOIN item_categories ic ON i.category_id = ic.id
-            WHERE its.item_id = :itemId
+            WHERE i.id = :itemId
             GROUP BY i.id, i.name, i.threshold_value, i.opening_stock, i.media,
-                isd.department_id, isv.vendor_id, ism.manufacturer_id, isb.branch_id
+                isd.department_id, isv.vendor_id, ism.manufacturer_id, isb.branch_id,
+                stock_data.expiry_date, stock_data.total_quantity
         ";
 
         $stmt = $this->db->prepare($sql);

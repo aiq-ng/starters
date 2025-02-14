@@ -584,10 +584,10 @@ class Accounting extends Kitchen
                 'entity_id' => $sales['id'] ?? null,
                 'entity_type' => "sales_order",
                 'title' => 'Sales Order Payment Confirmed',
-                'body' => $sales['order_title'] . ' payment has been confirmed'
+                'body' => $sales['order_id'] . ' payment has been confirmed'
             ];
 
-            (new NotificationService())->sendNotification($notification, false);
+            (new NotificationService())->sendNotification($notification);
 
             $this->db->commit();
 
