@@ -202,9 +202,11 @@ class Accounting extends Kitchen
             return 0;
         }
 
+        error_log('Deleting expenses: ' . implode(',', $expenseIds));
+
         $placeholders = implode(',', array_fill(0, count($expenseIds), '?'));
 
-        $stmt = $this->db->prepare("DELETE FROM expenses WHERE expense_id IN ($placeholders)");
+        $stmt = $this->db->prepare("DELETE FROM expenses WHERE id IN ($placeholders)");
         $stmt->execute($expenseIds);
 
         return $stmt->rowCount();
