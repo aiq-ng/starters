@@ -139,6 +139,7 @@ $routes = [
         '/purchases/orders/received/([a-fA-F0-9-]{36})' => [$tradeController, 'markPurchaseAsReceived'],
         '/sales/orders/send-to-kitchen/([a-fA-F0-9-]{36})' => [$tradeController, 'sendToKitchen'],
         '/accounting/sales-orders/([a-fA-F0-9-]{36})/confirm-payment' => [$accountingController, 'confirmSalesOrderPayment'],
+        '/accounting/bills/([a-fA-F0-9-]{36})/mark-as-paid' => [$accountingController, 'markBillAsPaid'],
         '/human-resources/employees/leave/([a-fA-F0-9-]{36})/approve' => [$humanResourceController, 'approveLeave'],
         '/inventory/items/stocks/([a-fA-F0-9-]{36})' => [$inventoryController, 'adjustStock'],
         '/inventory/history/comment/([a-fA-F0-9-]{36})' => [$inventoryController, 'comment'],

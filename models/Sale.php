@@ -306,11 +306,11 @@ class Sale extends Kitchen
 
         foreach ($data as $item) {
             $placeholders[] = "(?, ?, ?, ?, ?)";
-            $values[] = $item['item_category_id'] ?? null;
-            $values[] = $item['item_details'] ?? null;
-            $values[] = $item['unit_price'] ?? null;
-            $values[] = $item['minimum_order'] ?? null;
-            $values[] = $item['unit_id'] ?? null;
+            $values[] = !empty($item['item_category_id']) ? $item['item_category_id'] : null;
+            $values[] = !empty($item['item_details']) ? $item['item_details'] : null;
+            $values[] = !empty($item['unit_price']) ? $item['unit_price'] : null;
+            $values[] = !empty($item['minimum_order']) ? $item['minimum_order'] : null;
+            $values[] = !empty($item['unit_id']) ? $item['unit_id'] : null;
         }
 
         $query .= implode(", ", $placeholders);

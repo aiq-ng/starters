@@ -615,6 +615,66 @@ class Accounting extends Kitchen
         }
     }
 
+    public function markBillAsPaid($billId)
+    {
+        try {
+            $this->db->beginTransaction();
+
+            $query = "
+                UPDATE purchase_orders
+                SET status = 'paid'
+                WHERE id = :bill_id
+                RETURNING *
+            ";
+
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':bill_id', $billId);
+            $stmt->execute();
+
+            $bill = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if (!$bill) {
+                throw new \Exception("Bill not found or update failed.");
+            }
+
+            $usersToNotify = BaseController::getUserByRole(['Admin']);
+
+            if (empty($usersToNotify)) {
+                throw new \Exception("Admin user not found for notification.");
+            }
+
+            foreach ($usersToNotify as $userToNotify) {
+                if (!isset($userToNotify['id'])) {
+                    continue;
+                }
+
+                $notification = [
+                    'user_id' => $userToNotify['id'],
+                    'event' => 'update',
+                    'entity_id' => $bill['id'] ?? null,
+                    'entity_type' => "purchase_order",
+                    'title' => 'Bill Marked as Paid',
+                    'body' => $bill['purchase_order_number'] . ' has been marked as paid'
+                ];
+
+                (new NotificationService())->sendNotification($notification);
+            }
+
+            $this->db->commit();
+
+        } catch (\PDOException $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log("Database error in markBillAsPaid: " . $e->getMessage());
+            throw new \Exception("An error occurred while marking bill as paid.");
+        } catch (\Exception $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log("Error in markBillAsPaid: " . $e->getMessage());
+            throw new \Exception("An error occurred while marking bill as paid.");
+        }
+    }
 
     public function getSalesOrdersToKitchen()
     {

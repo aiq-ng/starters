@@ -132,6 +132,19 @@ class AccountingController extends BaseController
         $this->sendResponse('Order payment confirmed', 200);
     }
 
+    public function markBillAsPaid($billId)
+    {
+        $this->authorizeRequest();
+
+        try {
+            $this->accounting->markBillAsPaid($billId);
+        } catch (\Exception $e) {
+            $this->sendResponse($e->getMessage(), 400);
+        }
+
+        $this->sendResponse('Bill marked as paid', 200);
+    }
+
     public function overview()
     {
         $this->authorizeRequest();

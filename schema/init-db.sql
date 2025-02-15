@@ -254,9 +254,8 @@ CREATE TABLE vendors (
     balance DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) GENERATED ALWAYS AS (
         CASE
-            WHEN balance = 0 THEN 'active'
-            WHEN balance > 0 THEN 'owing'
-            ELSE 'paid'
+            WHEN balance < 0 THEN 'owing'
+            ELSE 'active'
         END
     ) STORED,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -303,9 +302,8 @@ CREATE TABLE customers (
     balance DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) GENERATED ALWAYS AS (
         CASE
-            WHEN balance = 0 THEN 'active'
-            WHEN balance > 0 THEN 'owing'
-            ELSE 'paid'
+            WHEN balance < 0 THEN 'owing'
+            ELSE 'active'
         END
     ) STORED,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -583,6 +581,8 @@ CREATE TABLE notifications (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Functions
+
 CREATE OR REPLACE FUNCTION generate_sku()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -594,8 +594,6 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
-
 
 CREATE OR REPLACE FUNCTION update_item_availability()
 RETURNS TRIGGER AS $$
@@ -689,6 +687,39 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+CREATE OR REPLACE FUNCTION update_vendor_balance()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE vendors
+    SET balance = COALESCE((
+        SELECT SUM(total) FROM purchase_orders
+        WHERE purchase_orders.vendor_id = NEW.vendor_id 
+        AND purchase_orders.status = 'paid'
+    ), 0)
+    WHERE id = NEW.vendor_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_customer_balance()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE customers
+    SET balance = COALESCE((
+        SELECT SUM(total) FROM sales_orders
+        WHERE sales_orders.customer_id = NEW.customer_id 
+        AND sales_orders.payment_status = 'paid'
+    ), 0)
+    WHERE id = NEW.customer_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Triggers
+
 CREATE TRIGGER before_insert_update_items
 BEFORE INSERT OR UPDATE ON items
 FOR EACH ROW
@@ -720,4 +751,16 @@ FOR EACH ROW EXECUTE FUNCTION update_purchase_order_total();
 CREATE TRIGGER trigger_update_sales_order_total
 AFTER INSERT OR UPDATE OR DELETE ON sales_order_items
 FOR EACH ROW EXECUTE FUNCTION update_sales_order_total();
+
+CREATE TRIGGER purchase_order_balance_update
+AFTER INSERT OR UPDATE OR DELETE ON purchase_orders
+FOR EACH ROW
+WHEN (NEW.status = 'paid' OR OLD.status = 'paid')
+EXECUTE FUNCTION update_vendor_balance();
+
+CREATE TRIGGER sales_order_balance_update
+AFTER INSERT OR UPDATE OR DELETE ON sales_orders
+FOR EACH ROW
+WHEN (NEW.payment_status = 'paid' OR OLD.payment_status = 'paid')
+EXECUTE FUNCTION update_customer_balance();
 
