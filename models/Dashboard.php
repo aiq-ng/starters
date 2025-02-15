@@ -385,9 +385,9 @@ class Dashboard
                 SUM(soi.quantity * soi.price) AS amount
             FROM 
                 sales_order_items soi
-            JOIN 
+            LEFT JOIN 
                 price_lists pl ON soi.item_id = pl.id
-            JOIN 
+            LEFT JOIN 
                 units u ON pl.unit_id = u.id
         ";
 
