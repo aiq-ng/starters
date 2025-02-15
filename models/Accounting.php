@@ -28,7 +28,7 @@ class Accounting extends Kitchen
             SUM(so.total) AS total_sales
         FROM sales_orders so
         WHERE EXTRACT(YEAR FROM so.delivery_date) = :year
-        AND so.status IN ('delivered', 'new order')
+        AND so.payment_status = 'paid'
         GROUP BY EXTRACT(MONTH FROM so.delivery_date)
     ),
     purchase_outflow AS (
@@ -37,7 +37,7 @@ class Accounting extends Kitchen
             SUM(po.total) AS total_purchase
         FROM purchase_orders po
         WHERE EXTRACT(YEAR FROM po.delivery_date) = :year
-        AND po.status IN ('received', 'paid')
+        AND po.status = 'paid'
         GROUP BY EXTRACT(MONTH FROM po.delivery_date)
     ),
     expenses_outflow AS (

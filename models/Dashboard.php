@@ -53,7 +53,7 @@ class Dashboard
             SUM(so.total) AS total_sales
         FROM sales_orders so
         WHERE EXTRACT(YEAR FROM COALESCE(so.delivery_date, so.created_at)) = :year
-        AND so.status IN ('paid')
+        AND so.payment_status IN ('paid')
         GROUP BY EXTRACT(MONTH FROM COALESCE(so.delivery_date, so.created_at))
     ),
     purchase_outflow AS (
@@ -215,15 +215,6 @@ class Dashboard
                 'total_employees' => 0
             ];
         }
-    }
-
-    private function calculatePercentageChange($currentValue, $previousValue)
-    {
-        if ($previousValue == 0) {
-            return $currentValue == 0 ? 0 : 100;
-        }
-
-        return (($currentValue - $previousValue) / $previousValue) * 100;
     }
 
     public function getLowQuantityStock($filters = [])

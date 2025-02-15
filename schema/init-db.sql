@@ -360,7 +360,8 @@ CREATE TABLE item_stocks (
     expiry_date DATE,
     branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT non_negative_quantity CHECK (quantity >= 0)
 );
 
 -- Item Stock Vendors
@@ -597,24 +598,20 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION update_item_availability()
 RETURNS TRIGGER AS $$
-DECLARE
-    total_stock INT;
 BEGIN
-    SELECT COALESCE(SUM(quantity), 0)
-    INTO total_stock
-    FROM item_stocks
-    WHERE item_id = NEW.item_id;
-
+    -- Update the availability status based on stock quantity
     UPDATE items
-    SET availability = CASE
-        WHEN total_stock = 0 THEN 'out of stock'
-        WHEN total_stock < threshold_value THEN 'low stock'
-        ELSE 'in stock'
-    END,
-    updated_at = CURRENT_TIMESTAMP
+    SET availability = 
+        CASE 
+            WHEN (SELECT COALESCE(SUM(quantity), 0) FROM item_stocks WHERE item_id = NEW.item_id) = 0 
+                THEN 'out of stock'
+            WHEN (SELECT COALESCE(SUM(quantity), 0) FROM item_stocks WHERE item_id = NEW.item_id) < threshold_value 
+                THEN 'low stock'
+            ELSE 'in-stock'
+        END
     WHERE id = NEW.item_id;
 
-    RETURN NULL;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -726,8 +723,7 @@ FOR EACH ROW
 EXECUTE FUNCTION generate_sku();
 
 CREATE TRIGGER trigger_update_item_availability
-AFTER INSERT OR UPDATE OR DELETE
-ON item_stocks
+AFTER INSERT OR UPDATE OR DELETE ON item_stocks
 FOR EACH ROW
 EXECUTE FUNCTION update_item_availability();
 

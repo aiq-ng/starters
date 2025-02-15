@@ -57,7 +57,7 @@ class Sale extends Kitchen
                 END AS period,
                 SUM(so.total) AS revenue
             FROM sales_orders so
-            WHERE so.status = 'paid'
+            WHERE so.payment_status = 'paid'
             AND so.created_at >= 
                 CASE
                     WHEN :period = 'today' THEN CURRENT_DATE
@@ -189,7 +189,7 @@ class Sale extends Kitchen
                 COUNT(DISTINCT so.customer_id) AS total_customers
             FROM sales_orders so
             LEFT JOIN sales_order_items soi ON so.id = soi.sales_order_id
-            WHERE so.created_at >= CURRENT_DATE
+            WHERE so.created_at >= CURRENT_DATE AND payment_status = 'paid'
         ),
         previous_data AS (
             SELECT
@@ -199,7 +199,7 @@ class Sale extends Kitchen
                 COUNT(DISTINCT so.customer_id) AS total_customers
             FROM sales_orders so
             LEFT JOIN sales_order_items soi ON so.id = soi.sales_order_id
-            WHERE so.created_at BETWEEN $comparisonDate AND CURRENT_DATE - INTERVAL '1 day'
+            WHERE payment_status = 'paid' AND so.created_at BETWEEN $comparisonDate AND CURRENT_DATE - INTERVAL '1 day'
         )
         SELECT
             cd.total_revenue,
@@ -265,7 +265,7 @@ class Sale extends Kitchen
             SELECT SUM(total) AS total_sales
             FROM sales_orders
             WHERE created_at BETWEEN :start_date AND :end_date
-            AND status = 'paid'
+            AND payment_status = 'paid'
         ";
 
         $stmt = $this->db->prepare($query);
