@@ -19,55 +19,55 @@ class Accounting extends Kitchen
     public function getRevenueAndExpensesByYear($year)
     {
         $query = "
-    WITH months AS (
-        SELECT generate_series(1, 12) AS month
-    ),
-    sales_inflow AS (
+        WITH months AS (
+            SELECT generate_series(1, 12) AS month
+        ),
+        sales_inflow AS (
+            SELECT 
+                EXTRACT(MONTH FROM COALESCE(so.delivery_date, so.created_at)) AS month,
+                SUM(so.total) AS total_sales
+            FROM sales_orders so
+            WHERE EXTRACT(YEAR FROM COALESCE(so.delivery_date, so.created_at)) = :year
+            AND so.payment_status = 'paid'
+            GROUP BY EXTRACT(MONTH FROM COALESCE(so.delivery_date, so.created_at))
+        ),
+        purchase_outflow AS (
+            SELECT 
+                EXTRACT(MONTH FROM COALESCE(po.delivery_date, po.created_at)) AS month,
+                SUM(po.total) AS total_purchase
+            FROM purchase_orders po
+            WHERE EXTRACT(YEAR FROM COALESCE(po.delivery_date, po.created_at)) = :year
+            AND po.status = 'paid'
+            GROUP BY EXTRACT(MONTH FROM COALESCE(po.delivery_date, po.created_at))
+        ),
+        expenses_outflow AS (
+            SELECT 
+                EXTRACT(MONTH FROM COALESCE(e.date_of_expense, e.created_at)) AS month,
+                SUM(e.amount + COALESCE(e.bank_charges, 0)) AS total_expenses
+            FROM expenses e
+            WHERE EXTRACT(YEAR FROM COALESCE(e.date_of_expense, e.created_at)) = :year
+            AND e.status IN ('pending', 'paid')
+            GROUP BY EXTRACT(MONTH FROM COALESCE(e.date_of_expense, e.created_at))
+        ),
+        revenue_and_expenses AS (
+            SELECT 
+                m.month,
+                COALESCE(s.total_sales, 0) AS revenue,
+                COALESCE(p.total_purchase, 0) + COALESCE(e.total_expenses, 0) AS expenses
+            FROM months m
+            LEFT JOIN sales_inflow s ON m.month = s.month
+            LEFT JOIN purchase_outflow p ON m.month = p.month
+            LEFT JOIN expenses_outflow e ON m.month = e.month
+        )
         SELECT 
-            EXTRACT(MONTH FROM so.delivery_date) AS month,
-            SUM(so.total) AS total_sales
-        FROM sales_orders so
-        WHERE EXTRACT(YEAR FROM so.delivery_date) = :year
-        AND so.payment_status = 'paid'
-        GROUP BY EXTRACT(MONTH FROM so.delivery_date)
-    ),
-    purchase_outflow AS (
-        SELECT 
-            EXTRACT(MONTH FROM po.delivery_date) AS month,
-            SUM(po.total) AS total_purchase
-        FROM purchase_orders po
-        WHERE EXTRACT(YEAR FROM po.delivery_date) = :year
-        AND po.status = 'paid'
-        GROUP BY EXTRACT(MONTH FROM po.delivery_date)
-    ),
-    expenses_outflow AS (
-        SELECT 
-            EXTRACT(MONTH FROM e.date_of_expense) AS month,
-            SUM(e.amount + COALESCE(e.bank_charges, 0)) AS total_expenses
-        FROM expenses e
-        WHERE EXTRACT(YEAR FROM e.date_of_expense) = :year
-        AND e.status IN ('pending', 'paid')
-        GROUP BY EXTRACT(MONTH FROM e.date_of_expense)
-    ),
-    revenue_and_expenses AS (
-        SELECT 
-            m.month,
-            COALESCE(s.total_sales, 0) AS revenue,
-            COALESCE(p.total_purchase, 0) + COALESCE(e.total_expenses, 0) AS expenses
-        FROM months m
-        LEFT JOIN sales_inflow s ON m.month = s.month
-        LEFT JOIN purchase_outflow p ON m.month = p.month
-        LEFT JOIN expenses_outflow e ON m.month = e.month
-    )
-    SELECT 
-        re.*,
-        CASE 
-            WHEN re.month = EXTRACT(MONTH FROM CURRENT_DATE) THEN TRUE
-            ELSE FALSE
-        END AS current_month
-    FROM revenue_and_expenses re
-    ORDER BY re.month;
-    ";
+            re.*,
+            CASE 
+                WHEN re.month = EXTRACT(MONTH FROM CURRENT_DATE) THEN TRUE
+                ELSE FALSE
+            END AS current_month
+        FROM revenue_and_expenses re
+        ORDER BY re.month;
+        ";
 
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(':year', $year, \PDO::PARAM_INT);
