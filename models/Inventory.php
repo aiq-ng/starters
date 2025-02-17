@@ -867,25 +867,4 @@ class Inventory
         }
     }
 
-    public function commentOnItemHistory($itemStockId, $data)
-    {
-        $sql = "
-            INSERT INTO comments
-            (entity_id, entity_type, user_id, parent_id, comment)
-            VALUES (:entityId, :entityType, :userId, :parentId, :comment)
-            RETURNING id
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        $stmt->bindValue(':entityId', $itemStockId);
-        $stmt->bindValue(':entityType', 'item_stock_adjustment');
-        $stmt->bindValue(':userId', $data['user_id'] ?? null);
-        $stmt->bindValue(':parentId', $data['parent_id'] ?? null);
-        $stmt->bindValue(':comment', $data['comment'] ?? null);
-
-        $stmt->execute();
-
-        return $stmt->fetchColumn();
-    }
 }

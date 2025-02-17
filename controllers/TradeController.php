@@ -611,4 +611,34 @@ class TradeController extends BaseController
         }
     }
 
+    public function comment($id)
+    {
+
+        $data = $this->getRequestData();
+
+        $data['user_id'] = $_SESSION['user_id'];
+        $data['entity_type'] = 'audit_logs';
+
+        $result = $this->commentOnItemHistory($id, $data);
+
+        if ($result) {
+            $this->sendResponse('Success', 200, ['comment_id' => $result]);
+        } else {
+            $this->sendResponse('Failed to add comment', 500);
+        }
+    }
+
+    public function commentOnSalesHistory($id)
+    {
+        $this->authorizeRequest();
+        $this->comment($id);
+
+    }
+
+    public function commentOnPurchaseHistory($id)
+    {
+        $this->authorizeRequest();
+
+        $this->comment($id);
+    }
 }

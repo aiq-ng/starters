@@ -112,6 +112,8 @@ class InventoryController extends BaseController
             'date_received', 'expiry_date', 'quantity', 'unit_id'
         ];
 
+        error_log('Form data: ' . json_encode($formData));
+
         $dataToValidate = array_intersect_key($formData, array_flip($requiredFields));
 
         if (!$this->validateFields(...array_values($dataToValidate))) {
@@ -180,8 +182,9 @@ class InventoryController extends BaseController
         $data = $this->getRequestData();
 
         $data['user_id'] = $_SESSION['user_id'];
+        $data['entity_type'] = 'item_stock_adjustment';
 
-        $result = $this->inventory->commentOnItemHistory($id, $data);
+        $result = $this->commentOnItemHistory($id, $data);
 
         if ($result) {
             $this->sendResponse('Success', 200, ['comment_id' => $result]);

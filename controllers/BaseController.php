@@ -35,9 +35,10 @@ class BaseController
 
     protected function getRequestData()
     {
-        if (isset($_SERVER['CONTENT_TYPE']) &&
-            strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
+        $method = $_SERVER['REQUEST_METHOD'];
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
 
+        if (strpos($contentType, 'application/json') !== false) {
             $json = file_get_contents('php://input');
             $data = json_decode($json, true);
 
@@ -45,38 +46,77 @@ class BaseController
                 $this->sendResponse('Invalid JSON format', 400);
             }
 
-            // Filter out null or empty fields
             return array_filter($data, function ($value) {
                 return $value !== null && $value !== '';
             });
         }
 
-        // If not JSON, return $_POST and handle multiple file uploads
+        if ($method === 'PUT' && strpos($contentType, 'application/x-www-form-urlencoded') !== false) {
+            parse_str(file_get_contents("php://input"), $formData);
+            return ['form_data' => $formData, 'files' => []];
+        }
+
+        if ($method === 'PUT' && strpos($contentType, 'multipart/form-data') !== false) {
+            return $this->parseMultipartFormData();
+        }
+
+        return [
+            'form_data' => $_POST,
+            'files' => $_FILES
+        ];
+    }
+
+    protected function parseMultipartFormData()
+    {
+        $rawData = file_get_contents("php://input");
+
+        preg_match('/boundary=(.*)$/', $_SERVER['CONTENT_TYPE'], $matches);
+        $boundary = $matches[1] ?? null;
+
+        if (!$boundary) {
+            return ['form_data' => [], 'files' => []];
+        }
+
+        $blocks = preg_split("/-+$boundary/", $rawData);
+        $formData = [];
         $files = [];
-        foreach ($_FILES as $key => $fileArray) {
-            if (is_array($fileArray['name'])) {
-                foreach ($fileArray['name'] as $index => $fileName) {
-                    $files[$key][] = [
-                        'name' => $fileName,
-                        'type' => $fileArray['type'][$index],
-                        'tmp_name' => $fileArray['tmp_name'][$index],
-                        'error' => $fileArray['error'][$index],
-                        'size' => $fileArray['size'][$index],
+
+        foreach ($blocks as $block) {
+            if (empty(trim($block))) {
+                continue;
+            }
+
+            if (strpos($block, 'Content-Disposition: form-data;') !== false) {
+                preg_match('/name="([^"]+)"/', $block, $nameMatch);
+                $name = $nameMatch[1] ?? '';
+
+                if (strpos($block, 'filename=') !== false) {
+                    preg_match('/filename="([^"]+)"/', $block, $filenameMatch);
+                    $filename = $filenameMatch[1] ?? '';
+
+                    preg_match('/Content-Type: (.+)/', $block, $typeMatch);
+                    $fileType = trim($typeMatch[1] ?? '');
+
+                    $fileContent = substr($block, strpos($block, "\r\n\r\n") + 4, -2);
+
+                    $tmpFile = tempnam(sys_get_temp_dir(), 'php');
+                    file_put_contents($tmpFile, $fileContent);
+
+                    $files[$name] = [
+                        'name' => $filename,
+                        'type' => $fileType,
+                        'tmp_name' => $tmpFile,
+                        'error' => 0,
+                        'size' => strlen($fileContent),
                     ];
+                } else {
+                    $value = trim(substr($block, strpos($block, "\r\n\r\n") + 4, -2));
+                    $formData[$name] = $value;
                 }
-            } else {
-                $files[$key] = $fileArray; // Single file upload
             }
         }
 
-        $formData = array_filter($_POST, function ($value) {
-            return $value !== null && $value !== '';
-        });
-
-        return [
-            'form_data' => $formData,
-            'files' => $files
-        ];
+        return ['form_data' => $formData, 'files' => $files];
     }
 
     protected function storeRefreshToken($userId, $refreshToken)
@@ -251,6 +291,29 @@ class BaseController
             $this->sendResponse('success', 200, $response['data'], $response['meta']);
         }
     }
+
+    public function commentOnItemHistory($itemStockId, $data)
+    {
+        $sql = "
+            INSERT INTO comments
+            (entity_id, entity_type, user_id, parent_id, comment)
+            VALUES (:entityId, :entityType, :userId, :parentId, :comment)
+            RETURNING id
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        $stmt->bindValue(':entityId', $itemStockId);
+        $stmt->bindValue(':entityType', $data['entity_type'] ?? null);
+        $stmt->bindValue(':userId', $data['user_id'] ?? null);
+        $stmt->bindValue(':parentId', $data['parent_id'] ?? null);
+        $stmt->bindValue(':comment', $data['comment'] ?? null);
+
+        $stmt->execute();
+
+        return $stmt->fetchColumn();
+    }
+
 
     public function getGallery()
     {
