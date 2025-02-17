@@ -152,6 +152,106 @@ class BaseController
         }
     }
 
+    public function insertAuditLog($userId, $action, $entityType, $entityId, $entityData = [])
+    {
+        $encodedEntityData = json_encode($entityData);
+
+        $query = "
+            INSERT INTO audit_logs (user_id, action, entity_type, entity_id, entity_data)
+            VALUES (:user_id, :action, :entity_type, :entity_id, :entity_data)
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':user_id', $userId);
+        $stmt->bindParam(':action', $action);
+        $stmt->bindParam(':entity_type', $entityType);
+        $stmt->bindParam(':entity_id', $entityId);
+        $stmt->bindParam(':entity_data', $encodedEntityData);
+
+        $stmt->execute();
+    }
+
+    public function getAuditLogs()
+    {
+        $this->authorizeRequest();
+
+        $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        $pageSize = isset($_GET['page_size']) ? (int) $_GET['page_size'] : 10;
+        $filter = isset($_GET['filter']) ? $_GET['filter'] : null;
+
+        $offset = ($page - 1) * $pageSize;
+
+        $query = "
+            SELECT audit_logs.*, users.name as processed_by
+            FROM audit_logs
+            LEFT JOIN users ON audit_logs.user_id = users.id
+        ";
+
+        if ($filter) {
+            $query .= " WHERE audit_logs.entity_type = :filter";
+        }
+
+        $query .= "
+            ORDER BY created_at DESC
+            LIMIT :page_size OFFSET :offset
+        ";
+
+        $stmt = $this->db->prepare($query);
+
+        if ($filter) {
+            $stmt->bindParam(':filter', $filter);
+        }
+        $stmt->bindParam(':page_size', $pageSize);
+        $stmt->bindParam(':offset', $offset);
+
+        $stmt->execute();
+
+        $logs = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        foreach ($logs as &$log) {
+            if (!empty($log['entity_data'])) {
+                $log['entity_data'] = json_decode($log['entity_data'], true);
+            }
+        }
+
+        $countQuery = "
+            SELECT COUNT(*) as total
+            FROM audit_logs
+            LEFT JOIN users ON audit_logs.user_id = users.id
+        ";
+
+        if ($filter) {
+            $countQuery .= " WHERE audit_logs.entity_type = :filter";
+        }
+
+        $countStmt = $this->db->prepare($countQuery);
+        if ($filter) {
+            $countStmt->bindParam(':filter', $filter);
+        }
+        $countStmt->execute();
+        $totalItems = $countStmt->fetch(\PDO::FETCH_ASSOC)['total'];
+
+        $meta = [
+            'total_data' => (int) $totalItems,
+            'total_pages' => ceil($totalItems / $pageSize),
+            'page_size' => (int) $pageSize,
+            'previous_page' => $page > 1 ? (int) $page - 1 : null,
+            'current_page' => (int) $page,
+            'next_page' => (int) $page + 1,
+        ];
+
+        $response = [
+            'data' => $logs,
+            'meta' => $meta
+        ];
+
+        if (empty($logs)) {
+            $this->sendResponse('No audit logs found', 200);
+        } else {
+            $this->sendResponse('success', 200, $response['data'], $response['meta']);
+        }
+    }
+
     public function getGallery()
     {
         $this->authorizeRequest();

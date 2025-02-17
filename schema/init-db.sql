@@ -496,6 +496,16 @@ CREATE TABLE sales_orders (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE audit_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    entity_id UUID,
+    entity_type VARCHAR(50),
+    action VARCHAR(50) CHECK (action IN ('create', 'update', 'delete')),
+    entity_data JSONB,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE order_ratings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id UUID REFERENCES sales_orders(id) ON DELETE CASCADE,
@@ -757,3 +767,38 @@ CREATE TRIGGER sales_order_balance_update
 AFTER INSERT OR UPDATE OR DELETE ON sales_orders
 FOR EACH ROW
 EXECUTE FUNCTION update_customer_balance();
+
+-- Step 1: Create a function to send a NOTIFY event
+CREATE OR REPLACE FUNCTION notify_availability_change()
+RETURNS TRIGGER AS $$
+DECLARE
+    payload JSON;
+BEGIN
+    -- Check if availability changed
+    IF NEW.availability IS DISTINCT FROM OLD.availability 
+       AND (NEW.availability = 'low stock' OR NEW.availability = 'out of stock') THEN
+       
+       -- Prepare JSON payload with item details
+       payload := json_build_object(
+           'item_id', NEW.id,
+           'name', NEW.name,
+           'sku', NEW.sku,
+           'availability', NEW.availability,
+           'updated_at', NEW.updated_at
+       );
+
+       -- Send NOTIFY event
+       PERFORM pg_notify('availability_channel', payload::text);
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Step 2: Create a trigger that fires on UPDATE
+CREATE TRIGGER availability_update_trigger
+AFTER UPDATE ON items
+FOR EACH ROW
+WHEN (OLD.availability IS DISTINCT FROM NEW.availability)
+EXECUTE FUNCTION notify_availability_change();
+

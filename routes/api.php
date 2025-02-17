@@ -53,6 +53,7 @@ $routes = [
         '/chefs' => [$kitchenController, 'getChefs'],
         '/gallery' => [$kitchenController, 'getGallery'],
         '/notifications/' => [$adminController, 'getNotifications'],
+        '/logs' => [$adminController, 'getAuditLogs'],
         '/work_leave_qualifications' => [$humanResourceController, 'getWorkLeaveQualifications'],
         '/dashboard/business' => [$dashboardController, 'businessOverview'],
         '/dashboard/metrics' => [$adminController, 'getDashboardMetrics'],

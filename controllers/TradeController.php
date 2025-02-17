@@ -75,6 +75,19 @@ class TradeController extends BaseController
 
         if ($invoice) {
 
+            $this->insertAuditLog(
+                userId: $data['user_id'],
+                entityId: $invoice['id'],
+                entityType: 'purchase_orders',
+                action: 'create',
+                entityData: [
+                    'reference_number' => $invoice['reference_number'] ?? null,
+                    'vendor_id' => $invoice['vendor_id'] ?? null,
+                    'total' => $invoice['total'] ?? null,
+                    'status' => $invoice['status'] ?? null,
+                ]
+            );
+
             $user = $this->findRecord('users', $data['user_id']);
             $usersToNotify = BaseController::getUserByRole('Admin');
 
@@ -126,6 +139,20 @@ class TradeController extends BaseController
             $invoice = $this->purchase->updatePurchaseOrder($purchaseId, $data);
 
             if ($invoice) {
+
+                $this->insertAuditLog(
+                    userId: $data['user_id'],
+                    entityId: $purchaseId,
+                    entityType: 'purchase_orders',
+                    action: 'update',
+                    entityData: [
+                        'reference_number' => $invoice['reference_number'] ?? null,
+                        'vendor_id' => $invoice['vendor_id'] ?? null,
+                        'total' => $invoice['total'] ?? null,
+                        'status' => $invoice['status'] ?? null,
+                    ]
+                );
+
                 $this->sendResponse('success', 200, $invoice);
             } else {
                 $this->sendResponse('Failed to update purchase', 500);
@@ -144,6 +171,15 @@ class TradeController extends BaseController
         $ids = isset($data['ids']) ? (array) $data['ids'] : [];
 
         $deleted = $this->purchase->deletePurchaseOrder($ids);
+
+        foreach ($ids as $id) {
+            $this->insertAuditLog(
+                userId: $_SESSION['user_id'],
+                entityId: $id,
+                entityType: 'purchase_orders',
+                action: 'delete'
+            );
+        }
 
         $status = $deleted ? 200 : 500;
         $message = $deleted
@@ -173,6 +209,19 @@ class TradeController extends BaseController
         try {
             $invoice = $this->sale->updateSale($saleId, $data);
 
+            $this->insertAuditLog(
+                userId: $data['user_id'],
+                entityId: $saleId,
+                entityType: 'sales_orders',
+                action: 'update',
+                entityData: [
+                    'reference_number' => $invoice['reference_number'] ?? null,
+                    'customer_id' => $invoice['customer_id'] ?? null,
+                    'total' => $invoice['total'] ?? null,
+                    'status' => $invoice['status'] ?? null,
+                ]
+            );
+
             if ($invoice) {
                 $this->sendResponse('success', 200, $invoice);
             } else {
@@ -194,6 +243,14 @@ class TradeController extends BaseController
         $deleted = $this->sale->deleteSalesOrder($ids);
 
         if ($deleted) {
+            foreach ($ids as $id) {
+                $this->insertAuditLog(
+                    userId: $_SESSION['user_id'],
+                    entityId: $id,
+                    entityType: 'sales_orders',
+                    action: 'delete'
+                );
+            }
             $this->sendResponse('Sales Order deleted successfully', 200);
         } else {
             $this->sendResponse('Failed to delete Sales Order', 500);
@@ -324,13 +381,24 @@ class TradeController extends BaseController
 
         $data['user_id'] = $_SESSION['user_id'];
 
-        error_log(json_encode($data));
-
         $saleId = $this->sale->createSale($data);
 
         if (!$saleId) {
             $this->sendResponse('Failed to create sale', 500);
         }
+
+        $this->insertAuditLog(
+            userId: $data['user_id'],
+            entityId: $saleId,
+            entityType: 'sales_orders',
+            action: 'create',
+            entityData: [
+                'reference_number' => $data['reference_number'] ?? null,
+                'customer_id' => $data['customer_id'] ?? null,
+                'total' => $data['total'] ?? null,
+                'status' => $data['status'] ?? null,
+            ]
+        );
 
         $user = $this->findRecord('users', $data['user_id']);
         $usersToNotify = BaseController::getUserByRole('Admin');
