@@ -55,7 +55,6 @@ class BaseController
             return $this->parseMultipartFormData();
         }
 
-        // Handle standard form data and file uploads for POST and other methods
         $files = [];
         foreach ($_FILES as $key => $fileArray) {
             if (is_array($fileArray['name'])) {
@@ -85,15 +84,10 @@ class BaseController
 
     protected function parseMultipartFormData()
     {
-        // Get raw input data from PHP input stream
         $inputStream = fopen("php://input", "r");
         $rawData = stream_get_contents($inputStream);
         fclose($inputStream);
 
-        // Debug: Log raw data for analysis
-        error_log("Raw data from PUT request: " . $rawData);
-
-        // Extract the boundary from the Content-Type header
         preg_match('/boundary=(.*)$/', $_SERVER['CONTENT_TYPE'], $matches);
         $boundary = $matches[1] ?? null;
 
@@ -102,7 +96,6 @@ class BaseController
             return ['form_data' => [], 'files' => []];
         }
 
-        // Split the raw data into blocks based on the boundary
         $blocks = explode("--" . $boundary, $rawData);
         $formData = [];
         $files = [];
@@ -112,12 +105,10 @@ class BaseController
                 continue;
             }
 
-            // Check for form-data content disposition
             if (strpos($block, 'Content-Disposition: form-data;') !== false) {
                 preg_match('/name="([^"]+)"/', $block, $nameMatch);
                 $name = $nameMatch[1] ?? '';
 
-                // Check if this part contains a file upload
                 if (strpos($block, 'filename=') !== false) {
                     preg_match('/filename="([^"]+)"/', $block, $filenameMatch);
                     $filename = $filenameMatch[1] ?? '';
@@ -125,18 +116,18 @@ class BaseController
                     preg_match('/Content-Type: (.+)/', $block, $typeMatch);
                     $fileType = trim($typeMatch[1] ?? '');
 
-                    // Extract file content
                     $fileContentStart = strpos($block, "\r\n\r\n") + 4;
                     $fileContent = substr($block, $fileContentStart, strrpos($block, "\r\n") - $fileContentStart);
 
-                    // Debug: Log file content length
-                    error_log("File content length: " . strlen($fileContent));
-
-                    // Save the file to a temporary location
                     $tmpFile = tempnam(sys_get_temp_dir(), 'php');
                     file_put_contents($tmpFile, $fileContent);
 
-                    $files[$name] = [
+                    // Wrap file data in an array to handle single and multiple files uniformly
+                    if (!isset($files[$name])) {
+                        $files[$name] = [];
+                    }
+
+                    $files[$name][] = [
                         'name' => $filename,
                         'type' => $fileType,
                         'tmp_name' => $tmpFile,
@@ -144,16 +135,11 @@ class BaseController
                         'size' => strlen($fileContent),
                     ];
                 } else {
-                    // Handle regular form data
                     $value = trim(substr($block, strpos($block, "\r\n\r\n") + 4, -2));
                     $formData[$name] = $value;
                 }
             }
         }
-
-        // Debug: Log files and form data
-        error_log("Parsed form data: " . print_r($formData, true));
-        error_log("Parsed files: " . print_r($files, true));
 
         return ['form_data' => $formData, 'files' => $files];
     }

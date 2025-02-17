@@ -58,9 +58,6 @@ class InventoryController extends BaseController
         $data = $this->getRequestData();
         $formData = $data['form_data'];
 
-        error_log('Form data: ' . json_encode($formData));
-        error_log('Files: ' . json_encode($data['files']));
-
         $mediaLinks = [];
         if (!empty($formData['image_url'])) {
             $mediaLinks = is_array($formData['image_url'])
@@ -107,11 +104,11 @@ class InventoryController extends BaseController
 
         $data = $this->getRequestData();
 
-        $formData = $data['form_data'];
-        $mediaFiles = $data['files']['media'] ?? [];
+        $mediaFiles = $data['files']['media'] ?? $data['files']['media[]'] ?? [];
 
-        error_log('Media files: ' . json_encode($mediaFiles));
-        error_log('Form data: ' . json_encode($formData));
+        if ($mediaFiles && !is_array($mediaFiles)) {
+            $mediaFiles = [$mediaFiles];
+        }
 
         $mediaLinks = [];
         if (!empty($mediaFiles)) {
@@ -120,15 +117,18 @@ class InventoryController extends BaseController
             if ($mediaLinks === false) {
                 $this->sendResponse('Error uploading media files', 500);
             }
-
         }
-        if (isset($formData['image_url'])) {
-            $imageUrls = is_array($formData['image_url'])
-                ? $formData['image_url']
-                : [$formData['image_url']];
 
-            $mediaLinks = array_merge($mediaLinks, $imageUrls);
+        $formData = $data['form_data'];
+        $imageUrls = $formData['image_url'] ?? $formData['image_url[]'] ?? [];
+
+        if (is_string($imageUrls)) {
+            $imageUrls = json_decode($imageUrls, true);
         }
+
+        $imageUrls = is_array($imageUrls) ? $imageUrls : [$imageUrls];
+
+        $mediaLinks = array_merge($mediaLinks, $imageUrls);
 
         $formData['manager_id'] = $formData['user_id'] ?? $_SESSION['user_id'] ?? null;
         $formData['source_id'] = $formData['collector_id'] ?? $formData['vendor_id'] ?? $_SESSION['user_id'] ?? null;
