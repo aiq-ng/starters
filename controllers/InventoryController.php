@@ -107,19 +107,6 @@ class InventoryController extends BaseController
         $formData = $data['form_data'];
         $mediaFiles = $data['files']['media'] ?? [];
 
-        $requiredFields = [
-            'name', 'department_id', 'category_id', 'manufacturer_id',
-            'date_received', 'expiry_date', 'quantity', 'unit_id'
-        ];
-
-        error_log('Form data: ' . json_encode($formData));
-
-        $dataToValidate = array_intersect_key($formData, array_flip($requiredFields));
-
-        if (!$this->validateFields(...array_values($dataToValidate))) {
-            $this->sendResponse('Invalid input data', 400);
-        }
-
         $mediaLinks = [];
         if (!empty($mediaFiles)) {
             $mediaLinks = $this->mediaHandler->handleMediaFiles($mediaFiles);
@@ -130,9 +117,9 @@ class InventoryController extends BaseController
 
         }
 
-        $formData['manager_id'] = $formData['user_id'] ?? $_SESSION['user_id'];
-        $formData['source_id'] = $formData['collector_id'] ?? $formData['vendor_id'] ?? $_SESSION['user_id'];
-        $formData['source_department_id'] = $formData['user_department_id'] ?? $formData['department_id'];
+        $formData['manager_id'] = $formData['user_id'] ?? $_SESSION['user_id'] ?? null;
+        $formData['source_id'] = $formData['collector_id'] ?? $formData['vendor_id'] ?? $_SESSION['user_id'] ?? null;
+        $formData['source_department_id'] = $formData['user_department_id'] ?? $formData['department_id'] ?? null;
 
         $result = $this->inventory->updateItem($id, $formData, $mediaLinks);
 
