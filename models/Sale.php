@@ -912,24 +912,24 @@ class Sale extends Kitchen
         return $stmt->fetchColumn();
     }
 
-    public function updateSale($data)
+    public function updateSale($id, $data)
     {
         $this->db->beginTransaction();
 
         try {
-            $this->updateSalesOrder($data);
-            $this->updateSalesOrderItems($data['sales_order_id'], $data['items']);
+            $this->updateSalesOrder($id, $data);
+            $this->updateSalesOrderItems($id, $data['items']);
 
             $this->db->commit();
 
-            return $data['sales_order_id'];
+            return $id;
         } catch (\Exception $e) {
             $this->db->rollBack();
             throw $e;
         }
     }
 
-    private function updateSalesOrder($data)
+    private function updateSalesOrder($id, $data)
     {
         $query = "
             UPDATE sales_orders
@@ -954,7 +954,7 @@ class Sale extends Kitchen
         $stmt = $this->db->prepare($query);
 
         $stmt->execute([
-            ':sales_order_id' => $data['sales_order_id'],
+            ':sales_order_id' => $id,
             ':order_type' => $data['order_type'] ?? null,
             ':order_title' => $data['order_title'] ?? null,
             ':payment_term_id' => $data['payment_term_id'] ?? null,
