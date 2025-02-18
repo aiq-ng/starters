@@ -428,7 +428,7 @@ class Accounting extends Kitchen
         LEFT JOIN 
             vendors v ON po.vendor_id = v.id
         WHERE 
-            po.status IN ('received', 'overdue')";
+            po.status IN ('received', 'overdue', 'paid')";
 
         if (!empty($conditions)) {
             $sql .= " AND " . implode(" AND ", $conditions);
