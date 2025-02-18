@@ -54,6 +54,7 @@ $routes = [
         '/gallery' => [$kitchenController, 'getGallery'],
         '/notifications/' => [$adminController, 'getNotifications'],
         '/logs' => [$adminController, 'getAuditLogs'],
+        '/search' => [$adminController, 'search'],
         '/work_leave_qualifications' => [$humanResourceController, 'getWorkLeaveQualifications'],
         '/dashboard/business' => [$dashboardController, 'businessOverview'],
         '/dashboard/metrics' => [$adminController, 'getDashboardMetrics'],

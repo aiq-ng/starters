@@ -11,6 +11,7 @@ use Services\EmailService;
 use Services\NotificationService;
 use Models\Purchase;
 use Models\Sale;
+use Models\Search;
 
 class BaseController
 {
@@ -21,6 +22,7 @@ class BaseController
     protected $mediaHandler;
     protected $emailService;
     protected $notify;
+    protected $search;
 
     public function __construct()
     {
@@ -31,6 +33,7 @@ class BaseController
         $this->mediaHandler = new MediaHandler();
         $this->emailService = new EmailService();
         $this->notify = new NotificationService();
+        $this->search = new Search();
     }
 
     protected function getRequestData()
@@ -397,6 +400,26 @@ class BaseController
         echo json_encode($response);
         exit;
     }
+
+    public function search()
+    {
+        $this->authorizeRequest();
+
+        $filters = [
+            'search' => isset($_GET['query']) ? $_GET['query'] : null,
+            'page' => isset($_GET['page']) ? $_GET['page'] : 1,
+            'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
+        ];
+
+        $data = $this->search->globalSearch(array_filter($filters));
+
+        if (!empty($data['data'])) {
+            $this->sendResponse('success', 200, $data['data'], $data['meta']);
+        } else {
+            $this->sendResponse('data not found', 200);
+        }
+    }
+
 
     public function sendNotification()
     {
