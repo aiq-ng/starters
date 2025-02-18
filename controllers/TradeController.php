@@ -61,10 +61,6 @@ class TradeController extends BaseController
 
         $data = $this->getRequestData();
 
-        if (!$this->validateFields($data['vendor_id'])) {
-            $this->sendResponse('Invalid fields', 400);
-        }
-
         if (!is_array($data['items']) || empty($data['items'])) {
             $this->sendResponse('Items should be an array and not empty', 400);
         }
@@ -124,10 +120,6 @@ class TradeController extends BaseController
         $this->authorizeRequest();
 
         $data = $this->getRequestData();
-
-        if (!$this->validateFields($data['vendor_id'])) {
-            $this->sendResponse('Invalid fields', 400);
-        }
 
         if (!is_array($data['items']) || empty($data['items'])) {
             $this->sendResponse('Items should be an array and not empty', 400);
@@ -196,9 +188,6 @@ class TradeController extends BaseController
 
         $data = $this->getRequestData();
 
-        if (!$this->validateFields($data['vendor_id'])) {
-            $this->sendResponse('Invalid fields', 400);
-        }
 
         if (!is_array($data['items']) || empty($data['items'])) {
             $this->sendResponse('Items should be an array and not empty', 400);
