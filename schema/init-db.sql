@@ -11,6 +11,12 @@ CREATE TABLE permissions (
     description TEXT
 );
 
+-- Salutation
+CREATE TABLE salutations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(50) UNIQUE NOT NULL
+);
+
 -- Currencies
 CREATE TABLE currencies (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -236,8 +242,7 @@ CREATE TABLE price_lists (
 -- Vendors
 CREATE TABLE vendors (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    salutation VARCHAR(10) 
-        CHECK (salutation IN ('Mr', 'Mrs', 'Miss', 'Dr', 'Prof')),
+    salutation VARCHAR(50),
     first_name VARCHAR(255),
     last_name VARCHAR(255),
     company_name VARCHAR(255),

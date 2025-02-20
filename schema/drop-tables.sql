@@ -40,6 +40,7 @@ DROP TABLE IF EXISTS payment_methods CASCADE;
 DROP TABLE IF EXISTS vendor_categories CASCADE;
 DROP TABLE IF EXISTS user_permissions CASCADE;
 DROP TABLE IF EXISTS loans CASCADE;
+DROP TABLE IF EXISTS salutations CASCADE;
 
 -- Core Entities
 DROP TABLE IF EXISTS refresh_tokens CASCADE;

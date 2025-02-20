@@ -12,6 +12,15 @@ INSERT INTO roles (name) VALUES
 ('Finance'),
 ('Chef');
 
+-- Seed data for salutations
+INSERT INTO salutations (name) VALUES
+('Mr.'),
+('Mrs.'),
+('Miss'),
+('Dr.'),
+('Prof.'),
+('Engr.');
+
 INSERT INTO permissions (name, description) VALUES
 ('sales', 'View and manage sales orders'),
 ('procurement', 'View and manage purchase orders'),
