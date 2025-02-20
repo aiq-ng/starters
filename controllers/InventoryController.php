@@ -123,11 +123,14 @@ class InventoryController extends BaseController
         $imageUrls = $formData['image_url'] ?? $formData['image_url[]'] ?? [];
 
         if (is_string($imageUrls)) {
-            $imageUrls = json_decode($imageUrls, true);
+            // Remove trailing commas before decoding
+            $imageUrls = rtrim($imageUrls, ',');
+
+            $decoded = json_decode($imageUrls, true);
+            $imageUrls = $decoded !== null ? $decoded : explode(',', $imageUrls);
         }
 
-        $imageUrls = is_array($imageUrls) ? $imageUrls : [$imageUrls];
-
+        $imageUrls = array_filter(array_map('trim', (array) $imageUrls));
         $mediaLinks = array_merge($mediaLinks, $imageUrls);
 
         $formData['manager_id'] = $formData['user_id'] ?? $_SESSION['user_id'] ?? null;
