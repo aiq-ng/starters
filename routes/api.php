@@ -51,6 +51,7 @@ $routes = [
         '/taxes' => [$adminController, 'getTaxes'],
         '/customers' => [$customerController, 'index'],
         '/chefs' => [$kitchenController, 'getChefs'],
+        '/riders' => [$kitchenController, 'getRiders'],
         '/gallery' => [$kitchenController, 'getGallery'],
         '/notifications/' => [$adminController, 'getNotifications'],
         '/logs' => [$adminController, 'getAuditLogs'],
@@ -146,6 +147,7 @@ $routes = [
         '/inventory/items/stocks/([a-fA-F0-9-]{36})' => [$inventoryController, 'adjustStock'],
         '/inventory/history/comment/([a-fA-F0-9-]{36})' => [$inventoryController, 'comment'],
         '/sales/orders/invoice/([a-fA-F0-9-]{36})' => [$tradeController, 'sendSaleInvoice'],
+        '/sales/orders/([a-fA-F0-9-]{36})/void' => [$tradeController, 'voidSale'],
         '/purchases/orders/invoice/([a-fA-F0-9-]{36})' => [$tradeController, 'sendPurchaseInvoice'],
         '/rate/([a-fA-F0-9-]{36})' => [$tradeController, 'rateOrder'],
 

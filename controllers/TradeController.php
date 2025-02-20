@@ -67,6 +67,8 @@ class TradeController extends BaseController
 
         $data['user_id'] = $_SESSION['user_id'];
 
+        error_log('Data: ' . json_encode($data));
+
         $invoice = $this->purchase->createPurchase($data);
 
         if ($invoice) {
@@ -128,6 +130,7 @@ class TradeController extends BaseController
         $data['user_id'] = $_SESSION['user_id'];
 
         try {
+            error_log('Data: ' . json_encode($data));
             $invoice = $this->purchase->updatePurchaseOrder($purchaseId, $data);
 
             if ($invoice) {
@@ -192,6 +195,8 @@ class TradeController extends BaseController
         $data['user_id'] = $_SESSION['user_id'];
 
         try {
+
+            error_log('Data: ' . json_encode($data));
             $invoice = $this->sale->updateSale($saleId, $data);
 
             $this->insertAuditLog(
@@ -366,6 +371,7 @@ class TradeController extends BaseController
 
         $data['user_id'] = $_SESSION['user_id'];
 
+        error_log('Data: ' . json_encode($data));
         $saleId = $this->sale->createSale($data);
 
         if (!$saleId) {
@@ -593,6 +599,19 @@ class TradeController extends BaseController
             $this->sendResponse('success', 200, $graph['data'], $graph['meta']);
         } else {
             $this->sendResponse('Graph not found', 404);
+        }
+    }
+
+    public function voidSale($salesId)
+    {
+        $this->authorizeRequest();
+
+        $result = $this->sale->voidSalesOrder($salesId);
+
+        if ($result) {
+            $this->sendResponse('success', 200);
+        } else {
+            $this->sendResponse('Failed to void sales order', 500);
         }
     }
 

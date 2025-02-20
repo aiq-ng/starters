@@ -491,7 +491,7 @@ CREATE TABLE sales_orders (
     total DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'pending' 
         -- upcoming for services
-        CHECK (status IN ('pending', 'cancelled', 'new order', 'in progress', 'in delivery', 'delivered')),
+        CHECK (status IN ('pending', 'void', 'new order', 'in progress', 'in delivery', 'delivered')),
     payment_status VARCHAR(50) DEFAULT 'unpaid' 
         CHECK (payment_status IN ('paid', 'unpaid')),
     sent_to_kitchen BOOLEAN DEFAULT FALSE,
@@ -528,6 +528,16 @@ CREATE TABLE chef_assignments (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT unique_chef_order UNIQUE (chef_id, order_id)
+);
+
+-- Driver Assignments
+CREATE TABLE driver_assignments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    driver_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    order_id UUID REFERENCES sales_orders(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_driver_order UNIQUE (driver_id, order_id)
 );
 
 -- Sales Order Items
@@ -771,38 +781,3 @@ CREATE TRIGGER sales_order_balance_update
 AFTER INSERT OR UPDATE OR DELETE ON sales_orders
 FOR EACH ROW
 EXECUTE FUNCTION update_customer_balance();
-
--- Step 1: Create a function to send a NOTIFY event
-CREATE OR REPLACE FUNCTION notify_availability_change()
-RETURNS TRIGGER AS $$
-DECLARE
-    payload JSON;
-BEGIN
-    -- Check if availability changed
-    IF NEW.availability IS DISTINCT FROM OLD.availability 
-       AND (NEW.availability = 'low stock' OR NEW.availability = 'out of stock') THEN
-       
-       -- Prepare JSON payload with item details
-       payload := json_build_object(
-           'item_id', NEW.id,
-           'name', NEW.name,
-           'sku', NEW.sku,
-           'availability', NEW.availability,
-           'updated_at', NEW.updated_at
-       );
-
-       -- Send NOTIFY event
-       PERFORM pg_notify('availability_channel', payload::text);
-    END IF;
-    
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Step 2: Create a trigger that fires on UPDATE
-CREATE TRIGGER availability_update_trigger
-AFTER UPDATE ON items
-FOR EACH ROW
-WHEN (OLD.availability IS DISTINCT FROM NEW.availability)
-EXECUTE FUNCTION notify_availability_change();
-

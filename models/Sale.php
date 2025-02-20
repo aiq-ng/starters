@@ -858,14 +858,12 @@ class Sale extends Kitchen
     private function insertSalesOrderItem($salesOrderId, $items)
     {
         $query = "
-    INSERT INTO sales_order_items 
-    (sales_order_id, item_id, quantity, price, tax_id) 
-    VALUES (:sales_order_id, :item_id, :quantity, :price, :tax_id);
-    ";
+        INSERT INTO sales_order_items 
+        (sales_order_id, item_id, quantity, price, tax_id) 
+        VALUES (:sales_order_id, :item_id, :quantity, :price, :tax_id);
+        ";
 
         $stmt = $this->db->prepare($query);
-        $taxId = $this->getTaxId('VAT (7.50)');
-
         try {
             foreach ($items as $item) {
                 $item = array_filter($item, function ($value) {
@@ -882,7 +880,7 @@ class Sale extends Kitchen
                             : $this->getPrice($item['item_id']),
                         ':tax_id' => isset($item['tax_id']) && $item['tax_id'] > 0
                             ? $item['tax_id']
-                            : $taxId
+                            : null
                     ]);
                 }
             }
@@ -986,7 +984,6 @@ class Sale extends Kitchen
 
         $stmt = $this->db->prepare($query);
 
-        $taxId = $this->getTaxId('VAT (7.50)');
 
         foreach ($items as $item) {
             $item = array_filter($item, function ($value) {
@@ -999,7 +996,7 @@ class Sale extends Kitchen
                     ':item_id' => $item['item_id'],
                     ':quantity' => $item['quantity'],
                     ':price' => $item['price'],
-                    ':tax_id' => $item['tax_id'] ?? $taxId
+                    ':tax_id' => $item['tax_id'] ?? null
                 ]);
             }
         }
@@ -1240,6 +1237,31 @@ class Sale extends Kitchen
         } catch (\PDOException $e) {
             error_log("Database error in updateSentToKitchen: " . $e->getMessage());
             throw new \Exception("An error occurred while updating sent_to_kitchen status.");
+        }
+    }
+
+    public function voidSalesOrder($orderId)
+    {
+        try {
+            $query = "
+                UPDATE sales_orders
+                SET status = 'void'
+                WHERE id = :order_id
+                RETURNING id
+            ";
+
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':order_id', $orderId);
+            $stmt->execute();
+
+            return $stmt->fetchColumn();
+
+        } catch (\PDOException $e) {
+            error_log("Database error in voidSalesOrder: " . $e->getMessage());
+            throw new \Exception("An error occurred while voiding sales order.");
+        } catch (\Exception $e) {
+            error_log("Error in voidSalesOrder: " . $e->getMessage());
+            throw new \Exception("An error occurred while voiding sales order.");
         }
     }
 

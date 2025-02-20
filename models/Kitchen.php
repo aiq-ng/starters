@@ -36,6 +36,26 @@ class Kitchen
         }
     }
 
+    public function getRiders($roleId)
+    {
+        $query = "SELECT u.id, u.name, COUNT(da.order_id) AS total_assignments 
+              FROM users u
+              LEFT JOIN driver_assignments da ON u.id = da.driver_id
+              WHERE u.role_id = :role_id
+              GROUP BY u.id, u.name";
+
+        $stmt = $this->db->prepare($query);
+
+        try {
+            $stmt->bindValue(':role_id', $roleId);
+            $stmt->execute();
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            return $result;
+        } catch (\Exception $e) {
+            throw new \Exception("Failed to fetch drivers: " . $e->getMessage());
+        }
+    }
+
 
     public function getNewOrders($filters = [])
     {
@@ -62,9 +82,10 @@ class Kitchen
             SELECT so.id,
                 so.order_id,
                 so.order_title,
+                so.processed_by AS sales_rep_id,
+		        u.name AS sales_rep_name,
                 c.display_name AS customer_name,
-		so.processed_by AS sales_rep,
-		CONCAT(u.firstname, ' ', u.lastname) AS sales_rep_name,
+                d.name AS driver_name,
                 so.order_type,
                 so.created_at AS arrival_time,
                 CONCAT(so.delivery_date, ' ', so.delivery_time) AS delivery_time,
@@ -79,11 +100,13 @@ class Kitchen
                     )
 		) AS items,
 		so.created_at
-            FROM sales_orders so
-            LEFT JOIN customers c ON so.customer_id = c.id
-            LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
+        FROM sales_orders so
+        LEFT JOIN customers c ON so.customer_id = c.id
+        LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
 	    LEFT JOIN price_lists p ON soi.item_id = p.id
-	    LEFT JOIN users u ON so.processed_by = u.id
+        LEFT JOIN users u ON so.processed_by = u.id
+        LEFT JOIN driver_assignments da ON so.id = da.order_id
+        LEFT JOIN users d ON da.driver_id = d.id
             WHERE 1=1
         ";
 
@@ -120,8 +143,8 @@ class Kitchen
 
         $query .= "
             GROUP BY so.id, c.display_name, c.email, so.order_id, so.order_title,
-                    so.order_type, so.discount, so.delivery_charge, so.total, u.firstname, u.lastname, 
-                    so.created_at, so.delivery_date, so.status, so.processed_by
+                    so.order_type, so.discount, so.delivery_charge, so.total, 
+                    so.created_at, so.delivery_date, so.status, so.processed_by, u.name, d.name
             ORDER BY so.$sortBy $order
             LIMIT :page_size OFFSET :offset
         ";
@@ -232,89 +255,87 @@ class Kitchen
 
     public function assignOrder($orderId, $userId)
     {
-        $query = "INSERT INTO chef_assignments (order_id, chef_id) VALUES (:order_id, :chef_id)";
+        $query = "INSERT INTO driver_assignments (order_id, driver_id) VALUES (:order_id, :driver_id)";
 
         $stmt = $this->db->prepare($query);
 
         try {
             $stmt->execute([
                 ':order_id' => $orderId,
-                ':chef_id' => $userId,
+                ':driver_id' => $userId,
             ]);
         } catch (\Exception $e) {
             throw new \Exception("Failed to assign order: " . $e->getMessage());
         }
     }
 
-    public function getAssignedOrders($chefId, $page = 1, $pageSize = 100)
-    {
-        return $this->getChefAssignedOrders($chefId, $page, $pageSize);
-    }
-
-    public function getAllAssignedOrders($chefId = null, $page = 1, $pageSize = 100)
-    {
-        if ($chefId !== null) {
-            return $this->getChefAssignedOrders($chefId, $page, $pageSize);
-        }
-        return $this->getChefAssignedOrders(null, $page, $pageSize);
-    }
-
-    public function getChefAssignedOrders($chefId = null, $page = 1, $pageSize = 100)
+    public function getOrders($driverId = null, $status = null, $page = 1, $pageSize = 100)
     {
         $offset = ($page - 1) * $pageSize;
 
-        $condition = $chefId
-            ? "WHERE ca.chef_id = :chef_id AND so.id IS NOT NULL"
-            : "WHERE so.id IS NOT NULL";
+        $conditions = ["so.id IS NOT NULL"];
+        $params = [];
 
-        // Query to get total count before applying pagination
+        if ($driverId) {
+            $conditions[] = "da.driver_id = :driver_id";
+            $params[':driver_id'] = $driverId;
+        }
+
+        if ($status) {
+            $conditions[] = "so.status = :status";
+            $params[':status'] = $status;
+        }
+
+        $conditionString = "WHERE " . implode(" AND ", $conditions);
+
         $countQuery = "
-        SELECT COUNT(DISTINCT so.id) AS total_items
-        FROM chef_assignments ca
-        LEFT JOIN sales_orders so ON so.id = ca.order_id
-        {$condition}
-    ";
+            SELECT COUNT(DISTINCT so.id) AS total_items
+            FROM sales_orders so
+            LEFT JOIN driver_assignments da ON da.order_id = so.id
+            {$conditionString}
+        ";
 
         $countStmt = $this->db->prepare($countQuery);
-        if ($chefId) {
-            $countStmt->bindValue(':chef_id', $chefId, \PDO::PARAM_INT);
+        foreach ($params as $key => $value) {
+            $countStmt->bindValue($key, $value, is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR);
         }
         $countStmt->execute();
         $totalItems = $countStmt->fetchColumn();
 
         $query = "
             SELECT so.id,
-                   so.order_id,
-                   u.firstname AS chef_name,
-                   so.delivery_time,
-                   json_agg(
-                       json_build_object(
-                           'item_id', p.id,
-                           'item_name', p.item_details,
-                           'quantity', soi.quantity
-                       )
-                   ) AS items
-            FROM chef_assignments ca
-            LEFT JOIN sales_orders so ON so.id = ca.order_id
+                so.order_id,
+                u.id AS driver_id,
+                u.name AS driver_name,
+                so.delivery_time,
+                json_agg(
+                   json_build_object(
+                       'item_id', p.id,
+                       'item_name', p.item_details,
+                       'quantity', soi.quantity
+                   )
+                ) AS items
+            FROM sales_orders so
+            LEFT JOIN driver_assignments da ON da.order_id = so.id
             LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
             LEFT JOIN price_lists p ON soi.item_id = p.id
-            LEFT JOIN users u ON ca.chef_id = u.id
-            {$condition}
+            LEFT JOIN users u ON da.driver_id = u.id
+            {$conditionString}
             GROUP BY so.id, so.order_id, so.delivery_date, so.delivery_time, 
-                     u.firstname
+                     u.name, u.id
             ORDER BY so.created_at DESC
             LIMIT :page_size OFFSET :offset
         ";
 
         $stmt = $this->db->prepare($query);
 
-        try {
-            if ($chefId) {
-                $stmt->bindValue(':chef_id', $chefId);
-            }
-            $stmt->bindValue(':page_size', $pageSize);
-            $stmt->bindValue(':offset', $offset);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR);
+        }
+        $stmt->bindValue(':page_size', $pageSize, \PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
 
+        try {
             $stmt->execute();
             $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -322,7 +343,6 @@ class Kitchen
                 $row['items'] = json_decode($row['items'], true);
             }
 
-            // Pagination meta
             $meta = [
                 'total_data' => (int) $totalItems,
                 'total_pages' => ceil($totalItems / $pageSize),
@@ -337,8 +357,8 @@ class Kitchen
                 'meta' => $meta
             ];
         } catch (\Exception $e) {
-            error_log("Failed to fetch assigned orders: " . $e->getMessage());
-            throw new \Exception("Failed to fetch assigned orders.");
+            error_log("Failed to fetch orders: " . $e->getMessage());
+            throw new \Exception("Failed to fetch orders.");
         }
     }
 }

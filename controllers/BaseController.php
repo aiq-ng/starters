@@ -383,22 +383,39 @@ class BaseController
         http_response_code($statusCode);
         header('Content-Type: application/json');
 
-        $response = [
-            'message' => $message,
-        ];
+        $response = ['message' => $message];
 
         if (!empty($data)) {
-            $response['data'] = $data;
+            $response['data'] = $this->removeNullFields($data);
         } else {
             $response['data'] = [];
         }
 
         if (!empty($meta)) {
-            $response['meta'] = $meta;
+            $response['meta'] = $this->removeNullFields($meta);
         }
 
         echo json_encode($response);
         exit;
+    }
+
+    private function removeNullFields($input)
+    {
+        if (is_array($input)) {
+            return array_filter(array_map([$this, 'removeNullFields'], $input), function ($value) {
+                return $value !== null;
+            });
+        } elseif (is_object($input)) {
+            foreach ($input as $key => $value) {
+                if ($value === null) {
+                    unset($input->$key);
+                } else {
+                    $input->$key = $this->removeNullFields($value);
+                }
+            }
+        }
+
+        return $input !== null ? $input : '';
     }
 
     public function search()

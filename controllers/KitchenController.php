@@ -78,13 +78,13 @@ class KitchenController extends BaseController
 
         try {
 
-            $chefId = isset($_GET['chef_id']) ? $_GET['chef_id'] : null;
+            $driverId = isset($_GET['driver_id']) ? $_GET['driver_id'] : null;
 
-            if (empty($chefId)) {
-                $this->sendResponse('Chef ID is required', 400);
+            if (empty($driverId)) {
+                $this->sendResponse('Driver ID is required', 400);
             }
 
-            $this->kitchen->assignOrder($salesId, $chefId);
+            $this->kitchen->assignOrder($salesId, $driverId);
 
             $this->sendResponse('Order assigned', 200);
 
@@ -109,6 +109,21 @@ class KitchenController extends BaseController
         }
     }
 
+    public function getRiders()
+    {
+        $this->authorizeRequest();
+
+        $riderId = $this->getRoleIdByName('Rider');
+
+        $riders = $this->kitchen->getRiders($riderId);
+
+        if (!empty($riders)) {
+            $this->sendResponse('success', 200, $riders);
+        } else {
+            $this->sendResponse('Riders not found', 404);
+        }
+    }
+
     public function getChefOrders()
     {
         $this->authorizeRequest();
@@ -119,7 +134,7 @@ class KitchenController extends BaseController
 
         $id = $chefId ? $chefId : $_SESSION['user_id'];
 
-        $orders = $this->kitchen->getAssignedOrders($id, $page, $page_size);
+        $orders = $this->kitchen->getOrders($id, null, $page, $page_size);
 
         if (!empty($orders)) {
             $this->sendResponse('success', 200, $orders['data'], $orders['meta']);
@@ -135,8 +150,9 @@ class KitchenController extends BaseController
         $page = isset($_GET['page']) ? $_GET['page'] : 1;
         $page_size = isset($_GET['page_size']) ? $_GET['page_size'] : 100;
         $chefId = isset($_GET['chef_id']) ? $_GET['chef_id'] : null;
+        $status = isset($_GET['status']) ? $this->convertStatus($_GET['status']) : 'new order';
 
-        $orders = $this->kitchen->getAllAssignedOrders($chefId, $page, $page_size);
+        $orders = $this->kitchen->getOrders($chefId, $status, $page, $page_size);
 
         if (!empty($orders)) {
             $this->sendResponse('success', 200, $orders['data'], $orders['meta']);
