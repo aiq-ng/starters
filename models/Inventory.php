@@ -333,6 +333,8 @@ class Inventory
                 throw new \Exception('Failed to insert item relationships.');
             }
 
+            $this->checkItemAvailability($itemId);
+
             return $stockId;
         } catch (\Exception $e) {
             error_log($e->getMessage());
@@ -550,6 +552,50 @@ class Inventory
         }
     }
 
+    private function checkItemAvailability($itemId)
+    {
+        $sql = "
+            SELECT availability, name 
+            FROM items 
+            WHERE id = :itemId
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':itemId', $itemId, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        $item = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$item) {
+            throw new \Exception("Item not found.");
+        }
+
+        if (in_array($item['availability'], ['out of stock', 'low stock'], true)) {
+            $usersToNotify = BaseController::getUserByRole(['Admin']);
+
+            if (empty($usersToNotify)) {
+                throw new \Exception("Admin user not found for notification.");
+            }
+
+            foreach ($usersToNotify as $userToNotify) {
+                if (!isset($userToNotify['id'])) {
+                    continue;
+                }
+
+                $notification = [
+                    'user_id' => $userToNotify['id'],
+                    'event' => 'notification',
+                    'entity_id' => $itemId,
+                    'entity_type' => "items",
+                    'title' => 'Item Availability',
+                    'body' => "{$item['name']} is {$item['availability']}"
+                ];
+
+                (new NotificationService())->sendNotification($notification);
+            }
+        }
+    }
+
     private function subtractStockFIFO($itemId, $quantity, $data)
     {
         $affectedStockIds = [];
@@ -597,6 +643,8 @@ class Inventory
         if ($quantity > 0) {
             throw new \Exception('Insufficient stock to complete the operation.');
         }
+
+        $this->checkItemAvailability($itemId);
 
         return $affectedStockIds;
     }
