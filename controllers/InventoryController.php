@@ -76,6 +76,9 @@ class InventoryController extends BaseController
             }
         }
 
+        error_log('Item Data: ' . json_encode($formData));
+        error_log('Media Links: ' . json_encode($mediaLinks));
+
         $result = $this->inventory->createItem($formData, $mediaLinks);
 
         if ($result) {
@@ -137,6 +140,9 @@ class InventoryController extends BaseController
         $formData['source_id'] = $formData['collector_id'] ?? $formData['vendor_id'] ?? $_SESSION['user_id'] ?? null;
         $formData['source_department_id'] = $formData['user_department_id'] ?? $formData['department_id'] ?? null;
 
+        error_log('Item Data: ' . json_encode($formData));
+        error_log('Media Links: ' . json_encode($mediaLinks));
+
         $result = $this->inventory->updateItem($id, $formData, $mediaLinks);
 
         if ($result) {
@@ -155,6 +161,8 @@ class InventoryController extends BaseController
         $data['manager_id'] = $_SESSION['user_id'];
         $data['source_id'] = $data['collector_id'] ?? $data['vendor_id'] ?? null;
         $data['source_department_id'] = $data['collector_department_id'] ?? $data['receiving_department_id'] ?? null;
+
+        error_log('Adjustment Data: ' . json_encode($data));
 
         $result = $this->inventory->adjustStock($id, $data);
 
@@ -186,6 +194,8 @@ class InventoryController extends BaseController
 
         $data['user_id'] = $_SESSION['user_id'];
         $data['entity_type'] = 'item_stock_adjustment';
+
+        error_log('Comment Data: ' . json_encode($data));
 
         $result = $this->commentOnItemHistory($id, $data);
 

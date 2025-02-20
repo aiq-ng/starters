@@ -36,6 +36,7 @@ class HumanResourceController extends BaseController
 
         $data = $this->getRequestData();
 
+        error_log('Department Data: ' . json_encode($data));
         $this->humanResource->createDepartment($data);
 
         $this->sendResponse('Department created successfully', 201);
@@ -64,6 +65,9 @@ class HumanResourceController extends BaseController
                 $mediaLinks[$mediaType] = $mediaLink;
             }
         }
+
+        error_log('Employee Data: ' . json_encode($formData));
+        error_log('Media Files: ' . json_encode($mediaFiles));
 
         $result = $this->humanResource->addEmployee($formData, $mediaLinks);
 

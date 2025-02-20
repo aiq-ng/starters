@@ -45,6 +45,7 @@ class VendorController extends BaseController
 
         $data['social_media'] = isset($data['social_media']) ? json_encode($data['social_media']) : null;
 
+        error_log('Vendor Data: ' . json_encode($data));
         $result = $this->vendor->create($data);
 
         if ($result) {
@@ -77,6 +78,7 @@ class VendorController extends BaseController
 
         $data['social_media'] = isset($data['social_media']) ? json_encode($data['social_media']) : null;
 
+        error_log('Vendor Data: ' . json_encode($data));
         $result = $this->vendor->updateVendor($id, $data);
 
         if ($result) {

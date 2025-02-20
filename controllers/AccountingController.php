@@ -26,6 +26,8 @@ class AccountingController extends BaseController
 
         $data['processed_by'] = $_SESSION['user_id'];
 
+        error_log('Expense Data: ' . json_encode($data));
+
         $this->accounting->insertExpense($data);
 
         $this->sendResponse('Expense added', 200);
