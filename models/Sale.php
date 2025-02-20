@@ -1081,6 +1081,7 @@ class Sale extends Kitchen
                         'quantity', soi.quantity,
                         'price', soi.price,
                         'amount', soi.quantity * soi.price,
+                        'total', soi.total,
                         'tax_id', soi.tax_id,
                         'tax_rate', t.rate
                     )

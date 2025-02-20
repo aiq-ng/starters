@@ -654,28 +654,41 @@ RETURNS TRIGGER AS $$
 DECLARE
     tax_rate DECIMAL(5,2);
 BEGIN
-    SELECT COALESCE(rate, 0) INTO tax_rate FROM taxes 
-    WHERE id = NEW.tax_id;
+    -- Fetch tax rate if tax_id is not NULL, otherwise set tax_rate to 0
+    IF NEW.tax_id IS NOT NULL THEN
+        SELECT COALESCE(rate, 0) INTO tax_rate FROM taxes 
+        WHERE id = NEW.tax_id;
+    ELSE
+        tax_rate := 0;
+    END IF;
 
     NEW.total := NEW.quantity * NEW.price * (1 + tax_rate / 100);
     NEW.updated_at := CURRENT_TIMESTAMP;
+    
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 
 CREATE OR REPLACE FUNCTION calculate_sales_order_items_price()
 RETURNS TRIGGER AS $$
 DECLARE
     tax_rate DECIMAL(5,2);
 BEGIN
-    SELECT COALESCE(rate, 0) INTO tax_rate FROM taxes 
-    WHERE id = NEW.tax_id;
+    IF NEW.tax_id IS NOT NULL THEN
+        SELECT COALESCE(rate, 0) INTO tax_rate FROM taxes 
+        WHERE id = NEW.tax_id;
+    ELSE
+        tax_rate := 0;
+    END IF;
 
     NEW.total := NEW.quantity * NEW.price * (1 + tax_rate / 100);
     NEW.updated_at := CURRENT_TIMESTAMP;
+    
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 
 CREATE OR REPLACE FUNCTION update_purchase_order_total()
 RETURNS TRIGGER AS $$
