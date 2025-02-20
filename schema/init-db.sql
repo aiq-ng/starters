@@ -290,8 +290,7 @@ CREATE TABLE customers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_type VARCHAR(50) 
         CHECK (customer_type IN ('individual', 'business')),
-    salutation VARCHAR(10) 
-        CHECK (salutation IN ('Mr', 'Mrs', 'Miss', 'Dr', 'Prof')),
+    salutation VARCHAR(10), 
     first_name VARCHAR(255),
     last_name VARCHAR(255),
     display_name VARCHAR(255),

@@ -137,9 +137,6 @@ class InventoryController extends BaseController
         $formData['source_id'] = $formData['collector_id'] ?? $formData['vendor_id'] ?? $_SESSION['user_id'] ?? null;
         $formData['source_department_id'] = $formData['user_department_id'] ?? $formData['department_id'] ?? null;
 
-        error_log('formData: ' . json_encode($formData));
-        error_log('mediaLinks: ' . json_encode($mediaLinks));
-
         $result = $this->inventory->updateItem($id, $formData, $mediaLinks);
 
         if ($result) {

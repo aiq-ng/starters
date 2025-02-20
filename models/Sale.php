@@ -1073,6 +1073,8 @@ class Sale extends Kitchen
                 so.delivery_charge,
                 so.delivery_address,
                 so.total,
+                so.status,
+                so.payment_status,
                 so.created_at AS invoice_date,
                 so.delivery_date,
                 json_agg(
