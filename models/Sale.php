@@ -816,14 +816,14 @@ class Sale extends Kitchen
                 order_type, order_title, payment_term_id, customer_id,
                 payment_method_id, delivery_option, 
                 delivery_date, delivery_time, delivery_address,
-                additional_note, customer_note, discount, delivery_charge, total
+                additional_note, customer_note, discount, delivery_charge, total, processed_by
             ) 
             VALUES (
                 :order_type, :order_title, :payment_term_id, :customer_id,
                 :payment_method_id, :delivery_option, 
                 :delivery_date, :delivery_time, :delivery_address, 
                 :additional_note, :customer_note, :discount, :delivery_charge,
-                :total 
+                :total, :processed_by 
             ) 
             RETURNING id;
         ";
@@ -846,7 +846,8 @@ class Sale extends Kitchen
                 ':customer_note' => $data['customer_note'] ?? null,
                 ':discount' => $data['discount'] ?? null,
                 ':delivery_charge' => $data['delivery_charge'] ?? null,
-                ':total' => $data['total'] ?? null
+                ':total' => $data['total'] ?? null,
+                ':processed_by' => $data['user_id'] ?? null
             ]);
 
             return $stmt->fetchColumn();
@@ -945,7 +946,8 @@ class Sale extends Kitchen
                 customer_note = :customer_note,
                 discount = :discount,
                 delivery_charge = :delivery_charge,
-                total = :total
+                total = :total,
+                processed_by = :processed_by
             WHERE id = :sales_order_id
         ";
 
@@ -966,7 +968,8 @@ class Sale extends Kitchen
             ':customer_note' => $data['customer_note'] ?? null,
             ':discount' => $data['discount'] ?? null,
             ':delivery_charge' => $data['delivery_charge'] ?? null,
-            ':total' => $data['total'] ?? null
+            ':total' => $data['total'] ?? null,
+            ':processed_by' => $data['user_id'] ?? null
         ]);
     }
 

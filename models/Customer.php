@@ -17,7 +17,6 @@ class Customer
     public function create($data)
     {
 
-        error_log("create customer data: " . json_encode($data));
         $query = "
         INSERT INTO customers 
         (customer_type, salutation, first_name, last_name, display_name, 

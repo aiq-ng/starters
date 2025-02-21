@@ -406,6 +406,7 @@ class Purchase
                 po.discount,
                 po.shipping_charge,
                 po.notes,
+                po.terms_and_conditions,
                 COALESCE(po.total, 0.00) AS total,
                 po.created_at::DATE AS order_date,
                 po.delivery_date,
