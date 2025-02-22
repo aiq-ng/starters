@@ -28,8 +28,8 @@ class KitchenController extends BaseController
             'status' => isset($_GET['status']) ? $this->convertStatus($_GET['status']) : null,
             'order_type' => isset($_GET['order_type']) ? $_GET['order_type'] : null,
             'delivery_option' => isset($_GET['delivery_option']) ? $_GET['delivery_option'] : null,
-            'date' => !empty($_GET['end_date']) ? $_GET['end_date'] : null,
-            'time' => !empty($_GET['end_time']) ? $_GET['end_time'] : null,
+            'date' => !empty($_GET['date']) ? $_GET['date'] : null,
+            'time' => !empty($_GET['time']) ? $_GET['time'] : null,
         ];
 
         $sales = $this->kitchen->getNewOrders(array_filter($filters));

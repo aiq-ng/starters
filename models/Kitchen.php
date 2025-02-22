@@ -57,31 +57,9 @@ class Kitchen
         }
     }
 
-
-    public function getNewOrders($filters = [])
+    private function getNewOrdersBaseQuery()
     {
-        $page = $filters['page'] ?? 1;
-        $pageSize = $filters['page_size'] ?? 10;
-        $status = $filters['status'] ?? null;
-        $date = $filters['date'] ?? null;
-        $search = $filters['search'] ?? null;
-        $orderType = $filters['order_type'] ?? null;
-        $sortBy = $filters['sort_by'] ?? 'delivery_date';
-        $order = $filters['order'] ?? 'DESC';
-        $sentToKitchen = $filters['sent_to_kitchen'] ?? null;
-        $deliveryTime = $filters['time'] ?? null;
-        $deliveryOption = $filters['delivery_option'] ?? null;
-
-        $offset = ($page - 1) * $pageSize;
-
-        $order = strtoupper($order) === 'ASC' ? 'ASC' : 'DESC';
-
-        $allowedSortColumns = ['created_at', 'delivery_date', 'order_title', 'status'];
-        if (!in_array($sortBy, $allowedSortColumns)) {
-            $sortBy = 'created_at';
-        }
-
-        $query = "
+        return "
             SELECT so.id,
                 so.order_id,
                 so.order_title,
@@ -122,6 +100,36 @@ class Kitchen
             LEFT JOIN users d ON da.driver_id = d.id
             LEFT JOIN payment_methods pm ON so.payment_method_id = pm.id
             LEFT JOIN payment_terms pt ON so.payment_term_id = pt.id
+        ";
+    }
+
+
+    public function getNewOrders($filters = [])
+    {
+        $page = $filters['page'] ?? 1;
+        $pageSize = $filters['page_size'] ?? 10;
+        $status = $filters['status'] ?? null;
+        $date = $filters['date'] ?? null;
+        $search = $filters['search'] ?? null;
+        $orderType = $filters['order_type'] ?? null;
+        $sortBy = $filters['sort_by'] ?? 'delivery_date';
+        $order = $filters['order'] ?? 'DESC';
+        $sentToKitchen = $filters['sent_to_kitchen'] ?? null;
+        $deliveryTime = $filters['time'] ?? null;
+        $deliveryOption = $filters['delivery_option'] ?? null;
+
+        $offset = ($page - 1) * $pageSize;
+        $order = strtoupper($order) === 'ASC' ? 'ASC' : 'DESC';
+
+        $allowedSortColumns = ['created_at', 'delivery_date', 'order_title', 'status'];
+        if (!in_array($sortBy, $allowedSortColumns)) {
+            $sortBy = 'created_at';
+        }
+
+        $baseQuery = $this->getNewOrdersBaseQuery();
+
+        $query = "
+            {$baseQuery}
             WHERE 1=1
         ";
 
@@ -155,37 +163,36 @@ class Kitchen
             $params[':sent_to_kitchen'] = $sentToKitchen ? 'true' : 'false';
         }
 
-        // Add delivery date filter
+        // Ensure delivery_date filter works correctly
         if ($date) {
             $conditions[] = "so.delivery_date = :delivery_date";
             $params[':delivery_date'] = $date;
         }
 
-        // Add delivery time filter with >=
+        // Ensure delivery_time filter works correctly
         if ($deliveryTime) {
             $conditions[] = "so.delivery_time >= :delivery_time";
             $params[':delivery_time'] = $deliveryTime;
         }
 
-        // Append conditions to query
         if (count($conditions) > 0) {
             $query .= " AND " . implode(' AND ', $conditions);
         }
 
         $query .= "
             GROUP BY so.id, c.email, so.order_id, so.order_title,
-                    so.order_type, so.discount, so.delivery_charge, so.total, 
-                    so.created_at, so.delivery_date, so.status, so.processed_by,
-                    u.name, d.name, c.work_phone, c.mobile_phone, so.delivery_time,
-                    c.address, so.delivery_option, pm.name, pt.name,
-                    c.first_name, c.last_name
+                     so.order_type, so.discount, so.delivery_charge, so.total, 
+                     so.created_at, so.delivery_date, so.status, so.processed_by,
+                     u.name, d.name, c.work_phone, c.mobile_phone, so.delivery_time,
+                     c.address, so.delivery_option, pm.name, pt.name,
+                     c.first_name, c.last_name
             ORDER BY so.$sortBy $order
             LIMIT :page_size OFFSET :offset
         ";
 
         $totalItems = $this->getCount($conditions, $params);
 
-        // Add pagination parameters
+        // Pagination params
         $params[':page_size'] = $pageSize;
         $params[':offset'] = $offset;
 
@@ -210,6 +217,7 @@ class Kitchen
                     }
                 }
             }
+
             $meta = [
                 'total_data' => (int) $totalItems,
                 'total_pages' => ceil($totalItems / $pageSize),
@@ -231,46 +239,9 @@ class Kitchen
 
     public function getOrderById($orderId)
     {
+        $baseQuery = $this->getNewOrdersBaseQuery();
         $query = "
-            SELECT so.id,
-                so.order_id,
-                so.order_title,
-                so.processed_by AS sales_rep_id,
-                u.name AS sales_rep_name,
-                CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
-                c.work_phone AS customer_work_phone,
-                c.mobile_phone AS customer_mobile_phone,
-                c.email AS customer_email,
-                c.address AS customer_address,
-                d.name AS driver_name,
-                so.order_type,
-                so.created_at,
-                so.delivery_date,
-                so.delivery_time,
-                so.delivery_option,
-                so.status,
-                so.delivery_charge,
-                so.discount,
-                pm.name AS payment_method,
-                pt.name AS payment_term,
-                COALESCE(SUM(soi.quantity * soi.price), 0) AS total_amount,
-                json_agg(
-                    json_build_object(
-                        'item_id', p.id,
-                        'item_name', p.item_details,
-                        'quantity', soi.quantity,
-                        'amount', soi.quantity * soi.price
-                    )
-                ) AS items
-            FROM sales_orders so
-            LEFT JOIN customers c ON so.customer_id = c.id
-            LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
-            LEFT JOIN price_lists p ON soi.item_id = p.id
-            LEFT JOIN users u ON so.processed_by = u.id
-            LEFT JOIN driver_assignments da ON so.id = da.order_id
-            LEFT JOIN users d ON da.driver_id = d.id
-            LEFT JOIN payment_methods pm ON so.payment_method_id = pm.id
-            LEFT JOIN payment_terms pt ON so.payment_term_id = pt.id
+            {$baseQuery} 
             WHERE so.id = :order_id
             GROUP BY so.id, c.email, so.order_id, so.order_title,
                      so.order_type, so.discount, so.delivery_charge, 
