@@ -5,6 +5,7 @@ namespace Models;
 use Database\Database;
 use Services\NotificationService;
 use Controllers\BaseController;
+use DateTime;
 
 class Kitchen
 {
@@ -62,12 +63,14 @@ class Kitchen
         $page = $filters['page'] ?? 1;
         $pageSize = $filters['page_size'] ?? 10;
         $status = $filters['status'] ?? null;
-        $date = $filters['date'] ?? date('Y-m-d');
+        $date = $filters['date'] ?? null;
         $search = $filters['search'] ?? null;
         $orderType = $filters['order_type'] ?? null;
         $sortBy = $filters['sort_by'] ?? 'delivery_date';
         $order = $filters['order'] ?? 'DESC';
         $sentToKitchen = $filters['sent_to_kitchen'] ?? null;
+        $deliveryTime = $filters['time'] ?? null;
+        $deliveryOption = $filters['delivery_option'] ?? null;
 
         $offset = ($page - 1) * $pageSize;
 
@@ -83,13 +86,22 @@ class Kitchen
                 so.order_id,
                 so.order_title,
                 so.processed_by AS sales_rep_id,
-		        u.name AS sales_rep_name,
-                c.display_name AS customer_name,
+                u.name AS sales_rep_name,
+                CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
+                c.work_phone AS customer_work_phone,
+                c.mobile_phone AS customer_mobile_phone,
+                c.address AS customer_address,
                 d.name AS driver_name,
                 so.order_type,
-                so.created_at AS arrival_time,
-                CONCAT(so.delivery_date, ' ', so.delivery_time) AS delivery_time,
+                so.created_at,
+                so.delivery_date,
+                so.delivery_time,
+                so.delivery_option,
                 so.status,
+                so.delivery_charge,
+                so.discount,
+                pm.name AS payment_method,
+                pt.name AS payment_term,
                 COALESCE(SUM(soi.quantity * soi.price), 0) AS total_amount,
                 json_agg(
                     json_build_object(
@@ -98,15 +110,17 @@ class Kitchen
                         'quantity', soi.quantity,
                         'amount', soi.quantity * soi.price
                     )
-		) AS items,
-		so.created_at
-        FROM sales_orders so
-        LEFT JOIN customers c ON so.customer_id = c.id
-        LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
-	    LEFT JOIN price_lists p ON soi.item_id = p.id
-        LEFT JOIN users u ON so.processed_by = u.id
-        LEFT JOIN driver_assignments da ON so.id = da.order_id
-        LEFT JOIN users d ON da.driver_id = d.id
+                ) AS items,
+                so.created_at
+            FROM sales_orders so
+            LEFT JOIN customers c ON so.customer_id = c.id
+            LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
+            LEFT JOIN price_lists p ON soi.item_id = p.id
+            LEFT JOIN users u ON so.processed_by = u.id
+            LEFT JOIN driver_assignments da ON so.id = da.order_id
+            LEFT JOIN users d ON da.driver_id = d.id
+            LEFT JOIN payment_methods pm ON so.payment_method_id = pm.id
+            LEFT JOIN payment_terms pt ON so.payment_term_id = pt.id
             WHERE 1=1
         ";
 
@@ -120,7 +134,6 @@ class Kitchen
             $conditions[] = "so.status IN ('cancelled', 'new order', 'in progress', 'in delivery', 'delivered')";
         }
 
-
         if ($search) {
             $conditions[] = "(so.order_title ILIKE :search OR so.reference_number ILIKE :search OR c.display_name ILIKE :search)";
             $params[':search'] = '%' . $search . '%';
@@ -131,9 +144,26 @@ class Kitchen
             $params[':order_type'] = $orderType;
         }
 
+        if ($deliveryOption) {
+            $conditions[] = "so.delivery_option = :delivery_option";
+            $params[':delivery_option'] = $deliveryOption;
+        }
+
         if ($sentToKitchen !== null) {
             $conditions[] = "so.sent_to_kitchen = :sent_to_kitchen";
             $params[':sent_to_kitchen'] = $sentToKitchen ? 'true' : 'false';
+        }
+
+        // Add delivery date filter
+        if ($date) {
+            $conditions[] = "so.delivery_date = :delivery_date";
+            $params[':delivery_date'] = $date;
+        }
+
+        // Add delivery time filter with >=
+        if ($deliveryTime) {
+            $conditions[] = "so.delivery_time >= :delivery_time";
+            $params[':delivery_time'] = $deliveryTime;
         }
 
         // Append conditions to query
@@ -142,9 +172,12 @@ class Kitchen
         }
 
         $query .= "
-            GROUP BY so.id, c.display_name, c.email, so.order_id, so.order_title,
+            GROUP BY so.id, c.email, so.order_id, so.order_title,
                     so.order_type, so.discount, so.delivery_charge, so.total, 
-                    so.created_at, so.delivery_date, so.status, so.processed_by, u.name, d.name
+                    so.created_at, so.delivery_date, so.status, so.processed_by,
+                    u.name, d.name, c.work_phone, c.mobile_phone, so.delivery_time,
+                    c.address, so.delivery_option, pm.name, pt.name,
+                    c.first_name, c.last_name
             ORDER BY so.$sortBy $order
             LIMIT :page_size OFFSET :offset
         ";
@@ -163,8 +196,19 @@ class Kitchen
 
             foreach ($result as &$row) {
                 $row['items'] = json_decode($row['items'], true);
-            }
 
+                if (!empty($row['delivery_date'])) {
+                    $date = new DateTime($row['delivery_date']);
+                    $row['delivery_date'] = $date->format('l d/m/Y');
+                }
+
+                if (!empty($row['delivery_time'])) {
+                    $time = DateTime::createFromFormat('H:i:s', $row['delivery_time']);
+                    if ($time) {
+                        $row['delivery_time'] = $time->format('g:i A');
+                    }
+                }
+            }
             $meta = [
                 'total_data' => (int) $totalItems,
                 'total_pages' => ceil($totalItems / $pageSize),

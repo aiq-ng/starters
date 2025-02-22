@@ -631,7 +631,7 @@ BEGIN
                 THEN 'out of stock'
             WHEN (SELECT COALESCE(SUM(quantity), 0) FROM item_stocks WHERE item_id = NEW.item_id) < threshold_value 
                 THEN 'low stock'
-            ELSE 'in-stock'
+            ELSE 'in stock'
         END
     WHERE id = NEW.item_id;
 

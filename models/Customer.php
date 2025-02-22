@@ -39,7 +39,7 @@ class Customer
         $stmt->bindValue(':company_name', $data['company_name'] ?? null);
         $stmt->bindValue(':email', $data['email'] ?? null);
         $stmt->bindValue(':work_phone', $data['work_phone'] ?? null);
-        $stmt->bindValue(':mobile_phone', $data['mobile_phone'] ?? null);
+        $stmt->bindValue(':mobile_phone', $data['mobile_phone'] ?? $data['mobile'] ?? null);
         $stmt->bindValue(':address', $data['address'] ?? null);
         $stmt->bindValue(':social_media', $data['social_media'] ?? null);
         $stmt->bindValue(':website', $data['website'] ?? null);
