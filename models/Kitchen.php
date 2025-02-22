@@ -90,6 +90,7 @@ class Kitchen
                 CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
                 c.work_phone AS customer_work_phone,
                 c.mobile_phone AS customer_mobile_phone,
+                c.email AS customer_email,
                 c.address AS customer_address,
                 d.name AS driver_name,
                 so.order_type,
