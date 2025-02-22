@@ -1067,7 +1067,7 @@ class Sale extends Kitchen
                 so.order_title,
                 so.order_type,
                 c.id AS customer_id,
-                c.display_name AS customer_name,
+                CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
                 c.address AS customer_address,
                 c.mobile_phone AS customer_phone,
                 c.email AS customer_email,
@@ -1109,7 +1109,8 @@ class Sale extends Kitchen
                     so.order_type, c.id, so.payment_term_id, so.payment_method_id,
                     so.assigned_driver_id, so.delivery_option, so.additional_note,
                     so.customer_note, so.discount, so.delivery_charge, so.total,
-                    c.email, so.created_at, so.delivery_date, so.delivery_charge_id
+                    c.email, so.created_at, so.delivery_date, so.delivery_charge_id,
+                    c.first_name, c.last_name
         ";
 
         $stmt = $this->db->prepare($query);
