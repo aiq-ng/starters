@@ -45,7 +45,7 @@ class KitchenController extends BaseController
     {
         $this->authorizeRequest();
 
-        $invoice = $this->sale->getInvoiceDetails($salesId);
+        $invoice = $this->sale->getOrderById($salesId);
 
         if ($invoice) {
             $this->sendResponse('success', 200, $invoice);

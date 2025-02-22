@@ -229,6 +229,83 @@ class Kitchen
         }
     }
 
+    public function getOrderById($orderId)
+    {
+        $query = "
+            SELECT so.id,
+                so.order_id,
+                so.order_title,
+                so.processed_by AS sales_rep_id,
+                u.name AS sales_rep_name,
+                CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
+                c.work_phone AS customer_work_phone,
+                c.mobile_phone AS customer_mobile_phone,
+                c.email AS customer_email,
+                c.address AS customer_address,
+                d.name AS driver_name,
+                so.order_type,
+                so.created_at,
+                so.delivery_date,
+                so.delivery_time,
+                so.delivery_option,
+                so.status,
+                so.delivery_charge,
+                so.discount,
+                pm.name AS payment_method,
+                pt.name AS payment_term,
+                COALESCE(SUM(soi.quantity * soi.price), 0) AS total_amount,
+                json_agg(
+                    json_build_object(
+                        'item_id', p.id,
+                        'item_name', p.item_details,
+                        'quantity', soi.quantity,
+                        'amount', soi.quantity * soi.price
+                    )
+                ) AS items
+            FROM sales_orders so
+            LEFT JOIN customers c ON so.customer_id = c.id
+            LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
+            LEFT JOIN price_lists p ON soi.item_id = p.id
+            LEFT JOIN users u ON so.processed_by = u.id
+            LEFT JOIN driver_assignments da ON so.id = da.order_id
+            LEFT JOIN users d ON da.driver_id = d.id
+            LEFT JOIN payment_methods pm ON so.payment_method_id = pm.id
+            LEFT JOIN payment_terms pt ON so.payment_term_id = pt.id
+            WHERE so.id = :order_id
+            GROUP BY so.id, c.email, so.order_id, so.order_title,
+                     so.order_type, so.discount, so.delivery_charge, 
+                     so.created_at, so.delivery_date, so.status, 
+                     so.processed_by, u.name, d.name, c.work_phone, 
+                     c.mobile_phone, so.delivery_time, c.address, 
+                     so.delivery_option, pm.name, pt.name, 
+                     c.first_name, c.last_name
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([':order_id' => $orderId]);
+        $order = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$order) {
+            throw new \Exception("Order not found.");
+        }
+
+        $order['items'] = json_decode($order['items'], true);
+
+        if (!empty($order['delivery_date'])) {
+            $date = new DateTime($order['delivery_date']);
+            $order['delivery_date'] = $date->format('l d/m/Y');
+        }
+
+        if (!empty($order['delivery_time'])) {
+            $time = DateTime::createFromFormat('H:i:s', $order['delivery_time']);
+            if ($time) {
+                $order['delivery_time'] = $time->format('g:i A');
+            }
+        }
+
+        return $order;
+    }
+
     public function getCount($conditions, $params)
     {
         $countQuery = "
