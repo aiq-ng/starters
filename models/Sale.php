@@ -1079,6 +1079,7 @@ class Sale extends Kitchen
                 so.additional_note,
                 so.customer_note,
                 so.discount,
+                so.total_boxes,
                 so.delivery_charge_id,
                 so.delivery_charge,
                 so.delivery_address,
@@ -1110,7 +1111,7 @@ class Sale extends Kitchen
                     so.assigned_driver_id, so.delivery_option, so.additional_note,
                     so.customer_note, so.discount, so.delivery_charge, so.total,
                     c.email, so.created_at, so.delivery_date, so.delivery_charge_id,
-                    c.first_name, c.last_name
+                    c.first_name, c.last_name, so.total_boxes
         ";
 
         $stmt = $this->db->prepare($query);
