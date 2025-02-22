@@ -385,12 +385,49 @@ class BaseController
 
         $response = ['message' => $message];
 
+        $formatNumber = function ($value) {
+            if (is_numeric($value)) {
+                return number_format($value, 2, '.', ',');
+            }
+            return $value;
+        };
+
+        // Process data array
         if (!empty($data)) {
-            $response['data'] = $this->removeNullFields($data);
+            $processedData = $this->removeNullFields($data);
+
+            // Recursive function to process nested arrays
+            $processArray = function ($item) use ($formatNumber, &$processArray) {
+                if (is_array($item)) {
+                    $result = [];
+                    foreach ($item as $key => $value) {
+                        $result[$key] = is_array($value) ? $processArray($value) : $value;
+
+                        if (in_array($key, [
+                            'price', 'total', 'amount','total_amount',
+                            'delivery_charge', 'total_income', 'total_expenses',
+                            'total_sales', 'total_purchase', 'total_purchases',
+                            'cash_flow', 'balance', 'prev_month_cash_flow',
+                            'estimated_cash_flow', 'total_revenue', 'buying_price',
+                            'vendor_balance', 'customer_balance', 'total_balance',
+                            'shipping_charge', 'total_cost', 'total_profit',
+
+                        ]) && is_numeric($value)) {
+                            $formattedKey = 'formatted_' . $key;
+                            $result[$formattedKey] = "₦{$formatNumber($value)}";
+                        }
+                    }
+                    return $result;
+                }
+                return $item;
+            };
+
+            $response['data'] = is_array($processedData) ? $processArray($processedData) : $processedData;
         } else {
             $response['data'] = [];
         }
 
+        // Process meta array
         if (!empty($meta)) {
             $response['meta'] = $this->removeNullFields($meta);
         }

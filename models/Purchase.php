@@ -154,48 +154,6 @@ class Purchase
         return (int) $stmt->fetchColumn();
     }
 
-    public function getPurchaseOrder($purchaseOrderId)
-    {
-        $query = "
-            SELECT
-                po.id,
-                po.vendor_id,
-                po.branch_id,
-                po.payment_term_id,
-                po.subject,
-                po.notes,
-                po.terms_and_conditions,
-                po.purchase_order_number,
-                po.reference_number, 
-                CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name, 
-                po.created_at::DATE AS order_date, 
-                po.delivery_date, 
-                COALESCE(po.total, 0.00) AS total, 
-                po.discount,
-                po.shipping_charge,
-                po.status,
-                CASE
-                    WHEN po.status = 'issued' THEN 'Issued'
-                ELSE pt.name
-                END AS payment
-            FROM purchase_orders po
-            LEFT JOIN vendors v ON po.vendor_id = v.id
-            LEFT JOIN payment_terms pt ON po.payment_term_id = pt.id
-            WHERE po.id = :purchase_order_id
-        ";
-
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([':purchase_order_id' => $purchaseOrderId]);
-
-        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-        if ($result) {
-            $result['items'] = $this->getPurchaseOrderItems($purchaseOrderId);
-        }
-
-        return $result;
-    }
-
     public function deletePurchaseOrder(array $purchaseOrderIds)
     {
         if (empty($purchaseOrderIds)) {
@@ -389,27 +347,72 @@ class Purchase
         }
     }
 
+    public function getPurchaseOrder($purchaseOrderId)
+    {
+        $query = "
+            SELECT
+                po.id,
+                po.vendor_id,
+                po.branch_id,
+                po.payment_term_id,
+                po.subject,
+                po.notes,
+                po.terms_and_conditions,
+                po.purchase_order_number,
+                po.reference_number, 
+                CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name, 
+                po.created_at::DATE AS order_date, 
+                po.delivery_date, 
+                COALESCE(po.total, 0.00) AS total, 
+                po.discount,
+                po.shipping_charge,
+                po.status,
+                CASE
+                    WHEN po.status = 'issued' THEN 'Issued'
+                ELSE pt.name
+                END AS payment
+            FROM purchase_orders po
+            LEFT JOIN vendors v ON po.vendor_id = v.id
+            LEFT JOIN payment_terms pt ON po.payment_term_id = pt.id
+            WHERE po.id = :purchase_order_id
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([':purchase_order_id' => $purchaseOrderId]);
+
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if ($result) {
+            $result['items'] = $this->getPurchaseOrderItems($purchaseOrderId);
+        }
+
+        return $result;
+    }
+
 
     public function getInvoiceDetails($purchaseOrderId)
     {
         $query = "
             SELECT po.id,
+                po.vendor_id,
+                po.branch_id,
+                po.payment_term_id,
                 po.subject,
-                v.display_name AS vendor_name,
-                v.email AS vendor_email,
-                v.address AS vendor_address,
-                v.mobile_phone AS vendor_phone,
-                v.balance AS vendor_balance,
-                po.invoice_number,
-                po.purchase_order_number, 
-                po.reference_number,
-                po.discount,
-                po.shipping_charge,
                 po.notes,
                 po.terms_and_conditions,
-                COALESCE(po.total, 0.00) AS total,
-                po.created_at::DATE AS order_date,
-                po.delivery_date,
+                po.purchase_order_number,
+                po.reference_number, 
+                CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name, 
+                po.created_at::DATE AS order_date, 
+                po.delivery_date, 
+                COALESCE(po.total, 0.00) AS total, 
+                po.discount,
+                po.shipping_charge,
+                po.status,
+                CASE
+                    WHEN po.status = 'issued' THEN 'Issued'
+                ELSE pt.name
+                END AS payment,
                 json_agg(
                     json_build_object(
                         'item_id', poi.item_id,
@@ -425,13 +428,15 @@ class Purchase
             FROM purchase_orders po
             LEFT JOIN vendors v ON po.vendor_id = v.id
             LEFT JOIN purchase_order_items poi ON poi.purchase_order_id = po.id
+            LEFT JOIN payment_terms pt ON po.payment_term_id = pt.id
             LEFT JOIN taxes tr ON poi.tax_id = tr.id
             LEFT JOIN items i ON poi.item_id = i.id
             WHERE po.id = :purchase_order_id
             GROUP BY po.id, po.purchase_order_number, po.reference_number,
                 v.display_name, v.email, v.address, v.mobile_phone, v.balance, 
                 po.discount, po.shipping_charge, po.notes, po.total, 
-                po.created_at, po.delivery_date;
+                po.created_at, po.delivery_date, po.status, pt.name, v.salutation,
+                v.first_name, v.last_name, po.subject, po.terms_and_conditions
         ";
 
         $stmt = $this->db->prepare($query);
