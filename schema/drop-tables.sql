@@ -42,6 +42,7 @@ DROP TABLE IF EXISTS vendor_categories CASCADE;
 DROP TABLE IF EXISTS user_permissions CASCADE;
 DROP TABLE IF EXISTS loans CASCADE;
 DROP TABLE IF EXISTS salutations CASCADE;
+DROP TABLE IF EXISTS delivery_charges CASCADE;
 
 -- Core Entities
 DROP TABLE IF EXISTS refresh_tokens CASCADE;

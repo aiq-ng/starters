@@ -76,7 +76,9 @@ class Kitchen
                 so.delivery_date,
                 so.delivery_time,
                 so.delivery_option,
+                so.total_boxes,
                 so.status,
+                so.delivery_charge_id,
                 so.delivery_charge,
                 so.discount,
                 pm.name AS payment_method,
@@ -184,8 +186,8 @@ class Kitchen
                      so.order_type, so.discount, so.delivery_charge, so.total, 
                      so.created_at, so.delivery_date, so.status, so.processed_by,
                      u.name, d.name, c.work_phone, c.mobile_phone, so.delivery_time,
-                     c.address, so.delivery_option, pm.name, pt.name,
-                     c.first_name, c.last_name
+                    c.address, so.delivery_option, pm.name, pt.name, so.total_boxes,
+                    so.delivery_charge_id, c.first_name, c.last_name
             ORDER BY so.$sortBy $order
             LIMIT :page_size OFFSET :offset
         ";
@@ -249,7 +251,7 @@ class Kitchen
                      so.processed_by, u.name, d.name, c.work_phone, 
                      c.mobile_phone, so.delivery_time, c.address, 
                      so.delivery_option, pm.name, pt.name, 
-                     c.first_name, c.last_name
+                     c.first_name, c.last_name, so.total_boxes, so.delivery_charge_id
         ";
 
         $stmt = $this->db->prepare($query);
@@ -401,6 +403,7 @@ class Kitchen
                 u.id AS driver_id,
                 u.name AS driver_name,
                 so.delivery_time,
+                so.total_boxes,
                 json_agg(
                    json_build_object(
                        'item_id', p.id,

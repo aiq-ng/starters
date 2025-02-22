@@ -411,6 +411,7 @@ class BaseController
                             'estimated_cash_flow', 'total_revenue', 'buying_price',
                             'vendor_balance', 'customer_balance', 'total_balance',
                             'shipping_charge', 'total_cost', 'total_profit',
+                            'total_transaction', 'expenses'
 
                         ]) && is_numeric($value)) {
                             $formattedKey = 'formatted_' . $key;
@@ -1243,6 +1244,37 @@ class BaseController
             'work_leave_qualifications',
             ['name'],
             ['id', 'name']
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
+    }
+
+    public function createDeliveryCharge()
+    {
+        $data = [
+            'name' => $_POST['name'] ?? null,
+            'amount' => $_POST['amount'] ?? null,
+            'description' => $_POST['description'] ?? null,
+        ];
+
+        if (!$data['name'] || !$data['amount']) {
+            return $this->sendResponse('error', 400, 'Name and amount are required.');
+        }
+
+        return $this->insertData('delivery_charges', $data);
+    }
+
+    public function getDeliveryCharges()
+    {
+        $result = $this->fetchData(
+            'delivery_charges',
+            ['name', 'amount'],
+            ['id', 'name', 'amount'],
         );
 
         return $this->sendResponse(

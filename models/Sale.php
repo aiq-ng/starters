@@ -550,6 +550,7 @@ class Sale extends Kitchen
                 so.created_at::DATE AS date, 
                 so.order_type, 
                 COALESCE(SUM(so.total), 0.00) AS amount,
+                so.total_boxes,
                 so.status,
                 so.payment_status
             FROM 
@@ -706,6 +707,7 @@ class Sale extends Kitchen
                 so.order_title AS title,
                 so.additional_note AS description,
                 so.created_at,
+                so.total_boxes,
                 so.delivery_date
             FROM 
                 sales_orders so
@@ -816,14 +818,15 @@ class Sale extends Kitchen
                 order_type, order_title, payment_term_id, customer_id,
                 payment_method_id, delivery_option, 
                 delivery_date, delivery_time, delivery_address,
-                additional_note, customer_note, discount, delivery_charge, total, processed_by
+                additional_note, customer_note, discount, delivery_charge, total, processed_by, total_boxes,
+                delivery_charge_id
             ) 
             VALUES (
                 :order_type, :order_title, :payment_term_id, :customer_id,
                 :payment_method_id, :delivery_option, 
                 :delivery_date, :delivery_time, :delivery_address, 
                 :additional_note, :customer_note, :discount, :delivery_charge,
-                :total, :processed_by 
+                :total, :processed_by, :total_boxes, :delivery_charge_id 
             ) 
             RETURNING id;
         ";
@@ -847,7 +850,9 @@ class Sale extends Kitchen
                 ':discount' => $data['discount'] ?? null,
                 ':delivery_charge' => $data['delivery_charge'] ?? null,
                 ':total' => $data['total'] ?? null,
-                ':processed_by' => $data['user_id'] ?? null
+                ':processed_by' => $data['user_id'] ?? null,
+                ':total_boxes' => $data['total_boxes'] ?? null,
+                ':delivery_charge_id' => $data['delivery_charge_id'] ?? null
             ]);
 
             return $stmt->fetchColumn();
@@ -947,7 +952,9 @@ class Sale extends Kitchen
                 discount = :discount,
                 delivery_charge = :delivery_charge,
                 total = :total,
-                processed_by = :processed_by
+                processed_by = :processed_by,
+                total_boxes = :total_boxes,
+                delivery_charge_id = :delivery_charge_id
             WHERE id = :sales_order_id
         ";
 
@@ -969,7 +976,9 @@ class Sale extends Kitchen
             ':discount' => $data['discount'] ?? null,
             ':delivery_charge' => $data['delivery_charge'] ?? null,
             ':total' => $data['total'] ?? null,
-            ':processed_by' => $data['user_id'] ?? null
+            ':processed_by' => $data['user_id'] ?? null,
+            ':total_boxes' => $data['total_boxes'] ?? null,
+            ':delivery_charge_id' => $data['delivery_charge_id'] ?? null
         ]);
     }
 
@@ -1070,6 +1079,7 @@ class Sale extends Kitchen
                 so.additional_note,
                 so.customer_note,
                 so.discount,
+                so.delivery_charge_id,
                 so.delivery_charge,
                 so.delivery_address,
                 so.total,
@@ -1099,7 +1109,7 @@ class Sale extends Kitchen
                     so.order_type, c.id, so.payment_term_id, so.payment_method_id,
                     so.assigned_driver_id, so.delivery_option, so.additional_note,
                     so.customer_note, so.discount, so.delivery_charge, so.total,
-                    c.email, so.created_at, so.delivery_date;
+                    c.email, so.created_at, so.delivery_date, so.delivery_charge_id
         ";
 
         $stmt = $this->db->prepare($query);

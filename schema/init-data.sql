@@ -244,3 +244,9 @@ VALUES
 ('Utilities', 'Payments for electricity, water, and internet bills'),
 ('Meals', 'Expenses for meals and entertainment'),
 ('Maintenance', 'Expenses related to equipment maintenance');
+
+INSERT INTO delivery_charges (name, amount, description) VALUES
+('Standard Delivery', 500.00, 'Delivery within 3-5 business days'),
+('Express Delivery', 1500.00, 'Delivery within 24 hours'),
+('Same-Day Delivery', 2500.00, 'Delivery within the same day for orders placed before 12 PM');
+

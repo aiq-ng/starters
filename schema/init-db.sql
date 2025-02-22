@@ -17,6 +17,14 @@ CREATE TABLE salutations (
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
+--delivery charge
+CREATE TABLE delivery_charges (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(50) UNIQUE,
+    amount DECIMAL(20, 2) NOT NULL,
+    description TEXT
+);
+
 -- Currencies
 CREATE TABLE currencies (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -487,7 +495,9 @@ CREATE TABLE sales_orders (
     additional_note TEXT,
     customer_note TEXT,
     discount DECIMAL(20, 2) DEFAULT 0,
+    delivery_charge_id UUID REFERENCES delivery_charges(id) ON DELETE SET NULL,
     delivery_charge DECIMAL(20, 2) DEFAULT 0,
+    total_boxes INT DEFAULT 1,
     total DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'pending' 
         -- upcoming for services
@@ -713,7 +723,8 @@ BEGIN
         SELECT SUM(total) 
         FROM sales_order_items 
         WHERE sales_order_id = NEW.sales_order_id
-    ), 0) - COALESCE(discount, 0) + COALESCE(delivery_charge, 0)
+    ), 0) * COALESCE(total_boxes, 1) 
+    - COALESCE(discount, 0) + COALESCE(delivery_charge, 0)
     WHERE id = NEW.sales_order_id;
 
     RETURN NEW;
@@ -747,6 +758,20 @@ BEGIN
         AND sales_orders.payment_status = 'paid'
     ), 0)
     WHERE id = COALESCE(NEW.customer_id, OLD.customer_id);
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION set_delivery_charge()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE sales_orders
+    SET delivery_charge = COALESCE((
+        SELECT amount FROM delivery_charges 
+        WHERE id = NEW.delivery_charge_id
+    ), 0)
+    WHERE id = NEW.id;
 
     RETURN NEW;
 END;
@@ -794,3 +819,10 @@ CREATE TRIGGER sales_order_balance_update
 AFTER INSERT OR UPDATE OR DELETE ON sales_orders
 FOR EACH ROW
 EXECUTE FUNCTION update_customer_balance();
+
+CREATE TRIGGER trigger_set_delivery_charge
+AFTER INSERT OR UPDATE OF delivery_charge_id
+ON sales_orders
+FOR EACH ROW
+EXECUTE FUNCTION set_delivery_charge();
+
