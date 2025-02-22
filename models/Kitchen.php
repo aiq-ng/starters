@@ -83,7 +83,7 @@ class Kitchen
                 so.discount,
                 pm.name AS payment_method,
                 pt.name AS payment_term,
-                COALESCE(SUM(soi.quantity * soi.price), 0) AS total_amount,
+                so.total AS total_amount,
                 json_agg(
                     json_build_object(
                         'item_id', p.id,
