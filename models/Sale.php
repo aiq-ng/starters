@@ -549,7 +549,7 @@ class Sale extends Kitchen
                 CONCAT_WS(' ', c.salutation, c.first_name, c.last_name) AS customer_name, 
                 so.created_at::DATE AS date, 
                 so.order_type, 
-                COALESCE(SUM(so.total), 0.00) AS amount,
+                so.total AS amount,
                 so.total_boxes,
                 so.status,
                 so.payment_status
@@ -606,7 +606,8 @@ class Sale extends Kitchen
         $query .= "
             GROUP BY 
                 so.order_id, so.order_title, c.salutation, c.first_name, 
-                c.last_name, so.created_at, so.order_type, so.total, so.status, so.id
+                c.last_name, so.created_at, so.order_type, so.total, so.status,
+                so.id, so.total
             ORDER BY 
                 so.created_at DESC 
             LIMIT :limit OFFSET :offset
@@ -1086,7 +1087,7 @@ class Sale extends Kitchen
                 so.total,
                 so.status,
                 so.payment_status,
-                so.created_at AS invoice_date,
+                so.created_at::DATE AS invoice_date,
                 so.delivery_date,
                 json_agg(
                     json_build_object(
