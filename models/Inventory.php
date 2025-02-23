@@ -542,6 +542,8 @@ class Inventory
                 $affectedStockIds[] = $newStockId;
             }
 
+            $this->db->commit();
+
             $item = $this->getItem($itemId);
             $usersToNotify = BaseController::getUserByRole('Admin');
 
