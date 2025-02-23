@@ -411,7 +411,7 @@ class BaseController
                             'estimated_cash_flow', 'total_revenue', 'buying_price',
                             'vendor_balance', 'customer_balance', 'total_balance',
                             'shipping_charge', 'total_cost', 'total_profit',
-                            'total_transaction', 'expenses'
+                            'total_transaction', 'expenses', 'highest_revenue', 'highest_expense',
 
                         ]) && is_numeric($value)) {
                             $formattedKey = 'formatted_' . $key;

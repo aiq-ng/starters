@@ -273,7 +273,7 @@ class TradeController extends BaseController
                     'entity_id' => $purchaseId,
                     'entity_type' => "purchase_order",
                     'title' => 'Purchase Order Received',
-                    'body' => 'Purchase order ' . $purchase['reference_number'] . ' has been marked as received',
+                    'body' => 'Purchase order ' . $purchase['purchase_order_number'] . ' has been marked as received',
                 ];
 
                 $this->notify->sendNotification($notification);

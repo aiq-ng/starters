@@ -122,42 +122,56 @@ class Accounting extends Kitchen
     }
 
 
-    public function getAccountingOverview()
+    public function getAccountingOverview($year)
     {
+
         $query = "
             SELECT 
-                (
-                    SELECT COALESCE(SUM(total), 0)
-                    FROM sales_orders
-                ) AS total_revenue,
-                (
-                    SELECT COALESCE(SUM(total), 0)
-                    FROM sales_orders
-                ) - COALESCE((
-                    SELECT SUM(total)
-                    FROM purchase_orders
-                ), 0) - COALESCE((
-                    SELECT SUM(amount)
-                    FROM expenses
-                ), 0) AS cash_at_hand,
-                (
-                    COALESCE((
-                        SELECT SUM(total)
-                        FROM purchase_orders
-                    ), 0) + COALESCE((
-                        SELECT SUM(amount)
-                        FROM expenses
-                    ), 0)
-                ) AS outgoing,
-                (
-                    SELECT COALESCE(SUM(amount), 0)
-                    FROM loans
-                    WHERE status != 'repaid'
-                ) AS current_loaned
-            ;
+                COALESCE((
+                    SELECT SUM(total) 
+                    FROM sales_orders 
+                    WHERE payment_status = 'paid'
+                    AND DATE_PART('year', COALESCE(delivery_date, created_at)) = :year
+                ), 0) AS total_revenue,
+                
+                COALESCE((
+                    SELECT MAX(total) 
+                    FROM sales_orders 
+                    WHERE payment_status = 'paid'
+                    AND DATE_PART('year', COALESCE(delivery_date, created_at)) = :year
+                ), 0) AS highest_revenue,
+
+                COALESCE((
+                    SELECT SUM(total) 
+                    FROM purchase_orders 
+                    WHERE status = 'paid'
+                    AND DATE_PART('year', COALESCE(delivery_date, created_at)) = :year
+                ), 0) 
+                + COALESCE((
+                    SELECT SUM(amount) 
+                    FROM expenses 
+                    WHERE status IN ('pending', 'paid')
+                    AND DATE_PART('year', COALESCE(date_of_expense, created_at)) = :year
+                ), 0) AS total_expenses,
+
+                COALESCE(GREATEST(
+                    (
+                        SELECT MAX(total) 
+                        FROM purchase_orders 
+                        WHERE status = 'paid'
+                        AND DATE_PART('year', COALESCE(delivery_date, created_at)) = :year
+                    ),
+                    (
+                        SELECT MAX(amount) 
+                        FROM expenses 
+                        WHERE status IN ('pending', 'paid')
+                        AND DATE_PART('year', COALESCE(date_of_expense, created_at)) = :year
+                    )
+                ), 0) AS highest_expenses
         ";
 
-        $stmt = $this->db->query($query);
+        $stmt = $this->db->prepare($query);
+        $stmt->execute(['year' => $year]);
 
         return $stmt->fetch(\PDO::FETCH_ASSOC);
     }

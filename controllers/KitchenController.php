@@ -152,7 +152,10 @@ class KitchenController extends BaseController
         $page = isset($_GET['page']) ? $_GET['page'] : 1;
         $page_size = isset($_GET['page_size']) ? $_GET['page_size'] : 100;
         $chefId = isset($_GET['chef_id']) ? $_GET['chef_id'] : null;
-        $status = isset($_GET['status']) ? $this->convertStatus($_GET['status']) : 'new order';
+        $status = isset($_GET['status'])
+            ? $this->convertStatus($_GET['status'])
+            : ['new order', 'in progress'];
+
 
         $orders = $this->kitchen->getOrders($chefId, $status, $page, $page_size);
 

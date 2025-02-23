@@ -376,19 +376,29 @@ class Kitchen
             $params[':driver_id'] = $driverId;
         }
 
-        if ($status) {
-            $conditions[] = "so.status = :status";
-            $params[':status'] = $status;
+        if (!empty($status)) {
+            if (is_array($status)) {
+                $statusPlaceholders = [];
+                foreach ($status as $index => $value) {
+                    $placeholder = ":status_$index";
+                    $statusPlaceholders[] = $placeholder;
+                    $params[$placeholder] = $value;
+                }
+                $conditions[] = "so.status IN (" . implode(',', $statusPlaceholders) . ")";
+            } else {
+                $conditions[] = "so.status = :status";
+                $params[':status'] = $status;
+            }
         }
 
         $conditionString = "WHERE " . implode(" AND ", $conditions);
 
         $countQuery = "
-            SELECT COUNT(DISTINCT so.id) AS total_items
-            FROM sales_orders so
-            LEFT JOIN driver_assignments da ON da.order_id = so.id
-            {$conditionString}
-        ";
+        SELECT COUNT(DISTINCT so.id) AS total_items
+        FROM sales_orders so
+        LEFT JOIN driver_assignments da ON da.order_id = so.id
+        {$conditionString}
+    ";
 
         $countStmt = $this->db->prepare($countQuery);
         foreach ($params as $key => $value) {

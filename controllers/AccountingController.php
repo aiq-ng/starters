@@ -151,7 +151,16 @@ class AccountingController extends BaseController
     {
         $this->authorizeRequest();
 
-        $overview = $this->accounting->getAccountingOverview();
+        $year = isset($_GET['year']) ? $_GET['year'] : date('Y');
+
+        $year = (int)$year;
+
+        if ($year <= 0 || strlen((string)$year) != 4) {
+            $year = (int)date('Y');
+        }
+
+
+        $overview = $this->accounting->getAccountingOverview($year);
 
         if ($overview) {
             $this->sendResponse('success', 200, $overview);

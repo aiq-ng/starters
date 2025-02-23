@@ -530,7 +530,6 @@ class Inventory
                 $newStockId = $this->createItemStock($itemId, $data);
 
                 $this->insertStockAdjustment(
-                    $itemId,
                     $newStockId,
                     $quantity,
                     $data['adjustment_type'],
@@ -543,7 +542,36 @@ class Inventory
                 $affectedStockIds[] = $newStockId;
             }
 
-            $this->db->commit();
+            $item = $this->getItem($itemId);
+            $usersToNotify = BaseController::getUserByRole('Admin');
+
+            if (empty($usersToNotify)) {
+                throw new \Exception("No Admin user found for notification.");
+            }
+
+            $adjustmentText = $data['adjustment_type'] === 'addition'
+                ? "increased by $quantity"
+                : "reduced by $quantity";
+
+            $title = 'Stock Adjustment';
+            $body = "The stock of {$item['name']} has been $adjustmentText.";
+
+            foreach ($usersToNotify as $userToNotify) {
+                if (!isset($userToNotify['id'])) {
+                    continue;
+                }
+
+                $notificationData = [
+                    'user_id' => $userToNotify['id'],
+                    'event' => 'notification',
+                    'entity_id' => $itemId,
+                    'entity_type' => 'items',
+                    'title' => $title,
+                    'body' => $body,
+                ];
+
+                (new NotificationService())->sendNotification($notificationData);
+            }
             return $affectedStockIds;
         } catch (\Exception $e) {
             $this->db->rollBack();
@@ -577,6 +605,13 @@ class Inventory
                 throw new \Exception("Admin user not found for notification.");
             }
 
+            $statusText = $item['availability'] === 'out of stock'
+                ? 'is currently out of stock'
+                : 'is running low on stock';
+
+            $title = 'Stock Alert: ' . $item['name'];
+            $body = "Attention: The item '{$item['name']}' $statusText. Please take action.";
+
             foreach ($usersToNotify as $userToNotify) {
                 if (!isset($userToNotify['id'])) {
                     continue;
@@ -587,8 +622,8 @@ class Inventory
                     'event' => 'notification',
                     'entity_id' => $itemId,
                     'entity_type' => "items",
-                    'title' => 'Item Availability',
-                    'body' => "{$item['name']} is {$item['availability']}"
+                    'title' => $title,
+                    'body' => $body
                 ];
 
                 (new NotificationService())->sendNotification($notification);
@@ -627,7 +662,6 @@ class Inventory
                     $affectedStockIds[] = $stockId;
 
                     $this->insertStockAdjustment(
-                        $itemId,
                         $stockId,
                         $subtractAmount,
                         $data['adjustment_type'],
@@ -650,7 +684,6 @@ class Inventory
     }
 
     private function insertStockAdjustment(
-        $itemId,
         $stockId,
         $quantity,
         $adjustmentType,
@@ -682,29 +715,6 @@ class Inventory
             throw new \Exception('Failed to log stock adjustment.');
         }
 
-        $item = $this->getItem($itemId);
-        $usersToNotify = BaseController::getUserByRole('Admin');
-
-        if (empty($usersToNotify)) {
-            throw new \Exception("No Admin user found for notification.");
-        }
-
-        foreach ($usersToNotify as $userToNotify) {
-            if (!isset($userToNotify['id'])) {
-                continue;
-            }
-
-            $notificationData = [
-                'user_id' => $userToNotify['id'],
-                'event' => 'notification',
-                'entity_id' => $stockId,
-                'entity_type' => 'items',
-                'title' => 'Stock Adjustment',
-                'body' => $item['name'] . ' stock has been adjusted',
-            ];
-
-            (new NotificationService())->sendNotification($notificationData);
-        }
     }
 
     private function getStocksByItemId($itemId)
