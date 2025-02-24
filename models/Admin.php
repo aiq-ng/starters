@@ -23,26 +23,36 @@ class Admin
 
         $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
 
-        $stmt->execute([
-            $hashedPassword,
-            $data['email']
-        ]);
+        try {
+            $stmt->execute([
+                $hashedPassword,
+                $data['email']
+            ]);
 
-        if (!empty($data['permissions']) && is_array($data['permissions'])) {
-            $this->insertPermissions($userId, $data['permissions']);
+            if (!empty($data['permissions']) && is_array($data['permissions'])) {
+                $this->insertPermissions($userId, $data['permissions']);
+            }
+
+            return $userId;
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception('Error adding admin access');
         }
-
-        return $userId;
     }
 
     public function insertPermissions($userId, $permissions)
     {
-        foreach ($permissions as $permissionId) {
-            $stmt = $this->db->prepare(
-                'INSERT INTO user_permissions (user_id, permission_id) 
+        try {
+            foreach ($permissions as $permissionId) {
+                $stmt = $this->db->prepare(
+                    'INSERT INTO user_permissions (user_id, permission_id) 
             VALUES (?, ?)'
-            );
-            $stmt->execute([$userId, $permissionId]);
+                );
+                $stmt->execute([$userId, $permissionId]);
+            }
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception('Error adding permissions');
         }
     }
 
@@ -55,14 +65,19 @@ class Admin
             GROUP BY p.name'
         );
 
-        $stmt->execute();
-        $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        try {
+            $stmt->execute();
+            $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        $overview = [];
-        foreach ($results as $row) {
-            $overview[$row['permission_name']] = $row['total_users'];
+            $overview = [];
+            foreach ($results as $row) {
+                $overview[$row['permission_name']] = $row['total_users'];
+            }
+
+            return $overview;
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
         }
-
-        return $overview;
     }
 }

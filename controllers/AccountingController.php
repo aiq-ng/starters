@@ -28,7 +28,11 @@ class AccountingController extends BaseController
 
         error_log('Expense Data: ' . json_encode($data));
 
-        $this->accounting->insertExpense($data);
+        try {
+            $this->accounting->insertExpense($data);
+        } catch (\Exception $e) {
+            $this->sendResponse($e->getMessage(), 400);
+        }
 
         $this->sendResponse('Expense added', 200);
     }

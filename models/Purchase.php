@@ -15,172 +15,186 @@ class Purchase
 
     public function getPurchaseOrders($filters = [])
     {
-        $page = $filters['page'] ?? 1;
-        $pageSize = $filters['page_size'] ?? 10;
+        try {
+            $page = $filters['page'] ?? 1;
+            $pageSize = $filters['page_size'] ?? 10;
 
-        $query = "
-            SELECT
-                po.id,
-                po.order_sequence AS serial_number,
-                po.purchase_order_number,
-                po.reference_number,
-                po.invoice_number,
-                CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name,
-                po.created_at::DATE AS order_date,
-                po.delivery_date,
-                COALESCE(po.total, 0.00) AS total,
-                po.status,
-                CASE
-                    WHEN po.status = 'issued' THEN 'Issued'
-                    ELSE pt.name
-                END AS payment
-            FROM purchase_orders po
-            LEFT JOIN vendors v ON po.vendor_id = v.id
-            LEFT JOIN payment_terms pt ON po.payment_term_id = pt.id
-        ";
+            $query = "
+                SELECT
+                    po.id,
+                    po.order_sequence AS serial_number,
+                    po.purchase_order_number,
+                    po.reference_number,
+                    po.invoice_number,
+                    CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name,
+                    po.created_at::DATE AS order_date,
+                    po.delivery_date,
+                    COALESCE(po.total, 0.00) AS total,
+                    po.status,
+                    CASE
+                        WHEN po.status = 'issued' THEN 'Issued'
+                        ELSE pt.name
+                    END AS payment
+                FROM purchase_orders po
+                LEFT JOIN vendors v ON po.vendor_id = v.id
+                LEFT JOIN payment_terms pt ON po.payment_term_id = pt.id
+            ";
 
-        $conditions = [];
-        $params = [];
+            $conditions = [];
+            $params = [];
 
-        if (!empty($filters['status']) && strtolower($filters['status']) !== 'all') {
-            $conditions[] = "po.status = :status";
-            $params['status'] = $filters['status'];
-        }
+            if (!empty($filters['status']) && strtolower($filters['status']) !== 'all') {
+                $conditions[] = "po.status = :status";
+                $params['status'] = $filters['status'];
+            }
 
-        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
-            $conditions[] = "po.created_at::DATE BETWEEN :start_date AND :end_date";
-            $params['start_date'] = $filters['start_date'];
-            $params['end_date'] = $filters['end_date'];
-        } elseif (!empty($filters['start_date'])) {
-            $conditions[] = "po.created_at::DATE >= :start_date";
-            $params['start_date'] = $filters['start_date'];
-        } elseif (!empty($filters['end_date'])) {
-            $conditions[] = "po.created_at::DATE <= :end_date";
-            $params['end_date'] = $filters['end_date'];
-        }
+            if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+                $conditions[] = "po.created_at::DATE BETWEEN :start_date AND :end_date";
+                $params['start_date'] = $filters['start_date'];
+                $params['end_date'] = $filters['end_date'];
+            } elseif (!empty($filters['start_date'])) {
+                $conditions[] = "po.created_at::DATE >= :start_date";
+                $params['start_date'] = $filters['start_date'];
+            } elseif (!empty($filters['end_date'])) {
+                $conditions[] = "po.created_at::DATE <= :end_date";
+                $params['end_date'] = $filters['end_date'];
+            }
 
-        if (!empty($filters['search'])) {
-            $conditions[] = "
+            if (!empty($filters['search'])) {
+                $conditions[] = "
                 (po.purchase_order_number ILIKE :search 
                 OR po.reference_number ILIKE :search
                 OR po.invoice_number ILIKE :search 
                 OR CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) ILIKE :search)
             ";
-            $params['search'] = '%' . $filters['search'] . '%';
+                $params['search'] = '%' . $filters['search'] . '%';
+            }
+
+            if ($conditions) {
+                $query .= " WHERE " . implode(' AND ', $conditions);
+            }
+
+            $query .= " ORDER BY po.created_at DESC LIMIT :limit OFFSET :offset";
+
+            $params['limit'] = $pageSize;
+            $params['offset'] = ($page - 1) * $pageSize;
+
+            $stmt = $this->db->prepare($query);
+
+            foreach ($params as $key => $value) {
+                $type = is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR;
+                $stmt->bindValue($key, $value, $type);
+            }
+
+            $stmt->execute();
+            $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            $totalItems = $this->getPurchaseOrdersCount($filters);
+
+            $meta = [
+                'total_data' => (int) $totalItems,
+                'total_pages' => ceil($totalItems / $pageSize),
+                'page_size' => (int) $pageSize,
+                'previous_page' => $page > 1 ? $page - 1 : null,
+                'current_page' => (int) $page,
+                'next_page' => $page * $pageSize < $totalItems ? $page + 1 : null,
+            ];
+
+            return ['data' => $data, 'meta' => $meta];
+        } catch (\Exception $e) {
+            error_log('Error fetching purchase orders: ' . $e->getMessage());
+            return ['data' => [], 'meta' => []];
         }
-
-        if ($conditions) {
-            $query .= " WHERE " . implode(' AND ', $conditions);
-        }
-
-        $query .= " ORDER BY po.created_at DESC LIMIT :limit OFFSET :offset";
-
-        $params['limit'] = $pageSize;
-        $params['offset'] = ($page - 1) * $pageSize;
-
-        $stmt = $this->db->prepare($query);
-
-        foreach ($params as $key => $value) {
-            $type = is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR;
-            $stmt->bindValue($key, $value, $type);
-        }
-
-        $stmt->execute();
-        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-        $totalItems = $this->getPurchaseOrdersCount($filters);
-
-        $meta = [
-            'total_data' => (int) $totalItems,
-            'total_pages' => ceil($totalItems / $pageSize),
-            'page_size' => (int) $pageSize,
-            'previous_page' => $page > 1 ? $page - 1 : null,
-            'current_page' => (int) $page,
-            'next_page' => $page * $pageSize < $totalItems ? $page + 1 : null,
-        ];
-
-        return ['data' => $data, 'meta' => $meta];
     }
 
     private function getPurchaseOrdersCount($filters = [])
     {
-        $query = "
+        try {
+            $query = "
                 SELECT COUNT(*) AS count
                 FROM purchase_orders po
                 LEFT JOIN vendors v ON po.vendor_id = v.id
-        ";
+            ";
 
-        $conditions = [];
-        $params = [];
+            $conditions = [];
+            $params = [];
 
-        if (!empty($filters['status']) && strtolower($filters['status']) !== 'all') {
-            $conditions[] = "po.status = :status";
-            $params['status'] = $filters['status'];
-        }
+            if (!empty($filters['status']) && strtolower($filters['status']) !== 'all') {
+                $conditions[] = "po.status = :status";
+                $params['status'] = $filters['status'];
+            }
 
-        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
-            $conditions[] = "po.created_at::DATE BETWEEN :start_date AND :end_date";
-            $params['start_date'] = $filters['start_date'];
-            $params['end_date'] = $filters['end_date'];
-        } elseif (!empty($filters['start_date'])) {
-            $conditions[] = "po.created_at::DATE >= :start_date";
-            $params['start_date'] = $filters['start_date'];
-        } elseif (!empty($filters['end_date'])) {
-            $conditions[] = "po.created_at::DATE <= :end_date";
-            $params['end_date'] = $filters['end_date'];
-        }
+            if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+                $conditions[] = "po.created_at::DATE BETWEEN :start_date AND :end_date";
+                $params['start_date'] = $filters['start_date'];
+                $params['end_date'] = $filters['end_date'];
+            } elseif (!empty($filters['start_date'])) {
+                $conditions[] = "po.created_at::DATE >= :start_date";
+                $params['start_date'] = $filters['start_date'];
+            } elseif (!empty($filters['end_date'])) {
+                $conditions[] = "po.created_at::DATE <= :end_date";
+                $params['end_date'] = $filters['end_date'];
+            }
 
-        if (!empty($filters['search'])) {
-            $conditions[] = "
+            if (!empty($filters['search'])) {
+                $conditions[] = "
                 (po.purchase_order_number ILIKE :search 
                 OR po.reference_number ILIKE :search 
                 OR po.invoice_number ILIKE :search 
                 OR CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) ILIKE :search)
             ";
-            $params['search'] = '%' . $filters['search'] . '%';
-        }
+                $params['search'] = '%' . $filters['search'] . '%';
+            }
 
-        if ($conditions) {
-            $query .= " WHERE " . implode(' AND ', $conditions);
-        }
+            if ($conditions) {
+                $query .= " WHERE " . implode(' AND ', $conditions);
+            }
 
-        $stmt = $this->db->prepare($query);
-        foreach ($params as $key => $value) {
-            $type = is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR;
-            $stmt->bindValue($key, $value, $type);
-        }
+            $stmt = $this->db->prepare($query);
+            foreach ($params as $key => $value) {
+                $type = is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR;
+                $stmt->bindValue($key, $value, $type);
+            }
 
-        $stmt->execute();
-        return (int) $stmt->fetchColumn();
+            $stmt->execute();
+            return (int) $stmt->fetchColumn();
+        } catch (\Exception $e) {
+            error_log('Error fetching purchase orders count: ' . $e->getMessage());
+            return 0;
+        }
     }
 
     public function deletePurchaseOrder(array $purchaseOrderIds)
     {
-        if (empty($purchaseOrderIds)) {
-            return false;
+        try {
+            if (empty($purchaseOrderIds)) {
+                return false;
+            }
+
+            $placeholders = implode(',', array_fill(0, count($purchaseOrderIds), '?'));
+
+            $query = "
+                DELETE FROM purchase_orders
+                WHERE id IN ($placeholders)
+            ";
+
+            $stmt = $this->db->prepare($query);
+            $stmt->execute($purchaseOrderIds);
+
+            return $stmt->rowCount() > 0;
+        } catch (\Exception $e) {
+            error_log('Error deleting purchase order: ' . $e->getMessage());
+            throw new \Exception("Failed to delete purchase order: " . $e->getMessage());
         }
-
-        $placeholders = implode(',', array_fill(0, count($purchaseOrderIds), '?'));
-
-        $query = "
-            DELETE FROM purchase_orders
-            WHERE id IN ($placeholders)
-        ";
-
-        $stmt = $this->db->prepare($query);
-        $stmt->execute($purchaseOrderIds);
-
-        return $stmt->rowCount() > 0;
     }
 
 
 
     public function createPurchase($data)
     {
-
-        $this->db->beginTransaction();
-
         try {
+            $this->db->beginTransaction();
+
             $purchaseOrderId = $this->insertPurchaseOrder($data);
 
             $this->insertPurchaseOrderItems($purchaseOrderId, $data['items']);
@@ -189,7 +203,8 @@ class Purchase
             return $this->getInvoiceDetails($purchaseOrderId);
         } catch (\Exception $e) {
             $this->db->rollBack();
-            throw $e;
+            error_log('Error creating purchase order: ' . $e->getMessage());
+            throw new \Exception("Failed to create purchase order: " . $e->getMessage());
         }
     }
 
@@ -205,22 +220,26 @@ class Purchase
             RETURNING id;
         ";
 
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([
-            ':delivery_date' => $data['delivery_date'] ?? null,
-            ':vendor_id' => $data['vendor_id'] ?? null,
-            ':branch_id' => $data['branch_id'] ?? null,
-            ':payment_term_id' => $data['payment_term_id'] ?? null,
-            ':subject' => $data['subject'] ?? null,
-            ':notes' => $data['notes'] ?? null,
-            ':terms_and_conditions' => $data['terms_and_conditions'] ?? null,
-            ':discount' => $data['discount'] ?? null,
-            ':shipping_charge' => $data['shipping_charge'] ?? null,
-            ':total' => $data['total'] ?? null,
-            ':processed_by' => $data['user_id'] ?? null,
-        ]);
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([
+                ':delivery_date' => $data['delivery_date'] ?? null,
+                ':vendor_id' => $data['vendor_id'] ?? null,
+                ':branch_id' => $data['branch_id'] ?? null,
+                ':payment_term_id' => $data['payment_term_id'] ?? null,
+                ':subject' => $data['subject'] ?? null,
+                ':notes' => $data['notes'] ?? null,
+                ':terms_and_conditions' => $data['terms_and_conditions'] ?? null,
+                ':discount' => $data['discount'] ?? null,
+                ':shipping_charge' => $data['shipping_charge'] ?? null,
+                ':total' => $data['total'] ?? null,
+                ':processed_by' => $data['user_id'] ?? null,
+            ]);
 
-        return $stmt->fetchColumn();
+            return $stmt->fetchColumn();
+        } catch (\Exception $e) {
+            throw new \Exception("Failed to insert purchase order: " . $e->getMessage());
+        }
     }
 
     private function insertPurchaseOrderItems($purchaseOrderId, $items)
@@ -233,19 +252,23 @@ class Purchase
             );
         ";
 
-        $stmt = $this->db->prepare($query);
+        try {
+            $stmt = $this->db->prepare($query);
 
-        foreach ($items as $item) {
-            // Filter out fields with empty ("") values
-            $filteredItem = array_filter($item, fn ($value) => $value !== "");
+            foreach ($items as $item) {
+                // Filter out fields with empty ("") values
+                $filteredItem = array_filter($item, fn ($value) => $value !== "");
 
-            $stmt->execute([
-                ':purchase_order_id' => $purchaseOrderId,
-                ':item_id' => $filteredItem['item_id'] ?? null,
-                ':quantity' => $filteredItem['quantity'] ?? null,
-                ':price' => $filteredItem['price'] ?? null,
-                ':tax_id' => $filteredItem['tax_id'] ?? null,
-            ]);
+                $stmt->execute([
+                    ':purchase_order_id' => $purchaseOrderId,
+                    ':item_id' => $filteredItem['item_id'] ?? null,
+                    ':quantity' => $filteredItem['quantity'] ?? null,
+                    ':price' => $filteredItem['price'] ?? null,
+                    ':tax_id' => $filteredItem['tax_id'] ?? null,
+                ]);
+            }
+        } catch (\Exception $e) {
+            throw new \Exception("Failed to insert purchase order items: " . $e->getMessage());
         }
     }
 
@@ -261,7 +284,8 @@ class Purchase
             return $this->getInvoiceDetails($purchaseOrderId);
         } catch (\Exception $e) {
             $this->db->rollBack();
-            throw $e;
+            error_log('Error updating purchase order: ' . $e->getMessage());
+            throw new \Exception("Failed to update purchase order: " . $e->getMessage());
         }
     }
 
@@ -284,21 +308,26 @@ class Purchase
             WHERE id = :purchase_order_id;
         ";
 
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([
-            ':purchase_order_id' => $purchaseOrderId,
-            ':delivery_date' => $data['delivery_date'] ?? null,
-            ':vendor_id' => $data['vendor_id'] ?? null,
-            ':branch_id' => $data['branch_id'] ?? null,
-            ':payment_term_id' => $data['payment_term_id'] ?? null,
-            ':subject' => $data['subject'] ?? null,
-            ':notes' => $data['notes'] ?? null,
-            ':terms_and_conditions' => $data['terms_and_conditions'] ?? null,
-            ':discount' => $data['discount'] ?? null,
-            ':shipping_charge' => $data['shipping_charge'] ?? null,
-            ':total' => $data['total'] ?? null,
-            ':processed_by' => $data['user_id'] ?? null,
-        ]);
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([
+                ':purchase_order_id' => $purchaseOrderId,
+                ':delivery_date' => $data['delivery_date'] ?? null,
+                ':vendor_id' => $data['vendor_id'] ?? null,
+                ':branch_id' => $data['branch_id'] ?? null,
+                ':payment_term_id' => $data['payment_term_id'] ?? null,
+                ':subject' => $data['subject'] ?? null,
+                ':notes' => $data['notes'] ?? null,
+                ':terms_and_conditions' => $data['terms_and_conditions'] ?? null,
+                ':discount' => $data['discount'] ?? null,
+                ':shipping_charge' => $data['shipping_charge'] ?? null,
+                ':total' => $data['total'] ?? null,
+                ':processed_by' => $data['user_id'] ?? null,
+            ]);
+        } catch (\Exception $e) {
+            error_log('Error updating purchase order: ' . $e->getMessage());
+            throw new \Exception("Failed to update purchase order: " . $e->getMessage());
+        }
     }
 
     private function updatePurchaseOrderItems($purchaseOrderId, $items)
@@ -320,22 +349,12 @@ class Purchase
             );
         ";
 
-        foreach ($items as $item) {
-            $filteredItem = array_filter($item, fn ($value) => $value !== "");
+        try {
+            foreach ($items as $item) {
+                $filteredItem = array_filter($item, fn ($value) => $value !== "");
 
-            // Try updating the item
-            $stmt = $this->db->prepare($updateQuery);
-            $stmt->execute([
-                ':purchase_order_id' => $purchaseOrderId,
-                ':item_id' => $filteredItem['item_id'] ?? null,
-                ':quantity' => $filteredItem['quantity'] ?? null,
-                ':price' => $filteredItem['price'] ?? null,
-                ':tax_id' => $filteredItem['tax_id'] ?? null,
-            ]);
-
-            // If no rows were updated, insert the item
-            if ($stmt->rowCount() === 0) {
-                $stmt = $this->db->prepare($insertQuery);
+                // Try updating the item
+                $stmt = $this->db->prepare($updateQuery);
                 $stmt->execute([
                     ':purchase_order_id' => $purchaseOrderId,
                     ':item_id' => $filteredItem['item_id'] ?? null,
@@ -343,7 +362,22 @@ class Purchase
                     ':price' => $filteredItem['price'] ?? null,
                     ':tax_id' => $filteredItem['tax_id'] ?? null,
                 ]);
+
+                // If no rows were updated, insert the item
+                if ($stmt->rowCount() === 0) {
+                    $stmt = $this->db->prepare($insertQuery);
+                    $stmt->execute([
+                        ':purchase_order_id' => $purchaseOrderId,
+                        ':item_id' => $filteredItem['item_id'] ?? null,
+                        ':quantity' => $filteredItem['quantity'] ?? null,
+                        ':price' => $filteredItem['price'] ?? null,
+                        ':tax_id' => $filteredItem['tax_id'] ?? null,
+                    ]);
+                }
             }
+        } catch (\Exception $e) {
+            error_log('Error updating purchase order items: ' . $e->getMessage());
+            throw new \Exception("Failed to update purchase order items: " . $e->getMessage());
         }
     }
 
@@ -377,16 +411,21 @@ class Purchase
             WHERE po.id = :purchase_order_id
         ";
 
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([':purchase_order_id' => $purchaseOrderId]);
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([':purchase_order_id' => $purchaseOrderId]);
 
-        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if ($result) {
-            $result['items'] = $this->getPurchaseOrderItems($purchaseOrderId);
+            if ($result) {
+                $result['items'] = $this->getPurchaseOrderItems($purchaseOrderId);
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            error_log('Error fetching purchase order: ' . $e->getMessage());
+            return null;
         }
-
-        return $result;
     }
 
 
@@ -456,6 +495,7 @@ class Purchase
             }
 
         } catch (\Exception $e) {
+            error_log('Error fetching purchase order details: ' . $e->getMessage());
             throw new \Exception("Failed to fetch purchase order details: " . $e->getMessage());
         }
     }
@@ -490,25 +530,31 @@ class Purchase
 
         } catch (\Exception $e) {
             $this->db->rollBack();
-            throw $e;
+            error_log('Error marking purchase order as received: ' . $e->getMessage());
+            return false;
         }
     }
 
     public function updatePurchaseOrderStatus($purchaseOrderId)
     {
-        $updateQuery = "
-            UPDATE purchase_orders
-            SET status = 'received',
-                date_received = NOW()
-            WHERE id = :purchase_order_id
-        ";
+        try {
+            $updateQuery = "
+                UPDATE purchase_orders
+                SET status = 'received',
+                    date_received = NOW()
+                WHERE id = :purchase_order_id
+            ";
 
-        $updateStmt = $this->db->prepare($updateQuery);
-        $updateStmt->execute([':purchase_order_id' => $purchaseOrderId]);
+            $updateStmt = $this->db->prepare($updateQuery);
+            $updateStmt->execute([':purchase_order_id' => $purchaseOrderId]);
 
-        $rowCount = $updateStmt->rowCount();
+            $rowCount = $updateStmt->rowCount();
 
-        return $rowCount;
+            return $rowCount;
+        } catch (\Exception $e) {
+            error_log('Error updating purchase order status: ' . $e->getMessage());
+            throw new \Exception('Failed to update purchase order status: ' . $e->getMessage());
+        }
     }
 
     public function getPurchaseOrderItems($purchaseOrderId)

@@ -18,39 +18,44 @@ class Customer
     {
 
         $query = "
-        INSERT INTO customers 
-        (customer_type, salutation, first_name, last_name, display_name, 
-        company_name, email, work_phone, mobile_phone, address, social_media,
-        website, currency_id, payment_term_id)
-        VALUES 
-        (:customer_type, :salutation, :first_name, :last_name, :display_name, 
-        :company_name, :email, :work_phone, :mobile_phone, :address,
-        :social_media, :website, :currency_id, :payment_term_id)
-        RETURNING id
+            INSERT INTO customers 
+            (customer_type, salutation, first_name, last_name, display_name, 
+            company_name, email, work_phone, mobile_phone, address, social_media,
+            website, currency_id, payment_term_id)
+            VALUES 
+            (:customer_type, :salutation, :first_name, :last_name, :display_name, 
+            :company_name, :email, :work_phone, :mobile_phone, :address,
+            :social_media, :website, :currency_id, :payment_term_id)
+            RETURNING id
         ";
 
-        $stmt = $this->db->prepare($query);
+        try {
+            $stmt = $this->db->prepare($query);
 
-        $stmt->bindValue(':customer_type', $data['customer_type'] ?? 'individual');
-        $stmt->bindValue(':salutation', $data['salutation'] ?? null);
-        $stmt->bindValue(':first_name', $data['first_name'] ?? null);
-        $stmt->bindValue(':last_name', $data['last_name'] ?? null);
-        $stmt->bindValue(':display_name', $data['display_name'] ?? null);
-        $stmt->bindValue(':company_name', $data['company_name'] ?? null);
-        $stmt->bindValue(':email', $data['email'] ?? null);
-        $stmt->bindValue(':work_phone', $data['work_phone'] ?? null);
-        $stmt->bindValue(':mobile_phone', $data['mobile_phone'] ?? $data['mobile'] ?? null);
-        $stmt->bindValue(':address', $data['address'] ?? null);
-        $stmt->bindValue(':social_media', $data['social_media'] ?? null);
-        $stmt->bindValue(':website', $data['website'] ?? null);
-        $stmt->bindValue(':currency_id', $data['currency_id'] ?? null);
-        $stmt->bindValue(':payment_term_id', $data['payment_term_id'] ?? null);
+            $stmt->bindValue(':customer_type', $data['customer_type'] ?? 'individual');
+            $stmt->bindValue(':salutation', $data['salutation'] ?? null);
+            $stmt->bindValue(':first_name', $data['first_name'] ?? null);
+            $stmt->bindValue(':last_name', $data['last_name'] ?? null);
+            $stmt->bindValue(':display_name', $data['display_name'] ?? null);
+            $stmt->bindValue(':company_name', $data['company_name'] ?? null);
+            $stmt->bindValue(':email', $data['email'] ?? null);
+            $stmt->bindValue(':work_phone', $data['work_phone'] ?? null);
+            $stmt->bindValue(':mobile_phone', $data['mobile_phone'] ?? $data['mobile'] ?? null);
+            $stmt->bindValue(':address', $data['address'] ?? null);
+            $stmt->bindValue(':social_media', $data['social_media'] ?? null);
+            $stmt->bindValue(':website', $data['website'] ?? null);
+            $stmt->bindValue(':currency_id', $data['currency_id'] ?? null);
+            $stmt->bindValue(':payment_term_id', $data['payment_term_id'] ?? null);
 
-        if ($stmt->execute()) {
-            return $stmt->fetchColumn();
+            if ($stmt->execute()) {
+                return $stmt->fetchColumn();
+            }
+
+            return false;
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception("Error creating customer");
         }
-
-        return false;
     }
 
     public function updateCustomer($id, $data)
@@ -75,25 +80,30 @@ class Customer
             WHERE id = :id
         ";
 
-        $stmt = $this->db->prepare($query);
+        try {
+            $stmt = $this->db->prepare($query);
 
-        $stmt->bindParam(':customer_type', $data['customer_type']);
-        $stmt->bindParam(':salutation', $data['salutation']);
-        $stmt->bindParam(':first_name', $data['first_name']);
-        $stmt->bindParam(':last_name', $data['last_name']);
-        $stmt->bindParam(':display_name', $data['display_name']);
-        $stmt->bindParam(':company_name', $data['company_name']);
-        $stmt->bindParam(':email', $data['email']);
-        $stmt->bindParam(':work_phone', $data['work_phone']);
-        $stmt->bindParam(':mobile_phone', $data['mobile_phone']);
-        $stmt->bindParam(':address', $data['address']);
-        $stmt->bindParam(':social_media', $data['social_media']);
-        $stmt->bindParam(':website', $data['website']);
-        $stmt->bindParam(':currency_id', $data['currency_id']);
-        $stmt->bindParam(':payment_term_id', $data['payment_term_id']);
-        $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':customer_type', $data['customer_type']);
+            $stmt->bindParam(':salutation', $data['salutation']);
+            $stmt->bindParam(':first_name', $data['first_name']);
+            $stmt->bindParam(':last_name', $data['last_name']);
+            $stmt->bindParam(':display_name', $data['display_name']);
+            $stmt->bindParam(':company_name', $data['company_name']);
+            $stmt->bindParam(':email', $data['email']);
+            $stmt->bindParam(':work_phone', $data['work_phone']);
+            $stmt->bindParam(':mobile_phone', $data['mobile_phone']);
+            $stmt->bindParam(':address', $data['address']);
+            $stmt->bindParam(':social_media', $data['social_media']);
+            $stmt->bindParam(':website', $data['website']);
+            $stmt->bindParam(':currency_id', $data['currency_id']);
+            $stmt->bindParam(':payment_term_id', $data['payment_term_id']);
+            $stmt->bindParam(':id', $id);
 
-        return $stmt->execute();
+            return $stmt->execute();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception("Error updating customer");
+        }
     }
 
     public function deleteCustomer($customerIds)
@@ -106,21 +116,31 @@ class Customer
 
         $placeholders = implode(',', array_fill(0, count($customerIds), '?'));
 
-        $stmt = $this->db->prepare("DELETE FROM customers WHERE id IN ($placeholders)");
-        $stmt->execute($customerIds);
+        try {
+            $stmt = $this->db->prepare("DELETE FROM customers WHERE id IN ($placeholders)");
+            $stmt->execute($customerIds);
 
-        return $stmt->rowCount();
+            return $stmt->rowCount();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception("Error deleting customer");
+        }
     }
 
     public function getCustomer($id)
     {
         $query = "SELECT * FROM customers WHERE id = :id";
 
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
 
-        return $stmt->fetch();
+            return $stmt->fetch();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
+        }
     }
 
     public function getCustomers($filters = [])
@@ -204,32 +224,37 @@ class Customer
         $params['pageSize'] = $pageSize;
         $params['offset'] = $offset;
 
-        $stmt = $this->db->prepare($query);
+        try {
+            $stmt = $this->db->prepare($query);
 
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value, is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value, is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR);
+            }
+
+            if ($stmt->execute()) {
+                $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                $totalItems = $this->getTotalCustomerCount($filters);
+
+                $meta = [
+                    'total_data' => (int) $totalItems,
+                    'total_pages' => ceil($totalItems / $pageSize),
+                    'page_size' => (int) $pageSize,
+                    'previous_page' => $page > 1 ? (int) $page - 1 : null,
+                    'current_page' => (int) $page,
+                    'next_page' => (int) $page + 1,
+                ];
+
+                return [
+                    'data' => $data,
+                    'meta' => $meta,
+                ];
+            }
+
+            return [];
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return ['data' => [], 'meta' => []];
         }
-
-        if ($stmt->execute()) {
-            $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            $totalItems = $this->getTotalCustomerCount($filters);
-
-            $meta = [
-                'total_data' => (int) $totalItems,
-                'total_pages' => ceil($totalItems / $pageSize),
-                'page_size' => (int) $pageSize,
-                'previous_page' => $page > 1 ? (int) $page - 1 : null,
-                'current_page' => (int) $page,
-                'next_page' => (int) $page + 1,
-            ];
-
-            return [
-                'data' => $data,
-                'meta' => $meta,
-            ];
-        }
-
-        return [];
     }
 
     private function getTotalCustomerCount($filters = [])
@@ -274,15 +299,20 @@ class Customer
             $countQuery .= " WHERE " . implode(" AND ", $conditions);
         }
 
-        $stmt = $this->db->prepare($countQuery);
+        try {
+            $stmt = $this->db->prepare($countQuery);
 
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value, is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value, is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR);
+            }
+
+            $stmt->execute();
+
+            return (int) $stmt->fetchColumn();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return 0;
         }
-
-        $stmt->execute();
-
-        return (int) $stmt->fetchColumn();
     }
 
     public function getCustomerTransactions($customerId)
@@ -347,21 +377,26 @@ class Customer
                 c.mobile_phone, c.customer_type, c.balance, cu.code, pt.name
         ";
 
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':customer_id', $customerId, \PDO::PARAM_STR);
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':customer_id', $customerId, \PDO::PARAM_STR);
 
-        if ($stmt->execute()) {
-            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if ($stmt->execute()) {
+                $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-            if ($result) {
-                $result['receivables'] = json_decode($result['receivables'] ?? '[]', true);
-                $result['transactions'] = json_decode($result['transactions'] ?? '[]', true);
-                $result['social_media'] = json_decode($result['social_media'] ?? '[]', true);
+                if ($result) {
+                    $result['receivables'] = json_decode($result['receivables'] ?? '[]', true);
+                    $result['transactions'] = json_decode($result['transactions'] ?? '[]', true);
+                    $result['social_media'] = json_decode($result['social_media'] ?? '[]', true);
+                }
+
+                return $result;
             }
 
-            return $result;
+            return false;
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
         }
-
-        return false;
     }
 }

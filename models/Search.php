@@ -16,86 +16,91 @@ class Search
 
     public function globalSearch($filters)
     {
-        $page = $filters['page'] ?? 1;
-        $pageSize = $filters['pageSize'] ?? 10;
-        $search = $filters['search'] ?? null;
-        $offset = ($page - 1) * $pageSize;
+        try {
+            $page = $filters['page'] ?? 1;
+            $pageSize = $filters['pageSize'] ?? 10;
+            $search = $filters['search'] ?? null;
+            $offset = ($page - 1) * $pageSize;
 
-        if (empty($search)) {
-            return [];
-        }
+            if (empty($search)) {
+                return [];
+            }
 
-        $query = "WITH search_results AS (" .
-            $this->getPurchaseInvoiceSearchQuery($search) . " UNION ALL " .
-            $this->getSalesInvoiceSearchQuery($search) . " UNION ALL " .
-            $this->getSalesOrderSearchQuery($search) . " UNION ALL " .
-            $this->getPurchaseOrderSearchQuery($search) . " UNION ALL " .
-            $this->getInventorySearchQuery($search) . " UNION ALL " .
-            $this->getCustomerSearchQuery($search) . " UNION ALL " .
-            $this->getVendorSearchQuery($search) . " UNION ALL " .
-            $this->getEmployeeSearchQuery($search) . " UNION ALL " .
-            $this->getExpenseSearchQuery($search) . " UNION ALL " .
-            $this->getPriceListSearchQuery($search) . ")
+            $query = "WITH search_results AS (" .
+                $this->getPurchaseInvoiceSearchQuery($search) . " UNION ALL " .
+                $this->getSalesInvoiceSearchQuery($search) . " UNION ALL " .
+                $this->getSalesOrderSearchQuery($search) . " UNION ALL " .
+                $this->getPurchaseOrderSearchQuery($search) . " UNION ALL " .
+                $this->getInventorySearchQuery($search) . " UNION ALL " .
+                $this->getCustomerSearchQuery($search) . " UNION ALL " .
+                $this->getVendorSearchQuery($search) . " UNION ALL " .
+                $this->getEmployeeSearchQuery($search) . " UNION ALL " .
+                $this->getExpenseSearchQuery($search) . " UNION ALL " .
+                $this->getPriceListSearchQuery($search) . ")
         SELECT * FROM search_results 
         LIMIT :pageSize OFFSET :offset";
 
-        $countQuery = "WITH search_results AS (" .
-            $this->getPurchaseInvoiceSearchQuery($search) . " UNION ALL " .
-            $this->getSalesInvoiceSearchQuery($search) . " UNION ALL " .
-            $this->getSalesOrderSearchQuery($search) . " UNION ALL " .
-            $this->getPurchaseOrderSearchQuery($search) . " UNION ALL " .
-            $this->getInventorySearchQuery($search) . " UNION ALL " .
-            $this->getCustomerSearchQuery($search) . " UNION ALL " .
-            $this->getVendorSearchQuery($search) . " UNION ALL " .
-            $this->getEmployeeSearchQuery($search) . " UNION ALL " .
-            $this->getExpenseSearchQuery($search) . " UNION ALL " .
-            $this->getPriceListSearchQuery($search) . ")
+            $countQuery = "WITH search_results AS (" .
+                $this->getPurchaseInvoiceSearchQuery($search) . " UNION ALL " .
+                $this->getSalesInvoiceSearchQuery($search) . " UNION ALL " .
+                $this->getSalesOrderSearchQuery($search) . " UNION ALL " .
+                $this->getPurchaseOrderSearchQuery($search) . " UNION ALL " .
+                $this->getInventorySearchQuery($search) . " UNION ALL " .
+                $this->getCustomerSearchQuery($search) . " UNION ALL " .
+                $this->getVendorSearchQuery($search) . " UNION ALL " .
+                $this->getEmployeeSearchQuery($search) . " UNION ALL " .
+                $this->getExpenseSearchQuery($search) . " UNION ALL " .
+                $this->getPriceListSearchQuery($search) . ")
         SELECT COUNT(*) AS total FROM search_results";
 
-        $bindings = [
-            'pageSize' => $pageSize,
-            'offset' => $offset
-        ];
+            $bindings = [
+                'pageSize' => $pageSize,
+                'offset' => $offset
+            ];
 
-        if ($search) {
-            $bindings['search'] = "%$search%";
-        }
-
-        $stmt = $this->db->prepare($query);
-        foreach ($bindings as $key => $value) {
-            $stmt->bindValue(":$key", $value);
-        }
-        $stmt->execute();
-        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        foreach ($data as &$row) {
-            if (isset($row['data'])) {
-                $decodedData = json_decode($row['data'], true);
-                unset($row['data']);
-                $row = array_merge(['type' => $row['type']], $decodedData);
+            if ($search) {
+                $bindings['search'] = "%$search%";
             }
-        }
-        unset($row);
 
-        $countStmt = $this->db->prepare($countQuery);
-        foreach ($bindings as $key => $value) {
-            if ($key !== 'pageSize' && $key !== 'offset') {
-                $countStmt->bindValue(":$key", $value);
+            $stmt = $this->db->prepare($query);
+            foreach ($bindings as $key => $value) {
+                $stmt->bindValue(":$key", $value);
             }
-        }
-        $countStmt->execute();
-        $total = $countStmt->fetchColumn();
+            $stmt->execute();
+            $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            foreach ($data as &$row) {
+                if (isset($row['data'])) {
+                    $decodedData = json_decode($row['data'], true);
+                    unset($row['data']);
+                    $row = array_merge(['type' => $row['type']], $decodedData);
+                }
+            }
+            unset($row);
 
-        return [
-            'data' => $data,
-            'meta' => [
-                'total_data' => (int) $total,
-                'total_pages' => ceil($total / $pageSize),
-                'pageSize' => (int) $pageSize,
-                'previous_page' => $page > 1 ? (int) $page - 1 : null,
-                'current_page' => (int) $page,
-                'next_page' => (int) $page + 1,
-            ]
-        ];
+            $countStmt = $this->db->prepare($countQuery);
+            foreach ($bindings as $key => $value) {
+                if ($key !== 'pageSize' && $key !== 'offset') {
+                    $countStmt->bindValue(":$key", $value);
+                }
+            }
+            $countStmt->execute();
+            $total = $countStmt->fetchColumn();
+
+            return [
+                'data' => $data,
+                'meta' => [
+                    'total_data' => (int) $total,
+                    'total_pages' => ceil($total / $pageSize),
+                    'pageSize' => (int) $pageSize,
+                    'previous_page' => $page > 1 ? (int) $page - 1 : null,
+                    'current_page' => (int) $page,
+                    'next_page' => (int) $page + 1,
+                ]
+            ];
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return ['data' => [], 'meta' => []];
+        }
     }
 
     private function getExpenseSearchQuery($search)

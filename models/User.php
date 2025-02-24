@@ -18,27 +18,32 @@ class User
     //Register new users
     public function register($data)
     {
-        $query = "
-        INSERT INTO " . $this->table . " 
-        (firstname, lastname, email, password, role_id) 
-        VALUES (:firstname, :lastname, :email, :password, :role_id)
-        RETURNING id";
-        $stmt = $this->db->prepare($query);
+        try {
+            $query = "
+            INSERT INTO " . $this->table . " 
+            (firstname, lastname, email, password, role_id) 
+            VALUES (:firstname, :lastname, :email, :password, :role_id)
+            RETURNING id";
+            $stmt = $this->db->prepare($query);
 
-        $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+            $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
 
-        $roleId = $data['role'] ?? 3;
+            $roleId = $data['role'] ?? 3;
 
-        $stmt->bindParam(':firstname', $data['firstname']);
-        $stmt->bindParam(':lastname', $data['lastname']);
-        $stmt->bindParam(':email', $data['email']);
-        $stmt->bindParam(':password', $hashedPassword);
-        $stmt->bindParam(':role_id', $roleId);
+            $stmt->bindParam(':firstname', $data['firstname']);
+            $stmt->bindParam(':lastname', $data['lastname']);
+            $stmt->bindParam(':email', $data['email']);
+            $stmt->bindParam(':password', $hashedPassword);
+            $stmt->bindParam(':role_id', $roleId);
 
-        if ($stmt->execute()) {
-            return $stmt->fetchColumn();
-        } else {
-            return false;
+            if ($stmt->execute()) {
+                return $stmt->fetchColumn();
+            } else {
+                return false;
+            }
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception("Error registering user");
         }
     }
 

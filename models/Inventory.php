@@ -22,170 +22,185 @@ class Inventory
 
     private function getItemCurrentQuantity($itemId)
     {
-        $sql = "
-            SELECT COALESCE(SUM(quantity), 0) AS total_quantity
-            FROM item_stocks
-            WHERE item_id = :itemId
-        ";
+        try {
+            $sql = "
+                SELECT COALESCE(SUM(quantity), 0) AS total_quantity
+                FROM item_stocks
+                WHERE item_id = :itemId
+            ";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':itemId', $itemId);
-        $stmt->execute();
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':itemId', $itemId);
+            $stmt->execute();
 
-        return $stmt->fetchColumn();
+            return $stmt->fetchColumn();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return 0;
+        }
     }
 
     public function getInventory($filter = null)
     {
-        $page = $filter['page'] ?? 1;
-        $pageSize = $filter['page_size'] ?? 10;
-        $order = $filter['order'] ?? 'i.id';
-        $sort = $filter['sort'] ?? 'DESC';
-        $search = $filter['search'] ?? null;
+        try {
+            $page = $filter['page'] ?? 1;
+            $pageSize = $filter['page_size'] ?? 10;
+            $order = $filter['order'] ?? 'i.id';
+            $sort = $filter['sort'] ?? 'DESC';
+            $search = $filter['search'] ?? null;
 
-        $sql = "
-            SELECT
-                i.id, 
-                i.name, 
-                CONCAT(COALESCE(SUM(item_stocks.quantity), 0), ' ', u.abbreviation) AS quantity,
-                CONCAT(i.threshold_value, ' ', u.abbreviation) AS threshold_value,
-                i.price AS buying_price, 
-                MAX(item_stocks.expiry_date) AS expiry_date,
-                i.sku,
-                i.barcode,
-                i.availability, 
-                i.media
-            FROM item_stocks
-            JOIN items i ON item_stocks.item_id = i.id
-            LEFT JOIN units u ON i.unit_id = u.id
-        ";
+            $sql = "
+                SELECT
+                    i.id, 
+                    i.name, 
+                    CONCAT(COALESCE(SUM(item_stocks.quantity), 0), ' ', u.abbreviation) AS quantity,
+                    CONCAT(i.threshold_value, ' ', u.abbreviation) AS threshold_value,
+                    i.price AS buying_price, 
+                    MAX(item_stocks.expiry_date) AS expiry_date,
+                    i.sku,
+                    i.barcode,
+                    i.availability, 
+                    i.media
+                FROM item_stocks
+                JOIN items i ON item_stocks.item_id = i.id
+                LEFT JOIN units u ON i.unit_id = u.id
+            ";
 
-        $conditions = [];
-        $params = [];
+            $conditions = [];
+            $params = [];
 
-        if (!empty($filter['availability']) && strtolower($filter['availability']) !== 'all') {
-            $conditions[] = "i.availability = :filterAvailability";
-            $params['filterAvailability'] = $filter['availability'];
-        }
-
-        if (!empty($search)) {
-            $conditions[] = "(i.name ILIKE :search OR i.description ILIKE :search OR i.sku ILIKE :search)";
-            $params['search'] = '%' . $search . '%';
-        }
-
-        if (!empty($conditions)) {
-            $sql .= " WHERE " . implode(' AND ', $conditions);
-        }
-
-        $sql .= "
-            GROUP BY 
-                i.id, i.name, i.threshold_value, i.price,
-                i.sku, i.availability, i.media, u.abbreviation
-            ORDER BY $order $sort
-            LIMIT :pageSize OFFSET :offset
-        ";
-
-        $params['pageSize'] = $pageSize;
-        $params['offset'] = ($page - 1) * $pageSize;
-
-        $stmt = $this->db->prepare($sql);
-
-        $stmt->bindValue(':pageSize', $params['pageSize'], \PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $params['offset'], \PDO::PARAM_INT);
-
-        if (!empty($filter['availability']) && strtolower($filter['availability']) !== 'all') {
-            $stmt->bindValue(':filterAvailability', $params['filterAvailability'], \PDO::PARAM_STR);
-        }
-
-        if (!empty($search)) {
-            $stmt->bindValue(':search', $params['search'], \PDO::PARAM_STR);
-        }
-
-        $stmt->execute();
-
-        $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-        foreach ($results as &$item) {
-            $item['media'] = !empty($item['media'])
-                ? json_decode($item['media'], true)
-                : null;
-
-            if (empty($item['barcode']) && !empty($item['sku'])) {
-                try {
-                    $barcode = $this->barcodeService->generateBarcode(
-                        $item['sku'],
-                        $item['id']
-                    );
-                    $this->barcodeService->updateItemBarcodeInDb(
-                        $item['id'],
-                        $barcode
-                    );
-                    $item['barcode'] = json_decode($barcode, true);
-                } catch (\Throwable $e) {
-                    error_log('Barcode generation failed: ' . $e->getMessage());
-                    $item['barcode'] = null; // Fallback
-                }
-            } elseif (!empty($item['barcode'])) {
-                $item['barcode'] = json_decode($item['barcode'], true);
+            if (!empty($filter['availability']) && strtolower($filter['availability']) !== 'all') {
+                $conditions[] = "i.availability = :filterAvailability";
+                $params['filterAvailability'] = $filter['availability'];
             }
+
+            if (!empty($search)) {
+                $conditions[] = "(i.name ILIKE :search OR i.description ILIKE :search OR i.sku ILIKE :search)";
+                $params['search'] = '%' . $search . '%';
+            }
+
+            if (!empty($conditions)) {
+                $sql .= " WHERE " . implode(' AND ', $conditions);
+            }
+
+            $sql .= "
+                GROUP BY 
+                    i.id, i.name, i.threshold_value, i.price,
+                    i.sku, i.availability, i.media, u.abbreviation
+                ORDER BY $order $sort
+                LIMIT :pageSize OFFSET :offset
+            ";
+
+            $params['pageSize'] = $pageSize;
+            $params['offset'] = ($page - 1) * $pageSize;
+
+            $stmt = $this->db->prepare($sql);
+
+            $stmt->bindValue(':pageSize', $params['pageSize'], \PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $params['offset'], \PDO::PARAM_INT);
+
+            if (!empty($filter['availability']) && strtolower($filter['availability']) !== 'all') {
+                $stmt->bindValue(':filterAvailability', $params['filterAvailability'], \PDO::PARAM_STR);
+            }
+
+            if (!empty($search)) {
+                $stmt->bindValue(':search', $params['search'], \PDO::PARAM_STR);
+            }
+
+            $stmt->execute();
+
+            $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            foreach ($results as &$item) {
+                $item['media'] = !empty($item['media'])
+                    ? json_decode($item['media'], true)
+                    : null;
+
+                if (empty($item['barcode']) && !empty($item['sku'])) {
+                    try {
+                        $barcode = $this->barcodeService->generateBarcode(
+                            $item['sku'],
+                            $item['id']
+                        );
+                        $this->barcodeService->updateItemBarcodeInDb(
+                            $item['id'],
+                            $barcode
+                        );
+                        $item['barcode'] = json_decode($barcode, true);
+                    } catch (\Throwable $e) {
+                        error_log('Barcode generation failed: ' . $e->getMessage());
+                        $item['barcode'] = null; // Fallback
+                    }
+                } elseif (!empty($item['barcode'])) {
+                    $item['barcode'] = json_decode($item['barcode'], true);
+                }
+            }
+
+            $totalItems = $this->countInventory($filter);
+
+            $meta = [
+                'total_data' => (int) $totalItems,
+                'total_pages' => ceil($totalItems / $pageSize),
+                'page_size' => (int) $pageSize,
+                'previous_page' => $page > 1 ? (int) $page - 1 : null,
+                'current_page' => (int) $page,
+                'next_page' => $page + 1 <= ceil($totalItems / $pageSize) ? (int) $page + 1 : null,
+            ];
+
+            return [
+                'inventory' => $results,
+                'meta' => $meta
+    ];
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return ['inventory' => [], 'meta' => []];
         }
-
-        $totalItems = $this->countInventory($filter);
-
-        $meta = [
-            'total_data' => (int) $totalItems,
-            'total_pages' => ceil($totalItems / $pageSize),
-            'page_size' => (int) $pageSize,
-            'previous_page' => $page > 1 ? (int) $page - 1 : null,
-            'current_page' => (int) $page,
-            'next_page' => $page + 1 <= ceil($totalItems / $pageSize) ? (int) $page + 1 : null,
-        ];
-
-        return [
-            'inventory' => $results,
-            'meta' => $meta
-        ];
     }
 
     private function countInventory($filter = null)
     {
-        $countSql = "
-            SELECT COUNT(DISTINCT i.id) AS total_count
-            FROM item_stocks
-            JOIN items i ON item_stocks.item_id = i.id
-            LEFT JOIN units u ON i.unit_id = u.id
-        ";
+        try {
+            $countSql = "
+                SELECT COUNT(DISTINCT i.id) AS total_count
+                FROM item_stocks
+                JOIN items i ON item_stocks.item_id = i.id
+                LEFT JOIN units u ON i.unit_id = u.id
+            ";
 
-        $conditions = [];
-        $params = [];
+            $conditions = [];
+            $params = [];
 
-        if (!empty($filter['availability'])) {
-            $conditions[] = "i.availability = :filterAvailability";
-            $params['filterAvailability'] = $filter['availability'];
+            if (!empty($filter['availability'])) {
+                $conditions[] = "i.availability = :filterAvailability";
+                $params['filterAvailability'] = $filter['availability'];
+            }
+
+            if (!empty($filter['search'])) {
+                $conditions[] = "(i.name ILIKE :search OR i.description ILIKE :search OR i.sku ILIKE :search)";
+                $params['search'] = '%' . $filter['search'] . '%';
+            }
+
+            if (!empty($conditions)) {
+                $countSql .= " WHERE " . implode(' AND ', $conditions);
+            }
+
+            $countStmt = $this->db->prepare($countSql);
+
+            if (!empty($filter['availability'])) {
+                $countStmt->bindValue(':filterAvailability', $params['filterAvailability'], \PDO::PARAM_STR);
+            }
+
+            if (!empty($filter['search'])) {
+                $countStmt->bindValue(':search', $params['search'], \PDO::PARAM_STR);
+            }
+
+            $countStmt->execute();
+
+            return $countStmt->fetchColumn();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return 0;
         }
-
-        if (!empty($filter['search'])) {
-            $conditions[] = "(i.name ILIKE :search OR i.description ILIKE :search OR i.sku ILIKE :search)";
-            $params['search'] = '%' . $filter['search'] . '%';
-        }
-
-        if (!empty($conditions)) {
-            $countSql .= " WHERE " . implode(' AND ', $conditions);
-        }
-
-        $countStmt = $this->db->prepare($countSql);
-
-        if (!empty($filter['availability'])) {
-            $countStmt->bindValue(':filterAvailability', $params['filterAvailability'], \PDO::PARAM_STR);
-        }
-
-        if (!empty($filter['search'])) {
-            $countStmt->bindValue(':search', $params['search'], \PDO::PARAM_STR);
-        }
-
-        $countStmt->execute();
-
-        return $countStmt->fetchColumn();
     }
 
     public function getItem($itemId)
@@ -234,7 +249,7 @@ class Inventory
             }
 
             return null;
-        } catch (\PDOException $e) {
+        } catch (\Exception $e) {
             error_log($e->getMessage());
             return null;
         }
@@ -242,18 +257,23 @@ class Inventory
 
     public function deleteItem($itemIds)
     {
-        if (empty($itemIds)) {
-            return 0;
+        try {
+            if (empty($itemIds)) {
+                return 0;
+            }
+
+            $itemIds = is_array($itemIds) ? $itemIds : [$itemIds];
+
+            $placeholders = implode(',', array_fill(0, count($itemIds), '?'));
+
+            $stmt = $this->db->prepare("DELETE FROM items WHERE id IN ($placeholders)");
+            $stmt->execute($itemIds);
+
+            return $stmt->rowCount();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception('Failed to delete item(s).');
         }
-
-        $itemIds = is_array($itemIds) ? $itemIds : [$itemIds];
-
-        $placeholders = implode(',', array_fill(0, count($itemIds), '?'));
-
-        $stmt = $this->db->prepare("DELETE FROM items WHERE id IN ($placeholders)");
-        $stmt->execute($itemIds);
-
-        return $stmt->rowCount();
     }
 
 
@@ -263,13 +283,13 @@ class Inventory
             $this->db->beginTransaction();
 
             $sql = "
-            INSERT INTO items
-            (name, description, unit_id, category_id,
-            price, threshold_value, media, opening_stock, sku)
-            VALUES (:name, :description, :unitId, :categoryId,
-            :price, :threshold, :media, :openingStock, :sku)
-            RETURNING id
-        ";
+                INSERT INTO items
+                (name, description, unit_id, category_id,
+                price, threshold_value, media, opening_stock, sku)
+                VALUES (:name, :description, :unitId, :categoryId,
+                :price, :threshold, :media, :openingStock, :sku)
+                RETURNING id
+            ";
 
             $mediaLinks = json_encode($mediaLinks);
 
@@ -302,7 +322,7 @@ class Inventory
         } catch (\Exception $e) {
             $this->db->rollBack();
             error_log($e->getMessage());
-            return false;
+            throw new \Exception('Failed to create item.');
         }
     }
 
@@ -338,7 +358,7 @@ class Inventory
             return $stockId;
         } catch (\Exception $e) {
             error_log($e->getMessage());
-            return false;
+            throw new \Exception('Failed to create item stock.');
         }
     }
 
@@ -410,7 +430,7 @@ class Inventory
 
         } catch (\Exception $e) {
             error_log($e->getMessage());
-            return false;
+            throw new \Exception('Failed to update item.');
         }
     }
 
@@ -447,66 +467,86 @@ class Inventory
 
     private function upsertItemStockVendor($stockId, $vendorId)
     {
-        $vendorSql = "
-            INSERT INTO item_stock_vendors (stock_id, vendor_id)
-            VALUES (:stockId, :vendorId)
-            ON CONFLICT (stock_id, vendor_id) 
-            DO UPDATE SET vendor_id = EXCLUDED.vendor_id
-        ";
+        try {
+            $vendorSql = "
+                INSERT INTO item_stock_vendors (stock_id, vendor_id)
+                VALUES (:stockId, :vendorId)
+                ON CONFLICT (stock_id, vendor_id) 
+                DO UPDATE SET vendor_id = EXCLUDED.vendor_id
+            ";
 
-        $vendorStmt = $this->db->prepare($vendorSql);
-        $vendorStmt->bindParam(':stockId', $stockId);
-        $vendorStmt->bindParam(':vendorId', $vendorId);
+            $vendorStmt = $this->db->prepare($vendorSql);
+            $vendorStmt->bindParam(':stockId', $stockId);
+            $vendorStmt->bindParam(':vendorId', $vendorId);
 
-        return $vendorStmt->execute();
+            return $vendorStmt->execute();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
+        }
     }
 
     private function upsertItemStockDepartment($stockId, $departmentId)
     {
-        $departmentSql = "
-            INSERT INTO item_stock_departments (stock_id, department_id)
-            VALUES (:stockId, :departmentId)
-            ON CONFLICT (stock_id, department_id) 
-            DO UPDATE SET department_id = EXCLUDED.department_id
-        ";
+        try {
+            $departmentSql = "
+                INSERT INTO item_stock_departments (stock_id, department_id)
+                VALUES (:stockId, :departmentId)
+                ON CONFLICT (stock_id, department_id) 
+                DO UPDATE SET department_id = EXCLUDED.department_id
+            ";
 
-        $departmentStmt = $this->db->prepare($departmentSql);
-        $departmentStmt->bindParam(':stockId', $stockId);
-        $departmentStmt->bindParam(':departmentId', $departmentId);
+            $departmentStmt = $this->db->prepare($departmentSql);
+            $departmentStmt->bindParam(':stockId', $stockId);
+            $departmentStmt->bindParam(':departmentId', $departmentId);
 
-        return $departmentStmt->execute();
+            return $departmentStmt->execute();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
+        }
     }
 
     private function upsertItemStockManufacturer($stockId, $manufacturerId)
     {
-        $manufacturerSql = "
-            INSERT INTO item_stock_manufacturers (stock_id, manufacturer_id)
-            VALUES (:stockId, :manufacturerId)
-            ON CONFLICT (stock_id, manufacturer_id) 
-            DO UPDATE SET manufacturer_id = EXCLUDED.manufacturer_id
-        ";
+        try {
+            $manufacturerSql = "
+                INSERT INTO item_stock_manufacturers (stock_id, manufacturer_id)
+                VALUES (:stockId, :manufacturerId)
+                ON CONFLICT (stock_id, manufacturer_id) 
+                DO UPDATE SET manufacturer_id = EXCLUDED.manufacturer_id
+            ";
 
-        $manufacturerStmt = $this->db->prepare($manufacturerSql);
-        $manufacturerStmt->bindParam(':stockId', $stockId);
-        $manufacturerStmt->bindParam(':manufacturerId', $manufacturerId);
+            $manufacturerStmt = $this->db->prepare($manufacturerSql);
+            $manufacturerStmt->bindParam(':stockId', $stockId);
+            $manufacturerStmt->bindParam(':manufacturerId', $manufacturerId);
 
-        return $manufacturerStmt->execute();
+            return $manufacturerStmt->execute();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
+        }
     }
 
     private function upsertItemStockBranch($stockId, $branchId)
     {
-        $branchSql = "
-            INSERT INTO item_stock_branches (stock_id, branch_id)
-            VALUES (:stockId, :branchId)
-            ON CONFLICT (stock_id, branch_id) 
-            DO UPDATE SET branch_id = EXCLUDED.branch_id
-        ";
+        try {
+            $branchSql = "
+                INSERT INTO item_stock_branches (stock_id, branch_id)
+                VALUES (:stockId, :branchId)
+                ON CONFLICT (stock_id, branch_id) 
+                DO UPDATE SET branch_id = EXCLUDED.branch_id
+            ";
 
-        $branchStmt = $this->db->prepare($branchSql);
-        $branchStmt->bindParam(':stockId', $stockId);
-        $branchStmt->bindParam(':branchId', $branchId);
+            $branchStmt = $this->db->prepare($branchSql);
+            $branchStmt->bindParam(':stockId', $stockId);
+            $branchStmt->bindParam(':branchId', $branchId);
 
-        return $branchStmt->execute();
+            return $branchStmt->execute();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
+        }
     }
 
 
@@ -578,111 +618,121 @@ class Inventory
         } catch (\Exception $e) {
             $this->db->rollBack();
             error_log($e->getMessage());
-            throw $e;
+            throw new \Exception('Failed to adjust stock.');
         }
     }
 
     private function checkItemAvailability($itemId)
     {
-        $sql = "
-            SELECT availability, name 
-            FROM items 
-            WHERE id = :itemId
-        ";
+        try {
+            $sql = "
+                SELECT availability, name 
+                FROM items 
+                WHERE id = :itemId
+            ";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':itemId', $itemId, \PDO::PARAM_INT);
-        $stmt->execute();
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':itemId', $itemId, \PDO::PARAM_INT);
+            $stmt->execute();
 
-        $item = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $item = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if (!$item) {
-            throw new \Exception("Item not found.");
-        }
-
-        if (in_array($item['availability'], ['out of stock', 'low stock'], true)) {
-            $usersToNotify = BaseController::getUserByRole(['Admin']);
-
-            if (empty($usersToNotify)) {
-                throw new \Exception("Admin user not found for notification.");
+            if (!$item) {
+                throw new \Exception("Item not found.");
             }
 
-            $statusText = $item['availability'] === 'out of stock'
-                ? 'is currently out of stock'
-                : 'is running low on stock';
+            if (in_array($item['availability'], ['out of stock', 'low stock'], true)) {
+                $usersToNotify = BaseController::getUserByRole(['Admin']);
 
-            $title = 'Stock Alert: ' . $item['name'];
-            $body = "Attention: The item '{$item['name']}' $statusText. Please take action.";
-
-            foreach ($usersToNotify as $userToNotify) {
-                if (!isset($userToNotify['id'])) {
-                    continue;
+                if (empty($usersToNotify)) {
+                    throw new \Exception("Admin user not found for notification.");
                 }
 
-                $notification = [
-                    'user_id' => $userToNotify['id'],
-                    'event' => 'notification',
-                    'entity_id' => $itemId,
-                    'entity_type' => "items",
-                    'title' => $title,
-                    'body' => $body
-                ];
+                $statusText = $item['availability'] === 'out of stock'
+                    ? 'is currently out of stock'
+                    : 'is running low on stock';
 
-                (new NotificationService())->sendNotification($notification);
+                $title = 'Stock Alert: ' . $item['name'];
+                $body = "Attention: The item '{$item['name']}' $statusText. Please take action.";
+
+                foreach ($usersToNotify as $userToNotify) {
+                    if (!isset($userToNotify['id'])) {
+                        continue;
+                    }
+
+                    $notification = [
+                        'user_id' => $userToNotify['id'],
+                        'event' => 'notification',
+                        'entity_id' => $itemId,
+                        'entity_type' => "items",
+                        'title' => $title,
+                        'body' => $body
+                    ];
+
+                    (new NotificationService())->sendNotification($notification);
+                }
             }
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
         }
     }
 
     private function subtractStockFIFO($itemId, $quantity, $data)
     {
-        $affectedStockIds = [];
-        $stocks = $this->getStocksByItemId($itemId);
+        try {
+            $affectedStockIds = [];
+            $stocks = $this->getStocksByItemId($itemId);
 
-        foreach ($stocks as $stock) {
-            error_log("Stock: " . json_encode($stock));
-            if ($quantity <= 0) {
-                break;
-            }
+            foreach ($stocks as $stock) {
+                error_log("Stock: " . json_encode($stock));
+                if ($quantity <= 0) {
+                    break;
+                }
 
-            $stockId = $stock['id'];
-            $stockQuantity = $stock['quantity'];
+                $stockId = $stock['id'];
+                $stockQuantity = $stock['quantity'];
 
-            if ($stockQuantity > 0) {
-                $subtractAmount = min($quantity, $stockQuantity);
-                $quantity -= $subtractAmount;
+                if ($stockQuantity > 0) {
+                    $subtractAmount = min($quantity, $stockQuantity);
+                    $quantity -= $subtractAmount;
 
-                $updateSql = "
+                    $updateSql = "
                     UPDATE item_stocks
                     SET quantity = quantity - :subtractAmount
                     WHERE id = :stockId
                 ";
-                $updateStmt = $this->db->prepare($updateSql);
-                $updateStmt->bindValue(':subtractAmount', $subtractAmount);
-                $updateStmt->bindValue(':stockId', $stockId);
+                    $updateStmt = $this->db->prepare($updateSql);
+                    $updateStmt->bindValue(':subtractAmount', $subtractAmount);
+                    $updateStmt->bindValue(':stockId', $stockId);
 
-                if ($updateStmt->execute()) {
-                    $affectedStockIds[] = $stockId;
+                    if ($updateStmt->execute()) {
+                        $affectedStockIds[] = $stockId;
 
-                    $this->insertStockAdjustment(
-                        $stockId,
-                        $subtractAmount,
-                        $data['adjustment_type'],
-                        $data['description'] ?? null,
-                        $data['source_id'] ?? null,
-                        $data['source_department_id'] ?? null,
-                        $data['manager_id'] ?? null
-                    );
+                        $this->insertStockAdjustment(
+                            $stockId,
+                            $subtractAmount,
+                            $data['adjustment_type'],
+                            $data['description'] ?? null,
+                            $data['source_id'] ?? null,
+                            $data['source_department_id'] ?? null,
+                            $data['manager_id'] ?? null
+                        );
+                    }
                 }
             }
+
+            if ($quantity > 0) {
+                throw new \Exception('Insufficient stock to complete the operation.');
+            }
+
+            $this->checkItemAvailability($itemId);
+
+            return $affectedStockIds;
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
         }
-
-        if ($quantity > 0) {
-            throw new \Exception('Insufficient stock to complete the operation.');
-        }
-
-        $this->checkItemAvailability($itemId);
-
-        return $affectedStockIds;
     }
 
     private function insertStockAdjustment(
@@ -694,54 +744,65 @@ class Inventory
         $sourceDepartmentId,
         $managerId
     ) {
-        $query = "
-        INSERT INTO item_stock_adjustments
-        (stock_id, quantity, adjustment_type,
-        description, source_id, source_department_id, 
-        manager_id, source_type)
-        VALUES (:stockId, :quantity, :adjustmentType,
-        :description, :source_id, :source_department_id, 
-        :manager_id, 'user')
-    ";
-        $stmt = $this->db->prepare($query);
+        try {
+            $query = "
+                INSERT INTO item_stock_adjustments
+                (stock_id, quantity, adjustment_type,
+                description, source_id, source_department_id, 
+                manager_id, source_type)
+                VALUES (:stockId, :quantity, :adjustmentType,
+                :description, :source_id, :source_department_id, 
+                :manager_id, 'user')
+            ";
+            $stmt = $this->db->prepare($query);
 
-        $stmt->bindValue(':stockId', $stockId);
-        $stmt->bindValue(':quantity', $quantity);
-        $stmt->bindValue(':adjustmentType', $adjustmentType);
-        $stmt->bindValue(':description', $description);
-        $stmt->bindValue(':source_id', $sourceId);
-        $stmt->bindValue(':source_department_id', $sourceDepartmentId);
-        $stmt->bindValue(':manager_id', $managerId);
+            $stmt->bindValue(':stockId', $stockId);
+            $stmt->bindValue(':quantity', $quantity);
+            $stmt->bindValue(':adjustmentType', $adjustmentType);
+            $stmt->bindValue(':description', $description);
+            $stmt->bindValue(':source_id', $sourceId);
+            $stmt->bindValue(':source_department_id', $sourceDepartmentId);
+            $stmt->bindValue(':manager_id', $managerId);
 
-        if (!$stmt->execute()) {
-            throw new \Exception('Failed to log stock adjustment.');
+            if (!$stmt->execute()) {
+                throw new \Exception('Failed to log stock adjustment.');
+            }
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
         }
 
     }
 
     private function getStocksByItemId($itemId)
     {
-        $sql = "
-            SELECT id, quantity, stock_code
-            FROM item_stocks
-            WHERE item_id = :itemId
-            AND quantity > 0
-            ORDER BY date_received ASC, id ASC
-        ";
+        try {
+            $sql = "
+                SELECT id, quantity, stock_code
+                FROM item_stocks
+                WHERE item_id = :itemId
+                AND quantity > 0
+                ORDER BY date_received ASC, id ASC
+            ";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':itemId', $itemId, \PDO::PARAM_STR);
-        $stmt->execute();
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':itemId', $itemId, \PDO::PARAM_STR);
+            $stmt->execute();
 
-        error_log("getStocksByItemId: $itemId");
+            error_log("getStocksByItemId: $itemId");
 
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return [];
+        }
     }
 
 
     public function getAdjustmentHistory($itemId)
     {
-        $sql = "
+        try {
+            $sql = "
             SELECT 
                 isa.id,
                 isa.adjustment_type,
@@ -802,19 +863,23 @@ class Inventory
             ORDER BY isa.created_at DESC
         ";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':itemId', $itemId, \PDO::PARAM_STR);
-        $stmt->execute();
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':itemId', $itemId, \PDO::PARAM_STR);
+            $stmt->execute();
 
-        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        foreach ($data as &$row) {
-            $row['comments'] = json_decode($row['comments'], true);
+            foreach ($data as &$row) {
+                $row['comments'] = json_decode($row['comments'], true);
+            }
+
+            $filteredData = Utils::filterOutNull($data);
+
+            return $filteredData ?? [];
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return [];
         }
-
-        $filteredData = Utils::filterOutNull($data);
-
-        return $filteredData ?? [];
     }
 
     public function getItemPricesByDay($itemId, $params)
@@ -921,7 +986,7 @@ class Inventory
             $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
             return $result;
-        } catch (\PDOException $e) {
+        } catch (\Exception $e) {
             error_log($e->getMessage());
             return [];
         }

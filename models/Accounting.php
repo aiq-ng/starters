@@ -82,7 +82,7 @@ class Accounting extends Kitchen
                 'data' => $result,
                 'meta' => $meta
             ];
-        } catch (\PDOException $e) {
+        } catch (\Exception $e) {
             error_log($e->getMessage());
             return [];
         }
@@ -170,10 +170,14 @@ class Accounting extends Kitchen
                 ), 0) AS highest_expenses
         ";
 
-        $stmt = $this->db->prepare($query);
-        $stmt->execute(['year' => $year]);
-
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute(['year' => $year]);
+            return $stmt->fetch(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return [];
+        }
     }
 
     public function insertExpense($data)
@@ -204,7 +208,7 @@ class Accounting extends Kitchen
             $stmt->bindValue(':processed_by', $data['processed_by'] ?? null);
 
             $stmt->execute();
-        } catch (\PDOException $e) {
+        } catch (\Exception $e) {
             error_log('Insert expense failed: ' . $e->getMessage());
             throw new \Exception('Failed to insert expense.');
         }
@@ -220,10 +224,16 @@ class Accounting extends Kitchen
 
         $placeholders = implode(',', array_fill(0, count($expenseIds), '?'));
 
-        $stmt = $this->db->prepare("DELETE FROM expenses WHERE id IN ($placeholders)");
-        $stmt->execute($expenseIds);
 
-        return $stmt->rowCount();
+        try {
+            $stmt = $this->db->prepare("DELETE FROM expenses WHERE id IN ($placeholders)");
+            $stmt->execute($expenseIds);
+
+            return $stmt->rowCount();
+        } catch (\Exception $e) {
+            error_log('Delete expenses failed: ' . $e->getMessage());
+            throw new \Exception('Failed to delete expenses.');
+        }
     }
 
     public function getExpenses($filter = [])
@@ -309,9 +319,9 @@ class Accounting extends Kitchen
 
             return ['data' => $data, 'meta' => $meta];
 
-        } catch (\PDOException $e) {
+        } catch (\Exception $e) {
             error_log('Fetch expenses failed: ' . $e->getMessage());
-            throw new \Exception('Failed to fetch expenses.');
+            return ['data' => [], 'meta' => []];
         }
     }
 
@@ -341,12 +351,18 @@ class Accounting extends Kitchen
                 e.id = :expense_id
         ";
 
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':expense_id', $expenseId);
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':expense_id', $expenseId);
 
-        $stmt->execute();
+            $stmt->execute();
 
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
+            return $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        } catch (\Exception $e) {
+            error_log('Fetch expense failed: ' . $e->getMessage());
+            return false;
+        }
     }
 
     private function countExpenses($conditions, $params)
@@ -371,9 +387,9 @@ class Accounting extends Kitchen
             $countStmt->execute();
             return $countStmt->fetchColumn();
 
-        } catch (\PDOException $e) {
+        } catch (\Exception $e) {
             error_log('Count expenses failed: ' . $e->getMessage());
-            throw new \Exception('Failed to count expenses.');
+            return 0;
         }
     }
 
@@ -474,9 +490,9 @@ class Accounting extends Kitchen
 
             return ['data' => $data, 'meta' => $meta];
 
-        } catch (\PDOException $e) {
+        } catch (\Exception $e) {
             error_log('Fetch purchase order bills failed: ' . $e->getMessage());
-            throw new \Exception('Failed to fetch purchase order bills.');
+            return ['data' => [], 'meta' => []];
         }
     }
 
@@ -501,9 +517,9 @@ class Accounting extends Kitchen
             $countStmt->execute();
             return $countStmt->fetchColumn();
 
-        } catch (\PDOException $e) {
+        } catch (\Exception $e) {
             error_log('Count purchase orders failed: ' . $e->getMessage());
-            throw new \Exception('Failed to count purchase orders.');
+            return 0;
         }
     }
 
@@ -554,18 +570,23 @@ class Accounting extends Kitchen
                 so.created_at, so.total, so.status
         ";
 
-        $stmt = $this->db->prepare($query);
-        $stmt->bindValue('order_id', $orderId);
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue('order_id', $orderId);
 
-        $stmt->execute();
+            $stmt->execute();
 
-        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if ($result && isset($result['product_order'])) {
-            $result['product_order'] = json_decode($result['product_order'], true);
+            if ($result && isset($result['product_order'])) {
+                $result['product_order'] = json_decode($result['product_order'], true);
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            error_log('Fetch sales order failed: ' . $e->getMessage());
+            return false;
         }
-
-        return $result;
     }
 
     public function confirmSalesOrderPayment($orderId)
@@ -614,12 +635,6 @@ class Accounting extends Kitchen
 
             $this->db->commit();
 
-        } catch (\PDOException $e) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
-            }
-            error_log("Database error in confirmSalesOrderPayment: " . $e->getMessage());
-            throw new \Exception("An error occurred while confirming sales order payment.");
         } catch (\Exception $e) {
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
@@ -675,12 +690,6 @@ class Accounting extends Kitchen
 
             $this->db->commit();
 
-        } catch (\PDOException $e) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
-            }
-            error_log("Database error in markBillAsPaid: " . $e->getMessage());
-            throw new \Exception("An error occurred while marking bill as paid.");
         } catch (\Exception $e) {
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
@@ -705,9 +714,9 @@ class Accounting extends Kitchen
 
             return $fetchStmt->fetchAll(\PDO::FETCH_COLUMN, 0);
 
-        } catch (\PDOException $e) {
+        } catch (\Exception $e) {
             error_log("Error in getSalesOrdersToKitchen: " . $e->getMessage());
-            throw new \Exception("An error occurred while fetching sales orders to kitchen.");
+            return null;
         }
     }
 

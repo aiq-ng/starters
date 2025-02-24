@@ -15,19 +15,24 @@ class HumanResource
 
     public function getOverview($roleId = null)
     {
-        $sql = "
-            SELECT 
-                (SELECT COUNT(*) FROM users WHERE role_id != :roleId) AS employee_count,
-                (SELECT COUNT(*) FROM departments) AS department_count,
-                (SELECT COUNT(*) FROM users WHERE role_id = :roleId) AS admin_count,
-                (SELECT COUNT(*) FROM user_leaves WHERE status = 'on leave') AS on_leave_count
-        ";
+        try {
+            $sql = "
+                SELECT 
+                    (SELECT COUNT(*) FROM users WHERE role_id != :roleId) AS employee_count,
+                    (SELECT COUNT(*) FROM departments) AS department_count,
+                    (SELECT COUNT(*) FROM users WHERE role_id = :roleId) AS admin_count,
+                    (SELECT COUNT(*) FROM user_leaves WHERE status = 'on leave') AS on_leave_count
+            ";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':roleId', $roleId, \PDO::PARAM_INT);
-        $stmt->execute();
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':roleId', $roleId, \PDO::PARAM_INT);
+            $stmt->execute();
 
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
+            return $stmt->fetch(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
+        }
     }
 
     public function createDepartment($data)
@@ -58,7 +63,7 @@ class HumanResource
 
         } catch (\Exception $e) {
             error_log($e->getMessage());
-            return false;
+            throw new \Exception("Error creating department");
         }
     }
 
@@ -106,156 +111,172 @@ class HumanResource
 
         } catch (\Exception $e) {
             error_log($e->getMessage());
-            return false;
+            throw new \Exception("Error adding employee");
         }
     }
 
     public function getAdmins($roleId = null)
     {
-        $stmt = $this->db->prepare(
-            'SELECT u.id, u.name, r.name AS role
+        try {
+            $stmt = $this->db->prepare(
+                'SELECT u.id, u.name, r.name AS role
              FROM users u
              JOIN roles r ON u.role_id = r.id
              WHERE u.role_id = :roleId'
-        );
+            );
 
-        $stmt->bindValue(':roleId', $roleId, \PDO::PARAM_INT);
-        $stmt->execute();
+            $stmt->bindValue(':roleId', $roleId, \PDO::PARAM_INT);
+            $stmt->execute();
 
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
+        }
     }
 
     public function getEmployees($filters = [])
     {
-        $page = $filters['page'] ?? 1;
-        $pageSize = $filters['page_size'] ?? 10;
-        $offset = ($page - 1) * $pageSize;
-        $adminId = $filters['role_id'] ?? null;
+        try {
+            $page = $filters['page'] ?? 1;
+            $pageSize = $filters['page_size'] ?? 10;
+            $offset = ($page - 1) * $pageSize;
+            $adminId = $filters['role_id'] ?? null;
 
-        $sql = "
-            SELECT
-                u.id,
-                u.name,
-                u.avatar_url,
-                d.name AS department,
-                r.name AS position,
-                u.salary,
-                u.bank_details,
-                COALESCE(ul.status, 'none') AS leave_status
-            FROM users u
-            LEFT JOIN departments d ON u.department_id = d.id
-            LEFT JOIN roles r ON u.role_id = r.id
-            LEFT JOIN user_leaves ul ON u.id = ul.user_id
-            WHERE u.role_id != :adminId
-        ";
+            $sql = "
+                SELECT
+                    u.id,
+                    u.name,
+                    u.avatar_url,
+                    d.name AS department,
+                    r.name AS position,
+                    u.salary,
+                    u.bank_details,
+                    COALESCE(ul.status, 'none') AS leave_status
+                FROM users u
+                LEFT JOIN departments d ON u.department_id = d.id
+                LEFT JOIN roles r ON u.role_id = r.id
+                LEFT JOIN user_leaves ul ON u.id = ul.user_id
+                WHERE u.role_id != :adminId
+            ";
 
-        $conditions = [];
-        $params = [':adminId' => $adminId];
+            $conditions = [];
+            $params = [':adminId' => $adminId];
 
-        if (!empty($filters['department']) && strtolower($filters['department']) !== 'all') {
-            $conditions[] = "d.name = :department";
-            $params[':department'] = $filters['department'];
-        }
+            if (!empty($filters['department']) && strtolower($filters['department']) !== 'all') {
+                $conditions[] = "d.name = :department";
+                $params[':department'] = $filters['department'];
+            }
 
-        if (!empty($filters['search'])) {
-            $conditions[] = "(
+            if (!empty($filters['search'])) {
+                $conditions[] = "(
             u.name LIKE :search OR
             r.name LIKE :search OR
             d.name LIKE :search OR
             u.bank_details::TEXT LIKE :search
         )";
-            $params[':search'] = '%' . $filters['search'] . '%';
+                $params[':search'] = '%' . $filters['search'] . '%';
+            }
+
+            if ($conditions) {
+                $sql .= ' AND ' . implode(' AND ', $conditions);
+            }
+
+            $sql .= ' LIMIT :pageSize OFFSET :offset';
+            $stmt = $this->db->prepare($sql);
+
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value, \PDO::PARAM_STR);
+            }
+
+            $stmt->bindValue(':pageSize', $pageSize, \PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+
+            $stmt->execute();
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            foreach ($result as $key => $employee) {
+                $result[$key]['bank_details'] = !empty($employee['bank_details'])
+                    ? json_decode($employee['bank_details'], true)
+                    : null;
+            }
+
+            $totalCount = $this->countEmployees($filters);
+
+            $meta = [
+                'total_data' => (int)$totalCount,
+                'total_pages' => ceil($totalCount / $pageSize),
+                'page_size' => (int)$pageSize,
+                'previous_page' => $page > 1 ? (int)$page - 1 : null,
+                'current_page' => (int)$page,
+                'next_page' => $page < ceil($totalCount / $pageSize) ? (int)$page + 1 : null,
+            ];
+
+            return [
+                'data' => $result,
+                'meta' => $meta
+    ];
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return ['data' => [], 'meta' => []];
         }
-
-        if ($conditions) {
-            $sql .= ' AND ' . implode(' AND ', $conditions);
-        }
-
-        $sql .= ' LIMIT :pageSize OFFSET :offset';
-        $stmt = $this->db->prepare($sql);
-
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value, \PDO::PARAM_STR);
-        }
-
-        $stmt->bindValue(':pageSize', $pageSize, \PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
-
-        $stmt->execute();
-        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-        foreach ($result as $key => $employee) {
-            $result[$key]['bank_details'] = !empty($employee['bank_details'])
-                ? json_decode($employee['bank_details'], true)
-                : null;
-        }
-
-        $totalCount = $this->countEmployees($filters);
-
-        $meta = [
-            'total_data' => (int)$totalCount,
-            'total_pages' => ceil($totalCount / $pageSize),
-            'page_size' => (int)$pageSize,
-            'previous_page' => $page > 1 ? (int)$page - 1 : null,
-            'current_page' => (int)$page,
-            'next_page' => $page < ceil($totalCount / $pageSize) ? (int)$page + 1 : null,
-        ];
-
-        return [
-            'data' => $result,
-            'meta' => $meta
-        ];
     }
 
     public function countEmployees($filters = [])
     {
-        $sql = "
-            SELECT COUNT(*) AS total
-            FROM users u
-            LEFT JOIN departments d ON u.department_id = d.id
-            LEFT JOIN roles r ON u.role_id = r.id
-            LEFT JOIN user_leaves ul ON u.id = ul.user_id
-            WHERE u.role_id != :adminId
-        ";
+        try {
+            $sql = "
+                SELECT COUNT(*) AS total
+                FROM users u
+                LEFT JOIN departments d ON u.department_id = d.id
+                LEFT JOIN roles r ON u.role_id = r.id
+                LEFT JOIN user_leaves ul ON u.id = ul.user_id
+                WHERE u.role_id != :adminId
+            ";
 
-        $conditions = [];
-        $params = [':adminId' => $filters['role_id'] ?? null];
+            $conditions = [];
+            $params = [':adminId' => $filters['role_id'] ?? null];
 
-        if (!empty($filters['department'])) {
-            $conditions[] = "d.name = :department";
-            $params[':department'] = $filters['department'];
+            if (!empty($filters['department'])) {
+                $conditions[] = "d.name = :department";
+                $params[':department'] = $filters['department'];
+            }
+
+            if (!empty($filters['search'])) {
+                $conditions[] = "(
+                u.name LIKE :search OR
+                r.name LIKE :search OR
+                d.name LIKE :search OR
+                u.bank_details::TEXT LIKE :search
+            )";
+                $params[':search'] = '%' . $filters['search'] . '%';
+            }
+
+            if ($conditions) {
+                $sql .= ' AND ' . implode(' AND ', $conditions);
+            }
+
+            $stmt = $this->db->prepare($sql);
+
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value, \PDO::PARAM_STR);
+            }
+
+            $stmt->execute();
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            return $result['total'];
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
         }
-
-        if (!empty($filters['search'])) {
-            $conditions[] = "(
-            u.name LIKE :search OR
-            r.name LIKE :search OR
-            d.name LIKE :search OR
-            u.bank_details::TEXT LIKE :search
-        )";
-            $params[':search'] = '%' . $filters['search'] . '%';
-        }
-
-        if ($conditions) {
-            $sql .= ' AND ' . implode(' AND ', $conditions);
-        }
-
-        $stmt = $this->db->prepare($sql);
-
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value, \PDO::PARAM_STR);
-        }
-
-        $stmt->execute();
-        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-        return $result['total'];
     }
 
     public function getEmployee($employeeId)
     {
-        $stmt = $this->db->prepare(
-            'SELECT 
+        try {
+            $stmt = $this->db->prepare(
+                'SELECT 
                 u.id,
                 u.avatar_url,
                 u.name,
@@ -277,82 +298,106 @@ class HumanResource
             LEFT JOIN roles r ON u.role_id = r.id
             LEFT JOIN user_leaves ul ON u.id = ul.user_id
             WHERE u.id = ?'
-        );
+            );
 
-        $stmt->execute([$employeeId]);
+            $stmt->execute([$employeeId]);
 
-        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if ($result) {
-            if ($result['bank_details']) {
-                $result['bank_details'] = json_decode($result['bank_details']);
-            } else {
-                $result['bank_details'] = [];
+            if ($result) {
+                if ($result['bank_details']) {
+                    $result['bank_details'] = json_decode($result['bank_details']);
+                } else {
+                    $result['bank_details'] = [];
+                }
             }
-        }
 
-        return $result;
+            return $result;
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return false;
+        }
     }
 
     public function deleteEmployee($employeeIds)
     {
-        if (empty($employeeIds)) {
-            return false;
+        try {
+            if (empty($employeeIds)) {
+                return false;
+            }
+
+            $employeeIds = is_array($employeeIds) ? $employeeIds : [$employeeIds];
+
+            $placeholders = implode(',', array_fill(0, count($employeeIds), '?'));
+
+            $stmt = $this->db->prepare("DELETE FROM users WHERE id IN ($placeholders)");
+            $stmt->execute($employeeIds);
+
+            return $stmt->rowCount();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception("Error deleting employee");
         }
-
-        $employeeIds = is_array($employeeIds) ? $employeeIds : [$employeeIds];
-
-        $placeholders = implode(',', array_fill(0, count($employeeIds), '?'));
-
-        $stmt = $this->db->prepare("DELETE FROM users WHERE id IN ($placeholders)");
-        $stmt->execute($employeeIds);
-
-        return $stmt->rowCount();
     }
 
     public function addToLeave($employeeId, $data)
     {
-        $stmt = $this->db->prepare(
-            'INSERT INTO user_leaves 
-        (user_id, start_date, end_date, notes, leave_type) 
-        VALUES (?, ?, ?, ?, ?) 
-        RETURNING id'
-        );
+        try {
+            $stmt = $this->db->prepare(
+                'INSERT INTO user_leaves 
+                (user_id, start_date, end_date, notes, leave_type) 
+                VALUES (?, ?, ?, ?, ?) 
+                RETURNING id'
+            );
 
-        $stmt->execute([
-            $employeeId,
-            $data['start_date'] ?? null,
-            $data['end_date'] ?? null,
-            $data['notes'] ?? null,
-            $data['leave_type'] ?? 'annual'
-        ]);
+            $stmt->execute([
+                $employeeId,
+                $data['start_date'] ?? null,
+                $data['end_date'] ?? null,
+                $data['notes'] ?? null,
+                $data['leave_type'] ?? 'annual'
+            ]);
 
-        return $stmt->fetchColumn() ?? null;
+            return $stmt->fetchColumn() ?? null;
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception("Error adding employee to leave");
+        }
     }
 
     public function putOnLeave($employeeId)
     {
-        $stmt = $this->db->prepare(
-            'UPDATE user_leaves 
-            SET status = \'on leave\' 
-            WHERE user_id = ?'
-        );
+        try {
+            $stmt = $this->db->prepare(
+                'UPDATE user_leaves 
+                SET status = \'on leave\' 
+                WHERE user_id = ?'
+            );
 
-        $stmt->execute([$employeeId]);
+            $stmt->execute([$employeeId]);
 
-        return $stmt->rowCount();
+            return $stmt->rowCount();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception("Error putting employee on leave");
+        }
     }
 
     public function suspendEmployee($employeeId)
     {
-        $stmt = $this->db->prepare(
-            'UPDATE users 
-            SET status = \'inactive\' 
-            WHERE id = ?'
-        );
+        try {
+            $stmt = $this->db->prepare(
+                'UPDATE users 
+                SET status = \'inactive\' 
+                WHERE id = ?'
+            );
 
-        $stmt->execute([$employeeId]);
+            $stmt->execute([$employeeId]);
 
-        return $stmt->rowCount();
+            return $stmt->rowCount();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception("Error suspending employee");
+        }
     }
 }

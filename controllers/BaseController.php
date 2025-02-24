@@ -149,20 +149,30 @@ class BaseController
 
     protected function storeRefreshToken($userId, $refreshToken)
     {
-        $query = "
-        INSERT INTO refresh_tokens (user_id, token)
-        VALUES (?, ?)
-    ";
+        try {
+            $query = "
+                INSERT INTO refresh_tokens (user_id, token)
+                VALUES (?, ?)
+            ";
 
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([$userId, $refreshToken]);
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([$userId, $refreshToken]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception("Failed to store refresh token");
+        }
     }
 
     protected function deleteRefreshToken($userId)
     {
-        $query = "DELETE FROM refresh_tokens WHERE user_id = ?";
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([$userId]);
+        try {
+            $query = "DELETE FROM refresh_tokens WHERE user_id = ?";
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([$userId]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception("Failed to delete refresh token");
+        }
     }
 
 
@@ -222,21 +232,26 @@ class BaseController
 
     public function insertAuditLog($userId, $action, $entityType, $entityId, $entityData = [])
     {
-        $encodedEntityData = json_encode($entityData);
+        try {
+            $encodedEntityData = json_encode($entityData);
 
-        $query = "
-            INSERT INTO audit_logs (user_id, action, entity_type, entity_id, entity_data)
-            VALUES (:user_id, :action, :entity_type, :entity_id, :entity_data)
-        ";
+            $query = "
+                INSERT INTO audit_logs (user_id, action, entity_type, entity_id, entity_data)
+                VALUES (:user_id, :action, :entity_type, :entity_id, :entity_data)
+            ";
 
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(':user_id', $userId);
-        $stmt->bindParam(':action', $action);
-        $stmt->bindParam(':entity_type', $entityType);
-        $stmt->bindParam(':entity_id', $entityId);
-        $stmt->bindParam(':entity_data', $encodedEntityData);
+            $stmt = $this->db->prepare($query);
+            $stmt->bindParam(':user_id', $userId);
+            $stmt->bindParam(':action', $action);
+            $stmt->bindParam(':entity_type', $entityType);
+            $stmt->bindParam(':entity_id', $entityId);
+            $stmt->bindParam(':entity_data', $encodedEntityData);
 
-        $stmt->execute();
+            $stmt->execute();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception("Failed to insert audit log");
+        }
     }
 
     public function getAuditLogs()
@@ -322,24 +337,29 @@ class BaseController
 
     public function commentOnItemHistory($itemStockId, $data)
     {
-        $sql = "
-            INSERT INTO comments
-            (entity_id, entity_type, user_id, parent_id, comment)
-            VALUES (:entityId, :entityType, :userId, :parentId, :comment)
-            RETURNING id
-        ";
+        try {
+            $sql = "
+                INSERT INTO comments
+                (entity_id, entity_type, user_id, parent_id, comment)
+                VALUES (:entityId, :entityType, :userId, :parentId, :comment)
+                RETURNING id
+            ";
 
-        $stmt = $this->db->prepare($sql);
+            $stmt = $this->db->prepare($sql);
 
-        $stmt->bindValue(':entityId', $itemStockId);
-        $stmt->bindValue(':entityType', $data['entity_type'] ?? null);
-        $stmt->bindValue(':userId', $data['user_id'] ?? null);
-        $stmt->bindValue(':parentId', $data['parent_id'] ?? null);
-        $stmt->bindValue(':comment', $data['comment'] ?? null);
+            $stmt->bindValue(':entityId', $itemStockId);
+            $stmt->bindValue(':entityType', $data['entity_type'] ?? null);
+            $stmt->bindValue(':userId', $data['user_id'] ?? null);
+            $stmt->bindValue(':parentId', $data['parent_id'] ?? null);
+            $stmt->bindValue(':comment', $data['comment'] ?? null);
 
-        $stmt->execute();
+            $stmt->execute();
 
-        return $stmt->fetchColumn();
+            return $stmt->fetchColumn();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception("Failed to comment on item history");
+        }
     }
 
 
@@ -623,7 +643,7 @@ class BaseController
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$result) {
-            throw new \Exception("Record with ID '$id' not found in the table '$table'.");
+            throw new \Exception("Record with ID '$id' not found.");
         }
 
         return $result;
@@ -740,75 +760,80 @@ class BaseController
         array $searchColumns = [],
         array $columns = ['*']
     ) {
-        $filters = [
-            'search' => isset($_GET['search']) ? $_GET['search'] : null,
-            'page' => isset($_GET['page']) && is_numeric($_GET['page']) && (int)$_GET['page'] > 0
-                ? (int)$_GET['page']
-                : 1,
-            'page_size' => isset($_GET['page_size']) && is_numeric($_GET['page_size']) && (int)$_GET['page_size'] > 0
-                ? (int)$_GET['page_size']
-                : 10,
-        ];
+        try {
+            $filters = [
+                'search' => isset($_GET['search']) ? $_GET['search'] : null,
+                'page' => isset($_GET['page']) && is_numeric($_GET['page']) && (int)$_GET['page'] > 0
+                    ? (int)$_GET['page']
+                    : 1,
+                'page_size' => isset($_GET['page_size']) && is_numeric($_GET['page_size']) && (int)$_GET['page_size'] > 0
+                    ? (int)$_GET['page_size']
+                    : 10,
+            ];
 
-        $page = $filters['page'];
-        $perPage = $filters['page_size'];
+            $page = $filters['page'];
+            $perPage = $filters['page_size'];
 
-        $searchConditions = [];
-        if (!empty($filters['search'])) {
-            foreach ($searchColumns as $column) {
-                $searchConditions[$column] = $filters['search'];
+            $searchConditions = [];
+            if (!empty($filters['search'])) {
+                foreach ($searchColumns as $column) {
+                    $searchConditions[$column] = $filters['search'];
+                }
             }
-        }
 
-        $columnsList = implode(', ', $columns);
-        $offset = ($page - 1) * $perPage;
-        $searchQuery = '';
+            $columnsList = implode(', ', $columns);
+            $offset = ($page - 1) * $perPage;
+            $searchQuery = '';
 
-        if (!empty($searchConditions)) {
-            $searchClauses = [];
-            foreach ($searchConditions as $column => $value) {
-                $searchClauses[] = "$column ILIKE :$column";
+            if (!empty($searchConditions)) {
+                $searchClauses = [];
+                foreach ($searchConditions as $column => $value) {
+                    $searchClauses[] = "$column ILIKE :$column";
+                }
+                $searchQuery = 'WHERE ' . implode(' OR ', $searchClauses);
             }
-            $searchQuery = 'WHERE ' . implode(' OR ', $searchClauses);
-        }
 
-        $query = "SELECT $columnsList FROM $table $searchQuery LIMIT :perPage OFFSET :offset";
-        $countQuery = "SELECT COUNT(*) as total FROM $table $searchQuery";
+            $query = "SELECT $columnsList FROM $table $searchQuery LIMIT :perPage OFFSET :offset";
+            $countQuery = "SELECT COUNT(*) as total FROM $table $searchQuery";
 
-        $stmt = $this->db->prepare($query);
-        $countStmt = $this->db->prepare($countQuery);
+            $stmt = $this->db->prepare($query);
+            $countStmt = $this->db->prepare($countQuery);
 
-        if (!empty($searchConditions)) {
-            foreach ($searchConditions as $column => $value) {
-                $stmt->bindValue(":$column", "%$value%");
-                $countStmt->bindValue(":$column", "%$value%");
+            if (!empty($searchConditions)) {
+                foreach ($searchConditions as $column => $value) {
+                    $stmt->bindValue(":$column", "%$value%");
+                    $countStmt->bindValue(":$column", "%$value%");
+                }
             }
+            $stmt->bindValue(':perPage', $perPage, \PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
+
+            $stmt->execute();
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            $countStmt->execute();
+            $totalItems = (int) $countStmt->fetch(\PDO::FETCH_ASSOC)['total'];
+
+            if (empty($result)) {
+                return $this->sendResponse('Not Found', 404, []);
+            }
+
+            $totalPages = ceil($totalItems / $perPage);
+
+            $meta = [
+                'total_data' => $totalItems,
+                'total_pages' => $totalPages,
+                'page_size' => $perPage,
+                'previous_page' => $page > 1 ? $page - 1 : null,
+                'current_page' => $page,
+                'next_page' => $page + 1 <= $totalPages ? $page + 1 : null,
+            ];
+
+            return ['data' => $result, 'meta' => $meta];
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return ['data' => [], 'meta' => []];
         }
-        $stmt->bindValue(':perPage', $perPage, \PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
-
-        $stmt->execute();
-        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-        $countStmt->execute();
-        $totalItems = (int) $countStmt->fetch(\PDO::FETCH_ASSOC)['total'];
-
-        if (empty($result)) {
-            return $this->sendResponse('Not Found', 404, []);
-        }
-
-        $totalPages = ceil($totalItems / $perPage);
-
-        $meta = [
-            'total_data' => $totalItems,
-            'total_pages' => $totalPages,
-            'page_size' => $perPage,
-            'previous_page' => $page > 1 ? $page - 1 : null,
-            'current_page' => $page,
-            'next_page' => $page + 1 <= $totalPages ? $page + 1 : null,
-        ];
-
-        return ['data' => $result, 'meta' => $meta];
     }
 
     protected function insertData(string $table, array $data)
@@ -826,7 +851,7 @@ class BaseController
         if ($stmt->execute()) {
             return $this->sendResponse('success', 201, 'Record successfully inserted');
         } else {
-            throw new \Exception("Failed to insert record into '$table'.");
+            throw new \Exception("Failed to insert record.");
         }
     }
 

@@ -25,15 +25,16 @@ class Kitchen
               WHERE u.role_id = :role_id
               GROUP BY u.id, u.name";
 
-        $stmt = $this->db->prepare($query);
 
         try {
+            $stmt = $this->db->prepare($query);
             $stmt->bindValue(':role_id', $roleId);
             $stmt->execute();
             $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             return $result;
         } catch (\Exception $e) {
-            throw new \Exception("Failed to fetch chefs: " . $e->getMessage());
+            error_log("Failed to fetch chefs: " . $e->getMessage());
+            return [];
         }
     }
 
@@ -45,15 +46,16 @@ class Kitchen
               WHERE u.role_id = :role_id
               GROUP BY u.id, u.name";
 
-        $stmt = $this->db->prepare($query);
 
         try {
+            $stmt = $this->db->prepare($query);
             $stmt->bindValue(':role_id', $roleId);
             $stmt->execute();
             $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             return $result;
         } catch (\Exception $e) {
-            throw new \Exception("Failed to fetch drivers: " . $e->getMessage());
+            error_log("Failed to fetch riders: " . $e->getMessage());
+            return [];
         }
     }
 
@@ -235,14 +237,16 @@ class Kitchen
             ];
 
         } catch (\Exception $e) {
-            throw new \Exception("Failed to fetch orders: " . $e->getMessage());
+            error_log("Failed to fetch orders: " . $e->getMessage());
+            return ['data' => [], 'meta' => []];
         }
     }
 
     public function getOrderById($orderId)
     {
-        $baseQuery = $this->getNewOrdersBaseQuery();
-        $query = "
+        try {
+            $baseQuery = $this->getNewOrdersBaseQuery();
+            $query = "
             {$baseQuery} 
             WHERE so.id = :order_id
             GROUP BY so.id, c.email, so.order_id, so.order_title,
@@ -252,31 +256,34 @@ class Kitchen
                      c.mobile_phone, so.delivery_time, c.address, 
                      so.delivery_option, pm.name, pt.name, 
                      c.first_name, c.last_name, so.total_boxes, so.delivery_charge_id
-        ";
+            ";
 
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([':order_id' => $orderId]);
-        $order = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([':order_id' => $orderId]);
+            $order = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if (!$order) {
-            throw new \Exception("Order not found.");
-        }
-
-        $order['items'] = json_decode($order['items'], true);
-
-        if (!empty($order['delivery_date'])) {
-            $date = new DateTime($order['delivery_date']);
-            $order['delivery_date'] = $date->format('l d/m/Y');
-        }
-
-        if (!empty($order['delivery_time'])) {
-            $time = DateTime::createFromFormat('H:i:s', $order['delivery_time']);
-            if ($time) {
-                $order['delivery_time'] = $time->format('g:i A');
+            if (!$order) {
+                throw new \Exception("Order not found.");
             }
-        }
 
-        return $order;
+            $order['items'] = json_decode($order['items'], true);
+
+            if (!empty($order['delivery_date'])) {
+                $date = new DateTime($order['delivery_date']);
+                $order['delivery_date'] = $date->format('l d/m/Y');
+            }
+
+            if (!empty($order['delivery_time'])) {
+                $time = DateTime::createFromFormat('H:i:s', $order['delivery_time']);
+                if ($time) {
+                    $order['delivery_time'] = $time->format('g:i A');
+                }
+            }
+
+            return $order;
+        } catch (\Exception $e) {
+            throw new \Exception("Failed to fetch order: " . $e->getMessage());
+        }
     }
 
     public function getCount($conditions, $params)
@@ -294,14 +301,15 @@ class Kitchen
             $countQuery .= " AND " . implode(' AND ', $conditions);
         }
 
-        $stmt = $this->db->prepare($countQuery);
 
         try {
+            $stmt = $this->db->prepare($countQuery);
             $stmt->execute($params);
             $count = $stmt->fetchColumn();
             return $count;
         } catch (\Exception $e) {
-            throw new \Exception("Failed to fetch orders count: " . $e->getMessage());
+            error_log("Failed to fetch order count: " . $e->getMessage());
+            return 0;
         }
     }
 
@@ -394,11 +402,11 @@ class Kitchen
         $conditionString = "WHERE " . implode(" AND ", $conditions);
 
         $countQuery = "
-        SELECT COUNT(DISTINCT so.id) AS total_items
-        FROM sales_orders so
-        LEFT JOIN driver_assignments da ON da.order_id = so.id
-        {$conditionString}
-    ";
+            SELECT COUNT(DISTINCT so.id) AS total_items
+            FROM sales_orders so
+            LEFT JOIN driver_assignments da ON da.order_id = so.id
+            {$conditionString}
+        ";
 
         $countStmt = $this->db->prepare($countQuery);
         foreach ($params as $key => $value) {
@@ -433,15 +441,14 @@ class Kitchen
             LIMIT :page_size OFFSET :offset
         ";
 
-        $stmt = $this->db->prepare($query);
-
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value, is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR);
-        }
-        $stmt->bindValue(':page_size', $pageSize, \PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
-
         try {
+            $stmt = $this->db->prepare($query);
+
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value, is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR);
+            }
+            $stmt->bindValue(':page_size', $pageSize, \PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
             $stmt->execute();
             $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -464,7 +471,7 @@ class Kitchen
             ];
         } catch (\Exception $e) {
             error_log("Failed to fetch orders: " . $e->getMessage());
-            throw new \Exception("Failed to fetch orders.");
+            return ['data' => [], 'meta' => []];
         }
     }
 }
