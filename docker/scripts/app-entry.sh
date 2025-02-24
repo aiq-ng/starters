@@ -1,34 +1,24 @@
 #!/bin/bash
 
-# Function to run SQL scripts in a specific order
-run_sql_scripts() {
-	echo "Running SQL scripts in order..."
-	sql_files=(
-		"/workspace/starters/schema/drop-tables.sql"
-		"/workspace/starters/schema/init-db.sql"
-		"/workspace/starters/schema/init-data.sql"
-	)
-
-	for sql_file in "${sql_files[@]}"; do
-		if [ -f "$sql_file" ]; then
-			echo "Executing $sql_file"
-			PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -f "$sql_file"
-		else
-			echo "SQL file not found: $sql_file"
-		fi
-	done
-}
+SCRIPT_PATH="/usr/local/bin/cron.sh"
+service cron start
 
 # Install Composer dependencies if not already installed
 if [ ! -d "vendor" ]; then
 	composer install
 fi
 
-# Run SQL scripts if the directory exists
-if [ -d "/workspace/starters/schema" ]; then
-	run_sql_scripts
+# Cron job setup
+CRON_JOB="*/5 * * * * /bin/bash $SCRIPT_PATH"
+(
+	crontab -l 2>/dev/null | grep -v "$SCRIPT_PATH"
+	echo "$CRON_JOB"
+) | crontab -
+
+if [ $? -eq 0 ]; then
+	echo "Cron job set to run $SCRIPT_PATH every 5 minutes."
 else
-	echo "No SQL scripts directory found."
+	echo "Failed to set up cron job."
 fi
 
 # Start the PHP built-in server

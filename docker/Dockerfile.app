@@ -10,6 +10,7 @@ RUN apt-get update && \
         unzip \
         postgresql-client \
         libpq-dev \
+        cron \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
         gd \
@@ -33,9 +34,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy the entrypoint script
 COPY docker/scripts/app-entry.sh /usr/local/bin/entrypoint.sh
+COPY docker/scripts/cron.sh /usr/local/bin/cron.sh
 
 # Make the script executable
 RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/cron.sh
 
 # Expose the port
 EXPOSE 9090
