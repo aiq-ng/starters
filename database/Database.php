@@ -28,11 +28,16 @@ class Database
             $this->port = getenv('DB_PORT');
         }
 
+        $this->conn = $this->createConnection();
+    }
+
+    private function createConnection()
+    {
         try {
-            // Create the PDO connection string
             $dsn = "pgsql:host={$this->host};port={$this->port};dbname={$this->db_name};";
-            $this->conn = new \PDO($dsn, $this->user, $this->password);
-            $this->conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            $pdo = new \PDO($dsn, $this->user, $this->password);
+            $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            return $pdo;
         } catch (\PDOException $exception) {
             echo "Connection failed: " . $exception->getMessage();
             throw new \PDOException("Database connection failed: " .
@@ -40,7 +45,7 @@ class Database
         }
     }
 
-    // Singleton method to get the instance
+    // Singleton method to get the shared connection
     public static function getInstance()
     {
         if (!self::$instance) {
@@ -52,6 +57,12 @@ class Database
     public function getConnection()
     {
         return $this->conn;
+    }
+
+    // Method to get a new connection (for cron jobs, separate tasks, etc.)
+    public static function getNewConnection()
+    {
+        return (new self())->getConnection();
     }
 }
 

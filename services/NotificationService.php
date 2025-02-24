@@ -13,7 +13,7 @@ class NotificationService
     public function __construct()
     {
         $this->httpClientService = new HttpClientService();
-        $this->db = Database::getInstance()->getConnection();
+        $this->db = Database::getNewConnection();
         $this->emailService = new EmailService();
     }
 

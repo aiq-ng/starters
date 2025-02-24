@@ -6,7 +6,7 @@ PHP_BINARY="/usr/local/bin/php"
 LOG_FILE="/workspace/starters/app/listener.log"
 ENV_FILE="/workspace/starters/app/.env"
 SCRIPT_PATH="/workspace/starters/app/listener.php"
-MAX_LINES=1000
+MAX_LINES=100
 
 init() {
 	touch "$LOG_FILE"

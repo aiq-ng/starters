@@ -19,7 +19,7 @@ class BarcodeService
     public function __construct()
     {
         $this->mediaHandler = new MediaHandler();
-        $this->db = Database::getInstance()->getConnection();
+        $this->db = Database::getNewConnection();
     }
 
     public function generateBarcode(string $sku): string

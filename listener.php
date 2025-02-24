@@ -1,6 +1,8 @@
 <?php
 
 require_once __DIR__ . '/database/Database.php';
+require_once __DIR__ . '/controllers/BaseController.php';
+require_once __DIR__ . '/services/NotificationService.php';
 require_once __DIR__ . '/loadenv.php';
 
 // Use the required namespaces
@@ -9,8 +11,7 @@ use Controllers\BaseController;
 use Services\NotificationService;
 
 // Get the singleton instance and PDO connection
-$database = Database::getInstance();
-$pdo = $database->getConnection();
+$pdo = Database::getNewConnection();
 
 $sql = "
     UPDATE purchase_orders
