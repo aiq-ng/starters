@@ -658,6 +658,11 @@ DECLARE
     term_name TEXT;
     num_value INTEGER;
 BEGIN
+    -- Only update payment_due_date if it's NULL
+    IF NEW.payment_due_date IS NOT NULL THEN
+        RETURN NEW;
+    END IF;
+
     SELECT name INTO term_name 
     FROM payment_terms 
     WHERE id = NEW.payment_term_id;

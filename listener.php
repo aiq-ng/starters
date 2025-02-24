@@ -20,9 +20,9 @@ $sql = "
     UPDATE purchase_orders
     SET status = 'overdue',
         updated_at = CURRENT_TIMESTAMP
-    WHERE payment_due_date < CURRENT_DATE
+    WHERE payment_due_date <= CURRENT_DATE
     AND status NOT IN ('paid', 'cancelled', 'overdue')
-    RETURNING id, reference_number
+    RETURNING id, purchase_order_number, payment_due_date
 ";
 
 try {
@@ -57,8 +57,10 @@ try {
                     'event' => 'notification',
                     'entity_id' => $purchase['id'],
                     'entity_type' => 'purchase_orders',
-                    'title' => 'Purchase Order Overdue',
-                    'body' => "Purchase order {$purchase['reference_number']} is overdue.",
+                    'title' => 'Overdue Payment',
+                    'body' => "The payment for Purchase Order #{$purchase['purchase_order_number']} 
+                            was due on {$purchase['payment_due_date']} and is now overdue. 
+                            Please take immediate action.",
                 ];
 
                 $notificationService->sendNotification($notification);
