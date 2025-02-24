@@ -582,31 +582,7 @@ class BaseController
 
     public function convertStatus($status)
     {
-        if ($status === 'new_order') {
-            return 'new order';
-        }
-
-        if ($status === 'in_progress') {
-            return 'in progress';
-        }
-
-        if ($status === 'in_delivery') {
-            return 'in delivery';
-        }
-
-        if ($status === 'in_stock') {
-            return 'in stock';
-        }
-
-        if ($status === 'out_of_stock') {
-            return 'out of stock';
-        }
-
-        if ($status === 'low_stock') {
-            return 'low stock';
-        }
-
-        return $status;
+        return ucwords(str_replace('_', ' ', $status));
     }
 
     public static function getUserByRole($roleNames)

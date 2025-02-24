@@ -37,7 +37,13 @@ class HumanResourceController extends BaseController
         $data = $this->getRequestData();
 
         error_log('Department Data: ' . json_encode($data));
-        $this->humanResource->createDepartment($data);
+
+        try {
+            $this->humanResource->createDepartment($data);
+        } catch (\Exception $e) {
+            error_log("Error creating department: " . $e->getMessage());
+            $this->sendResponse('Error creating department', 500);
+        }
 
         $this->sendResponse('Department created successfully', 201);
     }
