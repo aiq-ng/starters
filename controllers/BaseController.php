@@ -582,7 +582,7 @@ class BaseController
 
     public function convertStatus($status)
     {
-        return ucwords(str_replace('_', ' ', $status));
+        return str_replace('_', ' ', $status);
     }
 
     public static function getUserByRole($roleNames)
