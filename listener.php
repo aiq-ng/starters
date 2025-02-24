@@ -3,6 +3,7 @@
 require_once __DIR__ . '/database/Database.php';
 require_once __DIR__ . '/controllers/BaseController.php';
 require_once __DIR__ . '/services/NotificationService.php';
+require_once __DIR__ . '/services/HttpClientService.php';
 require_once __DIR__ . '/loadenv.php';
 
 // Use the required namespaces
