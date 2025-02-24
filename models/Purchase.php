@@ -505,9 +505,9 @@ class Purchase
         try {
             $this->db->beginTransaction();
 
-            $updatedRows = $this->updatePurchaseOrderStatus($purchaseOrderId);
+            $paymentTermId = $this->updatePurchaseOrderStatus($purchaseOrderId);
 
-            if ($updatedRows === 0) {
+            if ($paymentTermId === null) {
                 throw new \Exception('Purchase order status update failed.');
             }
 
@@ -524,6 +524,8 @@ class Purchase
                 }
             }
 
+            $this->updatePaymentDueDate($paymentTermId, $purchaseOrderId);
+
             $this->db->commit();
 
             return $vendorId ?? true;
@@ -535,22 +537,51 @@ class Purchase
         }
     }
 
+    public function updatePaymentDueDate($paymentTermId, $purchaseOrderId)
+    {
+        $query = "
+            SELECT name FROM payment_terms
+            WHERE id = :payment_term_id
+        ";
+
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([':payment_term_id' => $paymentTermId]);
+
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if ($result && stripos($result['name'], 'receipt') !== false) {
+                $updateQuery = "
+                    UPDATE purchase_orders
+                    SET payment_due_date = CURRENT_DATE
+                    WHERE id = :purchase_order_id
+                ";
+
+                $updateStmt = $this->db->prepare($updateQuery);
+                $updateStmt->execute([':purchase_order_id' => $purchaseOrderId]);
+            }
+        } catch (\Exception $e) {
+            error_log('Error updating payment due date: ' . $e->getMessage());
+        }
+    }
+
     public function updatePurchaseOrderStatus($purchaseOrderId)
     {
         try {
             $updateQuery = "
                 UPDATE purchase_orders
                 SET status = 'received',
-                    date_received = NOW()
+                    date_received = CURRENT_DATE
                 WHERE id = :purchase_order_id
+                RETURNING payment_term_id
             ";
 
             $updateStmt = $this->db->prepare($updateQuery);
             $updateStmt->execute([':purchase_order_id' => $purchaseOrderId]);
 
-            $rowCount = $updateStmt->rowCount();
+            $result = $updateStmt->fetch(\PDO::FETCH_ASSOC);
 
-            return $rowCount;
+            return $result ? $result['payment_term_id'] : null;
         } catch (\Exception $e) {
             error_log('Error updating purchase order status: ' . $e->getMessage());
             throw new \Exception('Failed to update purchase order status: ' . $e->getMessage());
