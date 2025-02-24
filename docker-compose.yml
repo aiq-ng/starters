@@ -14,6 +14,8 @@ services:
       - .env
     networks:
       - starters-network
+    depends_on:
+      - postgres
     restart: always
 
   websocket:
@@ -33,7 +35,29 @@ services:
       - starters-network
     restart: always
 
+  postgres:
+    image: postgres:latest
+    container_name: starters-db
+    restart: always
+    ports:
+      - "9092:5432"
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema/init-db.sql:/docker-entrypoint-initdb.d/01-init-db.sql
+      - ./schema/init-data.sql:/docker-entrypoint-initdb.d/02-init-data.sql
+    networks:
+      - starters-network
+
 networks:
   starters-network:
     driver: bridge
+
+volumes:
+  postgres_data:
 
