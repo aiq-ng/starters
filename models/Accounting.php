@@ -436,7 +436,7 @@ class Accounting extends Kitchen
             po.id, 
             po.reference_number AS ref_id,
             po.purchase_order_number AS po_number,
-            po.created_at AS date, 
+            po.date_received AS date, 
             po.payment_due_date AS due_date,
             v.display_name AS vendor_name, 
             po.total AS amount, 

@@ -17,7 +17,7 @@ $sql = "
     SET status = 'overdue',
         updated_at = CURRENT_TIMESTAMP
     WHERE payment_due_date < CURRENT_DATE
-    AND status NOT IN ('paid', 'cancelled', 'received', 'overdue')
+    AND status NOT IN ('paid', 'cancelled', 'overdue')
     RETURNING id, reference_number
 ";
 
