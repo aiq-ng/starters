@@ -437,21 +437,21 @@ class Accounting extends Kitchen
             po.reference_number AS ref_id,
             po.purchase_order_number AS po_number,
             po.created_at AS date, 
-            po.date_received + INTERVAL '30 days' AS due_date,
+            po.payment_due_date AS due_date,
             v.display_name AS vendor_name, 
             po.total AS amount, 
             CASE 
                 WHEN po.status = 'overdue' THEN 
                     CASE 
-                        WHEN CURRENT_DATE - po.date_received = 1 THEN 
+                        WHEN CURRENT_DATE - po.payment_due_date = 1 THEN 
                             'overdue by 1 day'
-                        WHEN CURRENT_DATE - po.date_received = 0 THEN 
+                        WHEN CURRENT_DATE - po.payment_due_date = 0 THEN 
                             'due today' 
                         ELSE 
-                            'overdue by ' || (CURRENT_DATE - po.date_received) || ' days' 
+                            'overdue by ' || (CURRENT_DATE - po.payment_due_date) || ' days' 
                     END
-                WHEN po.status = 'received' THEN 
-                    'received'
+                ELSE
+                    po.status
             END AS status
         FROM 
             purchase_orders po

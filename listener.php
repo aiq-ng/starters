@@ -16,7 +16,7 @@ $sql = "
     UPDATE purchase_orders
     SET status = 'overdue',
         updated_at = CURRENT_TIMESTAMP
-    WHERE delivery_date < CURRENT_DATE
+    WHERE payment_due_date < CURRENT_DATE
     AND status NOT IN ('paid', 'cancelled', 'received', 'overdue')
     RETURNING id, reference_number
 ";

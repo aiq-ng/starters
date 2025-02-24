@@ -439,6 +439,7 @@ CREATE TABLE purchase_orders (
     ) STORED,
     delivery_date DATE,
     payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
+    payment_due_date DATE,
     subject TEXT,
     notes TEXT,
     terms_and_conditions TEXT,
@@ -651,12 +652,36 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION set_status_to_overdue()
+CREATE OR REPLACE FUNCTION set_payment_due_date()
 RETURNS TRIGGER AS $$
+DECLARE
+    term_name TEXT;
+    num_value INTEGER;
 BEGIN
-    IF NEW.delivery_date < CURRENT_DATE AND NEW.status NOT IN ('paid', 'cancelled', 'received') THEN
-        NEW.status := 'overdue';
+    SELECT name INTO term_name 
+    FROM payment_terms 
+    WHERE id = NEW.payment_term_id;
+
+    IF term_name ILIKE '%delivery%' THEN
+        NEW.payment_due_date := NEW.delivery_date;
+    ELSIF term_name ~ '([0-9]+)' THEN
+        num_value := regexp_replace(term_name, '[^0-9]', '', 'g')::INTEGER;
+
+        IF term_name ILIKE '%day%' THEN
+            NEW.payment_due_date := CURRENT_DATE + num_value;
+        ELSIF term_name ILIKE '%week%' THEN
+            NEW.payment_due_date := CURRENT_DATE + (num_value * 7);
+        ELSIF term_name ILIKE '%month%' THEN
+            NEW.payment_due_date := CURRENT_DATE + (num_value * INTERVAL '1 month');
+        ELSIF term_name ILIKE '%year%' THEN
+            NEW.payment_due_date := CURRENT_DATE + (num_value * INTERVAL '1 year');
+        ELSE
+            NEW.payment_due_date := NEW.delivery_date;
+        END IF;
+    ELSE
+        NEW.payment_due_date := NEW.delivery_date;
     END IF;
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -780,7 +805,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Triggers
-
 CREATE TRIGGER before_insert_update_items
 BEFORE INSERT OR UPDATE ON items
 FOR EACH ROW
@@ -791,10 +815,10 @@ AFTER INSERT OR UPDATE OR DELETE ON item_stocks
 FOR EACH ROW
 EXECUTE FUNCTION update_item_availability();
 
-CREATE TRIGGER check_overdue_status
-BEFORE UPDATE ON purchase_orders
+CREATE TRIGGER trigger_set_payment_due_date
+BEFORE INSERT OR UPDATE ON purchase_orders
 FOR EACH ROW
-EXECUTE FUNCTION set_status_to_overdue();
+EXECUTE FUNCTION set_payment_due_date();
 
 CREATE TRIGGER trigger_calculate_purchase_order_items_price
 BEFORE INSERT OR UPDATE ON purchase_order_items
