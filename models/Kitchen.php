@@ -169,13 +169,11 @@ class Kitchen
             $params[':sent_to_kitchen'] = $sentToKitchen ? 'true' : 'false';
         }
 
-        // Ensure delivery_date filter works correctly
         if ($date) {
             $conditions[] = "so.delivery_date = :delivery_date";
             $params[':delivery_date'] = $date;
         }
 
-        // Ensure delivery_time filter works correctly
         if ($deliveryTime) {
             $conditions[] = "so.delivery_time >= :delivery_time";
             $params[':delivery_time'] = $deliveryTime;

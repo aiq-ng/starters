@@ -1014,6 +1014,19 @@ class Sale extends Kitchen
         try {
             $stmt = $this->db->prepare($query);
 
+            $existingItems = $this->getSalesOrderItems($salesOrderId);
+
+            error_log('Existing items ' . json_encode($existingItems));
+
+            $newItems = array_column($items, 'item_id');
+
+            error_log('New items ' . json_encode($newItems));
+
+            $itemsToDelete = array_diff($existingItems, $newItems);
+
+            error_log('Items to delete ' . json_encode($itemsToDelete));
+
+            $this->deleteSalesOrderItems($salesOrderId, $itemsToDelete);
 
             foreach ($items as $item) {
                 $item = array_filter($item, function ($value) {
@@ -1033,6 +1046,50 @@ class Sale extends Kitchen
         } catch (\Exception $e) {
             error_log($e->getMessage());
             throw new \Exception("Failed to update sales order items: " . $e->getMessage());
+        }
+    }
+
+    private function getSalesOrderItems($salesOrderId)
+    {
+        $query = "
+            SELECT 
+                item_id
+            FROM 
+                sales_order_items
+            WHERE 
+                sales_order_id = :sales_order_id
+        ";
+
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute(['sales_order_id' => $salesOrderId]);
+
+            return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            return [];
+        }
+    }
+
+    private function deleteSalesOrderItems($salesOrderId, $items)
+    {
+        $placeholders = implode(',', array_fill(0, count($items), '?'));
+
+        $query = "
+            DELETE FROM sales_order_items
+            WHERE sales_order_id = :sales_order_id
+            AND item_id NOT IN ($placeholders)
+        ";
+
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute(array_merge([$salesOrderId], $items));
+
+            return $stmt->rowCount();
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception("Failed to delete sales order items");
         }
     }
 
