@@ -19,7 +19,8 @@ set_exception_handler(function ($exception) {
     error_log('Exception: ' . $exception->getMessage());
 
     echo json_encode([
-        'message' => $exception->getMessage()
+        'message' => 'Oops! Something went wrong. Please try again later.',
+        'error' => $exception->getMessage()
     ]);
 
     exit;

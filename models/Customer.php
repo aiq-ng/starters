@@ -60,49 +60,38 @@ class Customer
 
     public function updateCustomer($id, $data)
     {
+
+        $filteredData = array_filter($data, function ($value) {
+            return $value !== "" && $value !== null;
+        });
+
+        $setClauses = [];
+        $params = [':id' => $id];
+
+        foreach ($filteredData as $field => $value) {
+            $setClauses[] = "$field = :$field";
+            $params[":$field"] = $value;
+        }
+
+        if (empty($setClauses)) {
+            return null;
+        }
+
+        $setClauseString = implode(', ', $setClauses);
+
         $query = "
             UPDATE customers
-            SET 
-                customer_type = :customer_type,
-                salutation = :salutation,
-                first_name = :first_name,
-                last_name = :last_name,
-                display_name = :display_name,
-                company_name = :company_name,
-                email = :email,
-                work_phone = :work_phone,
-                mobile_phone = :mobile_phone,
-                address = :address,
-                social_media = :social_media,
-                website = :website,
-                currency_id = :currency_id,
-                payment_term_id = :payment_term_id
+            SET $setClauseString
             WHERE id = :id
+            RETURNING id;
         ";
 
         try {
             $stmt = $this->db->prepare($query);
-
-            $stmt->bindParam(':customer_type', $data['customer_type']);
-            $stmt->bindParam(':salutation', $data['salutation']);
-            $stmt->bindParam(':first_name', $data['first_name']);
-            $stmt->bindParam(':last_name', $data['last_name']);
-            $stmt->bindParam(':display_name', $data['display_name']);
-            $stmt->bindParam(':company_name', $data['company_name']);
-            $stmt->bindParam(':email', $data['email']);
-            $stmt->bindParam(':work_phone', $data['work_phone']);
-            $stmt->bindParam(':mobile_phone', $data['mobile_phone']);
-            $stmt->bindParam(':address', $data['address']);
-            $stmt->bindParam(':social_media', $data['social_media']);
-            $stmt->bindParam(':website', $data['website']);
-            $stmt->bindParam(':currency_id', $data['currency_id']);
-            $stmt->bindParam(':payment_term_id', $data['payment_term_id']);
-            $stmt->bindParam(':id', $id);
-
-            return $stmt->execute();
+            $stmt->execute($params);
+            return $stmt->fetchColumn();
         } catch (\Exception $e) {
-            error_log($e->getMessage());
-            throw new \Exception("Error updating customer");
+            throw new \Exception("Failed to update customer: " . $e->getMessage());
         }
     }
 

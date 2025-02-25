@@ -58,46 +58,36 @@ class Vendor
 
     public function updateVendor($id, $data)
     {
-        $query = "
-            UPDATE vendors 
-            SET 
-                salutation = :salutation,
-                first_name = :first_name,
-                last_name = :last_name,
-                display_name = :display_name,
-                company_name = :company_name,
-                email = :email,
-                work_phone = :work_phone,
-                mobile_phone = :mobile_phone,
-                address = :address,
-                social_media = :social_media,
-                payment_term_id = :payment_term_id,
-                currency_id = :currency_id,
-                category_id = :category_id,
-                website = :website
-            WHERE id = :id
-        ";
-
         try {
+            $filteredData = array_filter($data, function ($value) {
+                return $value !== "" && $value !== null;
+            });
+
+            $setClauses = [];
+            $params = [':id' => $id];
+
+            foreach ($filteredData as $field => $value) {
+                $setClauses[] = "$field = :$field";
+                $params[":$field"] = $value;
+            }
+
+            if (empty($setClauses)) {
+                return null;
+            }
+
+            $setClauseString = implode(', ', $setClauses);
+
+            $query = "
+                UPDATE vendors
+                SET $setClauseString
+                WHERE id = :id
+                RETURNING id;
+            ";
+
             $stmt = $this->db->prepare($query);
+            $stmt->execute($params);
 
-            $stmt->bindValue(':salutation', $data['salutation'] ?? null);
-            $stmt->bindValue(':first_name', $data['first_name'] ?? null);
-            $stmt->bindValue(':last_name', $data['last_name'] ?? null);
-            $stmt->bindValue(':display_name', $data['display_name'] ?? null);
-            $stmt->bindValue(':company_name', $data['company_name'] ?? null);
-            $stmt->bindValue(':email', $data['email'] ?? null);
-            $stmt->bindValue(':work_phone', $data['work_phone'] ?? null);
-            $stmt->bindValue(':mobile_phone', $data['mobile_phone'] ?? null);
-            $stmt->bindValue(':address', $data['address'] ?? null);
-            $stmt->bindValue(':social_media', $data['social_media'] ?? null);
-            $stmt->bindValue(':payment_term_id', $data['payment_term_id'] ?? null);
-            $stmt->bindValue(':currency_id', $data['currency_id'] ?? null);
-            $stmt->bindValue(':category_id', $data['category_id'] ?? null);
-            $stmt->bindValue(':website', $data['website'] ?? null);
-            $stmt->bindValue(':id', $id);
-
-            return $stmt->execute();
+            return $stmt->fetchColumn();
         } catch (\Exception $e) {
             error_log($e->getMessage());
             throw new \Exception("Error updating vendor");
