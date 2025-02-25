@@ -7,33 +7,13 @@ if (!ob_get_level()) {
 
 header('Content-Type: application/json');
 
+// Convert all PHP warnings, notices, and errors into exceptions
 set_error_handler(function ($severity, $message, $file, $line) {
-    // Clear any existing output
-    ob_clean();
-
-    // Check if the error message indicates a duplicate key or unique constraint violation
-    if (strpos($message, 'duplicate key') !== false || strpos($message, 'unique constraint') !== false) {
-        http_response_code(409); // Conflict
-        error_log("Unique Constraint Violation: $message in $file on line $line");
-        echo json_encode([
-            'message' => 'A record with the same value already exists. Please use a different value.'
-        ]);
-    } elseif (strpos($message, 'foreign key constraint') !== false || strpos($message, 'SQLSTATE[23503]') !== false) {
-        // Handle foreign key constraint violations
-        http_response_code(400); // Bad Request
-        error_log("Foreign Key Constraint Violation: $message in $file on line $line");
-        echo json_encode([
-            'message' => 'Foreign Key Constraint Violation: The referenced record does not exist. Please ensure that all references are valid.'
-        ]);
-    } else {
-        http_response_code(500);
-        error_log("Error: $message in $file on line $line");
-        echo json_encode([
-            'message' => "Error: $message in $file on line $line"
-        ]);
+    if (!(error_reporting() & $severity)) {
+        return false; // Skip errors that should not be reported
     }
 
-    exit;
+    throw new \ErrorException($message, 0, $severity, $file, $line);
 });
 
 set_exception_handler(function ($exception) {
@@ -51,7 +31,6 @@ register_shutdown_function(function () {
     if ($error !== null) {
         ob_clean();
 
-        // Check if it's a foreign key constraint violation
         if (strpos($error['message'], 'SQLSTATE[23503]') !== false) {
             http_response_code(400); // Bad Request
             error_log("Foreign Key Constraint Violation: {$error['message']} in {$error['file']} on line {$error['line']}");
