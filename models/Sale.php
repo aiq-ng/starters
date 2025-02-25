@@ -945,7 +945,7 @@ class Sale extends Kitchen
         }
     }
 
-    private function updateSalesOrder($id, $data)
+    private function updateSalesOrderx($id, $data)
     {
         $query = "
             UPDATE sales_orders
@@ -999,6 +999,40 @@ class Sale extends Kitchen
         }
     }
 
+    private function updateSalesOrder($id, $data)
+    {
+        $filteredData = array_filter($data, function ($value) {
+            return $value !== "" && $value !== null;
+        });
+
+        $setClauses = [];
+        $params = [':id' => $id];
+
+        foreach ($filteredData as $field => $value) {
+            $setClauses[] = "$field = :$field";
+            $params[":$field"] = $value;
+        }
+
+        $setClauseString = implode(', ', $setClauses);
+
+        error_log('Set clause: ' . json_encode($setClauseString));
+
+        $query = "
+            UPDATE sales_orders
+            SET $setClauseString
+            WHERE id = :id
+            RETURNING id;
+        ";
+
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute($params);
+            return $stmt->fetchColumn();
+        } catch (\Exception $e) {
+            throw new \Exception("Failed to update sales order: " . $e->getMessage());
+        }
+    }
+
     private function updateSalesOrderItems($salesOrderId, $items)
     {
         $query = "
@@ -1015,16 +1049,8 @@ class Sale extends Kitchen
             $stmt = $this->db->prepare($query);
 
             $existingItems = $this->getSalesOrderItems($salesOrderId);
-
-            error_log('Existing items ' . json_encode($existingItems));
-
             $newItems = array_column($items, 'item_id');
-
-            error_log('New items ' . json_encode($newItems));
-
             $itemsToDelete = array_diff($existingItems, $newItems);
-
-            error_log('Items to delete ' . json_encode($itemsToDelete));
 
             foreach ($itemsToDelete as $itemToDelete) {
                 $this->deleteSalesOrderItem($salesOrderId, $itemToDelete);
