@@ -200,7 +200,7 @@ class TradeController extends BaseController
             $invoice = $this->sale->updateSale($saleId, $data);
 
             $this->insertAuditLog(
-                userId: $data['user_id'],
+                userId: $data['processed_by'],
                 entityId: $saleId,
                 entityType: 'sales_orders',
                 action: 'update',
