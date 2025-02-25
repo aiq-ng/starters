@@ -291,93 +291,124 @@ class Purchase
 
     private function updatePurchaseOrderDetails($purchaseOrderId, $data)
     {
+        unset($data['items']);
+
+        $filteredData = array_filter($data, function ($value) {
+            return $value !== "" && $value !== null;
+        });
+
+        $setClauses = [];
+        $params = [':purchase_order_id' => $purchaseOrderId];
+
+        foreach ($filteredData as $field => $value) {
+            $setClauses[] = "$field = :$field";
+            $params[":$field"] = $value;
+        }
+
+        if (empty($setClauses)) {
+            return null;
+        }
+
+        $setClauseString = implode(', ', $setClauses);
+
         $query = "
-            UPDATE purchase_orders 
-            SET 
-                delivery_date = :delivery_date,
-                vendor_id = :vendor_id,
-                branch_id = :branch_id,
-                payment_term_id = :payment_term_id,
-                subject = :subject,
-                notes = :notes,
-                terms_and_conditions = :terms_and_conditions,
-                discount = :discount,
-                shipping_charge = :shipping_charge,
-                total = :total,
-                processed_by = :processed_by
-            WHERE id = :purchase_order_id;
+            UPDATE purchase_orders
+            SET $setClauseString
+            WHERE id = :purchase_order_id
+            RETURNING id;
         ";
 
         try {
             $stmt = $this->db->prepare($query);
-            $stmt->execute([
-                ':purchase_order_id' => $purchaseOrderId,
-                ':delivery_date' => $data['delivery_date'] ?? null,
-                ':vendor_id' => $data['vendor_id'] ?? null,
-                ':branch_id' => $data['branch_id'] ?? null,
-                ':payment_term_id' => $data['payment_term_id'] ?? null,
-                ':subject' => $data['subject'] ?? null,
-                ':notes' => $data['notes'] ?? null,
-                ':terms_and_conditions' => $data['terms_and_conditions'] ?? null,
-                ':discount' => $data['discount'] ?? null,
-                ':shipping_charge' => $data['shipping_charge'] ?? null,
-                ':total' => $data['total'] ?? null,
-                ':processed_by' => $data['user_id'] ?? null,
-            ]);
+            $stmt->execute($params);
+            return $stmt->fetchColumn();
         } catch (\Exception $e) {
-            error_log('Error updating purchase order: ' . $e->getMessage());
             throw new \Exception("Failed to update purchase order: " . $e->getMessage());
         }
     }
 
     private function updatePurchaseOrderItems($purchaseOrderId, $items)
     {
-        $updateQuery = "
-            UPDATE purchase_order_items 
-            SET 
-                quantity = :quantity,
-                price = :price,
-                tax_id = :tax_id
-            WHERE purchase_order_id = :purchase_order_id AND item_id = :item_id;
-        ";
+        try {
+            $existingItemIds = $this->getPurchaseOrderItemIds($purchaseOrderId);
+            $incomingItemIds = array_column($items, 'item_id');
+            $itemsToDelete = array_diff($existingItemIds, $incomingItemIds);
 
-        $insertQuery = "
-            INSERT INTO purchase_order_items (
-                purchase_order_id, item_id, quantity, price, tax_id
-            ) VALUES (
-                :purchase_order_id, :item_id, :quantity, :price, :tax_id
-            );
+            foreach ($itemsToDelete as $itemToDelete) {
+                $this->deletePurchaseOrderItem($purchaseOrderId, $itemToDelete);
+            }
+
+            foreach ($items as $item) {
+                $item = array_filter($item, fn ($value) => $value !== "" && $value !== null);
+
+                if (in_array($item['item_id'], $existingItemIds)) {
+                    $query = "
+                    UPDATE purchase_order_items
+                    SET 
+                        quantity = COALESCE(:quantity, quantity),
+                        price = COALESCE(:price, price),
+                        tax_id = COALESCE(:tax_id, tax_id)
+                    WHERE purchase_order_id = :purchase_order_id 
+                    AND item_id = :item_id
+                ";
+                } else {
+                    $query = "
+                    INSERT INTO purchase_order_items (purchase_order_id, item_id, quantity, price, tax_id)
+                    VALUES (:purchase_order_id, :item_id, :quantity, :price, :tax_id)
+                ";
+                }
+
+                $stmt = $this->db->prepare($query);
+                $stmt->execute([
+                    ':purchase_order_id' => $purchaseOrderId,
+                    ':item_id' => $item['item_id'],
+                    ':quantity' => $item['quantity'] ?? null,
+                    ':price' => $item['price'] ?? null,
+                    ':tax_id' => $item['tax_id'] ?? null
+                ]);
+            }
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception("Failed to update purchase order items: " . $e->getMessage());
+        }
+    }
+
+    private function getPurchaseOrderItemIds($purchaseOrderId)
+    {
+        $query = "
+            SELECT item_id
+            FROM purchase_order_items
+            WHERE purchase_order_id = :purchase_order_id
         ";
 
         try {
-            foreach ($items as $item) {
-                $filteredItem = array_filter($item, fn ($value) => $value !== "");
+            $stmt = $this->db->prepare($query);
+            $stmt->execute(['purchase_order_id' => $purchaseOrderId]);
 
-                // Try updating the item
-                $stmt = $this->db->prepare($updateQuery);
-                $stmt->execute([
-                    ':purchase_order_id' => $purchaseOrderId,
-                    ':item_id' => $filteredItem['item_id'] ?? null,
-                    ':quantity' => $filteredItem['quantity'] ?? null,
-                    ':price' => $filteredItem['price'] ?? null,
-                    ':tax_id' => $filteredItem['tax_id'] ?? null,
-                ]);
-
-                // If no rows were updated, insert the item
-                if ($stmt->rowCount() === 0) {
-                    $stmt = $this->db->prepare($insertQuery);
-                    $stmt->execute([
-                        ':purchase_order_id' => $purchaseOrderId,
-                        ':item_id' => $filteredItem['item_id'] ?? null,
-                        ':quantity' => $filteredItem['quantity'] ?? null,
-                        ':price' => $filteredItem['price'] ?? null,
-                        ':tax_id' => $filteredItem['tax_id'] ?? null,
-                    ]);
-                }
-            }
+            return $stmt->fetchAll(\PDO::FETCH_COLUMN);
         } catch (\Exception $e) {
-            error_log('Error updating purchase order items: ' . $e->getMessage());
-            throw new \Exception("Failed to update purchase order items: " . $e->getMessage());
+            error_log($e->getMessage());
+            return [];
+        }
+    }
+
+    private function deletePurchaseOrderItem($purchaseOrderId, $itemId)
+    {
+        $query = "
+            DELETE FROM purchase_order_items
+            WHERE purchase_order_id = :purchase_order_id
+            AND item_id = :item_id
+        ";
+
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([
+                ':purchase_order_id' => $purchaseOrderId,
+                ':item_id' => $itemId
+            ]);
+        } catch (\Exception $e) {
+            error_log($e->getMessage());
+            throw new \Exception("Failed to delete purchase order item: " . $e->getMessage());
         }
     }
 

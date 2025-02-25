@@ -1040,10 +1040,6 @@ class Sale extends Kitchen
             $incomingItemIds = array_column($items, 'item_id');
             $itemsToDelete = array_diff($existingItemIds, $incomingItemIds);
 
-            error_log('Existing items: ' . json_encode($existingItemIds));
-            error_log('Incoming items: ' . json_encode($incomingItemIds));
-            error_log('Items to delete: ' . json_encode($itemsToDelete));
-
             foreach ($itemsToDelete as $itemToDelete) {
                 $this->deleteSalesOrderItem($salesOrderId, $itemToDelete);
             }

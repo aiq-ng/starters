@@ -127,7 +127,7 @@ class TradeController extends BaseController
             $this->sendResponse('Items should be an array and not empty', 400);
         }
 
-        $data['user_id'] = $_SESSION['user_id'];
+        $data['processed_by'] = $_SESSION['user_id'];
 
         try {
             error_log('Data: ' . json_encode($data));
@@ -136,7 +136,7 @@ class TradeController extends BaseController
             if ($invoice) {
 
                 $this->insertAuditLog(
-                    userId: $data['user_id'],
+                    userId: $data['processed_by'],
                     entityId: $purchaseId,
                     entityType: 'purchase_orders',
                     action: 'update',
@@ -502,7 +502,7 @@ class TradeController extends BaseController
         $this->authorizeRequest();
 
         $data = $this->getRequestData();
-        
+
         error_log('Data: ' . json_encode($data));
 
         if (!isset($data['list']) || !is_array($data['list'])) {
