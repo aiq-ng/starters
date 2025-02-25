@@ -367,7 +367,7 @@ class Purchase
                     ':tax_id' => $item['tax_id'] ?? null
                 ]);
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             error_log($e->getMessage());
             throw new \Exception("Failed to update purchase order items: " . $e->getMessage());
         }
