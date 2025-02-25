@@ -502,6 +502,8 @@ class TradeController extends BaseController
         $this->authorizeRequest();
 
         $data = $this->getRequestData();
+        
+        error_log('Data: ' . json_encode($data));
 
         if (!isset($data['list']) || !is_array($data['list'])) {
             return $this->sendResponse('Invalid data format.', 400);
