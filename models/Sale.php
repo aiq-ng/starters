@@ -1017,8 +1017,6 @@ class Sale extends Kitchen
 
         $setClauseString = implode(', ', $setClauses);
 
-        error_log('Set clause: ' . json_encode($setClauseString));
-
         $query = "
             UPDATE sales_orders
             SET $setClauseString
@@ -1037,38 +1035,49 @@ class Sale extends Kitchen
 
     private function updateSalesOrderItems($salesOrderId, $items)
     {
-        $query = "
-            UPDATE sales_order_items
-            SET 
-                quantity = :quantity,
-                price = :price,
-                tax_id = :tax_id
-            WHERE sales_order_id = :sales_order_id
-            AND item_id = :item_id
-        ";
-
         try {
-            $stmt = $this->db->prepare($query);
 
-            $existingItems = $this->getSalesOrderItems($salesOrderId);
-            $newItems = array_column($items, 'item_id');
-            $itemsToDelete = array_diff($existingItems, $newItems);
+            $existingItemIds = $this->getSalesOrderItems($salesOrderId);
+            $incomingItemIds = array_column($items, 'item_id');
+            $itemsToDelete = array_diff($existingItemIds, $incomingItemIds);
 
             foreach ($itemsToDelete as $itemToDelete) {
                 $this->deleteSalesOrderItem($salesOrderId, $itemToDelete);
             }
 
             foreach ($items as $item) {
-                $item = array_filter($item, function ($value) {
-                    return $value !== "" && $value !== null;
-                });
+                $item = array_filter($item, fn ($value) => $value !== "" && $value !== null);
 
-                if (!empty($item['item_id']) && isset($item['quantity']) && isset($item['price'])) {
+                if (isset($item['item_id'])) {
+                    // Update only non-null fields
+                    $query = "
+                        UPDATE sales_order_items
+                        SET 
+                            quantity = COALESCE(:quantity, quantity),
+                            price = COALESCE(:price, price),
+                            tax_id = COALESCE(:tax_id, tax_id)
+                        WHERE sales_order_id = :sales_order_id 
+                        AND item_id = :item_id
+                    ";
+                    $stmt = $this->db->prepare($query);
                     $stmt->execute([
                         ':sales_order_id' => $salesOrderId,
                         ':item_id' => $item['item_id'],
+                        ':quantity' => $item['quantity'] ?? null,
+                        ':price' => $item['price'] ?? null,
+                        ':tax_id' => $item['tax_id'] ?? null
+                    ]);
+                } else {
+                    // Insert new items (no item_id means it's a new entry)
+                    $query = "
+                        INSERT INTO sales_order_items (sales_order_id, quantity, price, tax_id)
+                        VALUES (:sales_order_id, :quantity, :price, :tax_id)
+                    ";
+                    $stmt = $this->db->prepare($query);
+                    $stmt->execute([
+                        ':sales_order_id' => $salesOrderId,
                         ':quantity' => $item['quantity'],
-                        ':price' => $item['price'],
+                        ':price' => $item['price'] ?? null,
                         ':tax_id' => $item['tax_id'] ?? null
                     ]);
                 }
