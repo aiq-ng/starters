@@ -945,7 +945,7 @@ class Sale extends Kitchen
         }
     }
 
-    private function updateSalesOrder($id, $data)
+    private function updateSalesOrderx($id, $data)
     {
         $query = "
             UPDATE sales_orders
@@ -999,8 +999,10 @@ class Sale extends Kitchen
         }
     }
 
-    private function updateSalesOrderx($id, $data)
+    private function updateSalesOrder($id, $data)
     {
+        unset($data['items']);
+
         $filteredData = array_filter($data, function ($value) {
             return $value !== "" && $value !== null;
         });
