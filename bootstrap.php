@@ -7,44 +7,36 @@ if (!ob_get_level()) {
 
 header('Content-Type: application/json');
 
-// Convert all PHP warnings, notices, and errors into exceptions
+// Convert all warnings and notices to exceptions
 set_error_handler(function ($severity, $message, $file, $line) {
-    if (!(error_reporting() & $severity)) {
-        return false; // Skip errors that should not be reported
-    }
-
-    throw new \ErrorException($message, 0, $severity, $file, $line);
+    throw new ErrorException($message, 0, $severity, $file, $line);
 });
 
+// Global exception handler (catches all exceptions, including converted warnings)
 set_exception_handler(function ($exception) {
     ob_clean();
     http_response_code(500);
     error_log('Exception: ' . $exception->getMessage());
+
     echo json_encode([
         'message' => $exception->getMessage()
     ]);
+
     exit;
 });
 
+// Handle fatal errors at shutdown (but prevent duplicate handling)
 register_shutdown_function(function () {
     $error = error_get_last();
-    if ($error !== null) {
+    if ($error !== null && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
         ob_clean();
+        http_response_code(500);
+        error_log("Fatal Error: {$error['message']} in {$error['file']} on line {$error['line']}");
 
-        if (strpos($error['message'], 'SQLSTATE[23503]') !== false) {
-            http_response_code(400); // Bad Request
-            error_log("Foreign Key Constraint Violation: {$error['message']} in {$error['file']} on line {$error['line']}");
-            echo json_encode([
-                'message' => 'Foreign Key Constraint Violation: The referenced record does not exist. Please ensure that all references are valid.'
-            ]);
-        } else {
-            http_response_code(500);
-            error_log("Fatal Error: {$error['message']} in {$error['file']} on line {$error['line']}");
-            echo json_encode([
-                'message' => "Fatal Error: {$error['message']}"
-            ]);
-        }
+        echo json_encode([
+            'message' => "Fatal Error: {$error['message']}"
+        ]);
 
-        exit;
+        exit; // Stop further execution
     }
 });
