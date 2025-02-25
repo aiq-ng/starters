@@ -330,6 +330,7 @@ class Purchase
     private function updatePurchaseOrderItems($purchaseOrderId, $items)
     {
         try {
+            $items = array_filter($items, fn ($item) => isset($item['item_id']));
             $existingItemIds = $this->getPurchaseOrderItemIds($purchaseOrderId);
             $incomingItemIds = array_column($items, 'item_id');
             $itemsToDelete = array_diff($existingItemIds, $incomingItemIds);
@@ -339,32 +340,26 @@ class Purchase
             }
 
             foreach ($items as $item) {
-                $item = array_filter($item, fn ($value) => $value !== "" && $value !== null);
+                $filteredItem = array_filter($item, fn ($value) => $value !== "" && $value !== null);
 
-                if (in_array($item['item_id'], $existingItemIds)) {
-                    $query = "
-                    UPDATE purchase_order_items
-                    SET 
-                        quantity = COALESCE(:quantity, quantity),
-                        price = COALESCE(:price, price),
-                        tax_id = COALESCE(:tax_id, tax_id)
-                    WHERE purchase_order_id = :purchase_order_id 
-                    AND item_id = :item_id
-                ";
-                } else {
-                    $query = "
-                    INSERT INTO purchase_order_items (purchase_order_id, item_id, quantity, price, tax_id)
-                    VALUES (:purchase_order_id, :item_id, :quantity, :price, :tax_id)
-                ";
-                }
+                $query = in_array($item['item_id'], $existingItemIds)
+                    ? "UPDATE purchase_order_items
+                   SET quantity = COALESCE(:quantity, quantity),
+                       price = COALESCE(:price, price),
+                       tax_id = COALESCE(:tax_id, tax_id)
+                   WHERE purchase_order_id = :purchase_order_id 
+                   AND item_id = :item_id"
+                    : "INSERT INTO purchase_order_items 
+                   (purchase_order_id, item_id, quantity, price, tax_id)
+                   VALUES (:purchase_order_id, :item_id, :quantity, :price, :tax_id)";
 
                 $stmt = $this->db->prepare($query);
                 $stmt->execute([
                     ':purchase_order_id' => $purchaseOrderId,
                     ':item_id' => $item['item_id'],
-                    ':quantity' => $item['quantity'] ?? null,
-                    ':price' => $item['price'] ?? null,
-                    ':tax_id' => $item['tax_id'] ?? null
+                    ':quantity' => $filteredItem['quantity'] ?? null,
+                    ':price' => $filteredItem['price'] ?? null,
+                    ':tax_id' => $filteredItem['tax_id'] ?? null
                 ]);
             }
         } catch (\Exception $e) {
