@@ -192,7 +192,7 @@ class TradeController extends BaseController
         $data = $this->getRequestData();
 
 
-        $data['user_id'] = $_SESSION['user_id'];
+        $data['processed_by'] = $_SESSION['user_id'];
 
         try {
 
