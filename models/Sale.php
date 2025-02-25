@@ -1026,7 +1026,9 @@ class Sale extends Kitchen
 
             error_log('Items to delete ' . json_encode($itemsToDelete));
 
-            $this->deleteSalesOrderItems($salesOrderId, $itemsToDelete);
+            foreach ($itemsToDelete as $itemToDelete) {
+                $this->deleteSalesOrderItem($salesOrderId, $itemToDelete);
+            }
 
             foreach ($items as $item) {
                 $item = array_filter($item, function ($value) {
@@ -1072,24 +1074,22 @@ class Sale extends Kitchen
         }
     }
 
-    private function deleteSalesOrderItems($salesOrderId, $items)
+    private function deleteSalesOrderItem($salesOrderId, $itemId)
     {
-        $placeholders = implode(',', array_fill(0, count($items), '?'));
-
         $query = "
             DELETE FROM sales_order_items
             WHERE sales_order_id = :sales_order_id
-            AND item_id NOT IN ($placeholders)
+            AND item_id = :item_id
         ";
 
         try {
             $stmt = $this->db->prepare($query);
-            $stmt->execute(array_merge([$salesOrderId], $items));
+            $stmt->execute(['sales_order_id' => $salesOrderId, 'item_id' => $itemId]);
 
             return $stmt->rowCount();
         } catch (\Exception $e) {
             error_log($e->getMessage());
-            throw new \Exception("Failed to delete sales order items");
+            throw new \Exception("Failed to delete sales order item");
         }
     }
 
