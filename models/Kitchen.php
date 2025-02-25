@@ -83,6 +83,8 @@ class Kitchen
                 so.delivery_charge_id,
                 so.delivery_charge,
                 so.discount,
+                so.customer_note,
+                so.additional_note,
                 pm.name AS payment_method,
                 pt.name AS payment_term,
                 so.total AS total_amount,
@@ -189,7 +191,8 @@ class Kitchen
                      so.created_at, so.delivery_date, so.status, so.processed_by,
                      u.name, d.name, c.work_phone, c.mobile_phone, so.delivery_time,
                     c.address, so.delivery_option, pm.name, pt.name, so.total_boxes,
-                    so.delivery_charge_id, c.first_name, c.last_name
+                    so.delivery_charge_id, c.first_name, c.last_name, so.customer_note,
+                    so.additional_note
             ORDER BY so.$sortBy $order
             LIMIT :page_size OFFSET :offset
         ";
