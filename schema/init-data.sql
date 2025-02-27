@@ -1,16 +1,10 @@
 -- Seed data for roles
 INSERT INTO roles (name) VALUES
 ('Admin'),
-('Manager'),
-('Staff'),
-('Rider'),
-('Human Resources'),
-('Inventory Manager'),
-('Sales'),
-('Accountant'),
-('Marketing'),
-('Finance'),
-('Chef');
+('Head of department'),
+('Assistant to head of department'),
+('Supervisor'),
+('Team Lead');
 
 -- Seed data for salutations
 INSERT INTO salutations (name) VALUES

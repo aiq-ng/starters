@@ -191,7 +191,7 @@ class BaseController
     public function authorizeRequest()
     {
         if (!isset($_SERVER['HTTP_AUTHORIZATION'])) {
-            $this->sendResponse('Authorization header not found', 401);
+        $this->sendResponse('Authorization header not found', 401);
             return;
         }
 
@@ -791,7 +791,7 @@ class BaseController
             $totalItems = (int) $countStmt->fetch(\PDO::FETCH_ASSOC)['total'];
 
             if (empty($result)) {
-                return $this->sendResponse('Not Found', 404, []);
+                return $this->sendResponse('Success', 200, [], []);
             }
 
             $totalPages = ceil($totalItems / $perPage);
@@ -831,6 +831,29 @@ class BaseController
         }
     }
 
+    protected function deleteData(string $table)
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+        $ids = isset($data['ids']) ? (array) $data['ids'] : [];
+
+        if (empty($ids)) {
+            throw new \Exception("No record ID provided.");
+        }
+
+        $placeholders = implode(', ', array_fill(0, count($ids), '?'));
+
+        $query = "DELETE FROM $table WHERE id IN ($placeholders)";
+        $stmt = $this->db->prepare($query);
+
+        if ($stmt->execute($ids)) {
+            return $this->sendResponse('success', 200, 'Record successfully deleted');
+        } else {
+            throw new \Exception("Failed to delete record.");
+        }
+    }
+
     public function getRoles()
     {
         $result = $this->fetchData('roles', ['name'], ['id', 'name']);
@@ -844,6 +867,11 @@ class BaseController
         ];
 
         return $this->insertData('roles', $data);
+    }
+
+    public function deleteRole()
+    {
+        return $this->deleteData('roles');
     }
 
     public function getUnits()
@@ -874,6 +902,11 @@ class BaseController
         return $this->insertData('units', $data);
     }
 
+    public function deleteUnit()
+    {
+        return $this->deleteData('units');
+    }
+
     public function getVendorCategories()
     {
         $result = $this->fetchData(
@@ -898,6 +931,11 @@ class BaseController
         ];
 
         return $this->insertData('vendor_categories', $data);
+    }
+
+    public function deleteVendorCategory()
+    {
+        return $this->deleteData('vendor_categories');
     }
 
     public function getCurrencies()
@@ -927,6 +965,11 @@ class BaseController
         return $this->insertData('currencies', $data);
     }
 
+    public function deleteCurrency()
+    {
+        return $this->deleteData('currencies');
+    }
+
     public function getPaymentMethods()
     {
         $result = $this->fetchData(
@@ -953,6 +996,11 @@ class BaseController
         return $this->insertData('payment_methods', $data);
     }
 
+    public function deletePaymentMethod()
+    {
+        return $this->deleteData('payment_methods');
+    }
+
     public function getPaymentTerms()
     {
         $result = $this->fetchData(
@@ -977,6 +1025,11 @@ class BaseController
         ];
 
         return $this->insertData('payment_terms', $data);
+    }
+
+    public function deletePaymentTerm()
+    {
+        return $this->deleteData('payment_terms');
     }
 
     public function getTaxes()
@@ -1006,6 +1059,11 @@ class BaseController
         return $this->insertData('taxes', $data);
     }
 
+    public function deleteTax()
+    {
+        return $this->deleteData('taxes');
+    }
+
     public function getDepartments()
     {
         $result = $this->fetchData(
@@ -1030,6 +1088,11 @@ class BaseController
         ];
 
         return $this->insertData('departments', $data);
+    }
+
+    public function deleteDepartment()
+    {
+        return $this->deleteData('departments');
     }
 
     public function getBranches()
@@ -1058,6 +1121,11 @@ class BaseController
         return $this->insertData('branches', $data);
     }
 
+    public function deleteBranch()
+    {
+        return $this->deleteData('branches');
+    }
+
     public function getItemCategories()
     {
         $result = $this->fetchData(
@@ -1082,6 +1150,11 @@ class BaseController
         ];
 
         return $this->insertData('item_categories', $data);
+    }
+
+    public function deleteItemCategory()
+    {
+        return $this->deleteData('item_categories');
     }
 
     public function getItemManufacturers()
@@ -1110,6 +1183,11 @@ class BaseController
         return $this->insertData('item_manufacturers', $data);
     }
 
+    public function deleteItemManufacturer()
+    {
+        return $this->deleteData('item_manufacturers');
+    }
+
     public function getBasePayTypes()
     {
         $result = $this->fetchData(
@@ -1134,6 +1212,11 @@ class BaseController
         ];
 
         return $this->insertData('base_pay_types', $data);
+    }
+
+    public function deleteBasePayType()
+    {
+        return $this->deleteData('base_pay_types');
     }
 
     public function getUsers()
@@ -1178,6 +1261,11 @@ class BaseController
         return $this->insertData('no_of_working_days', $data);
     }
 
+    public function deleteNoOfWorkingDays()
+    {
+        return $this->deleteData('no_of_working_days');
+    }
+
     public function getPermissions()
     {
         $result = $this->fetchData(
@@ -1202,6 +1290,11 @@ class BaseController
         ];
 
         return $this->insertData('permissions', $data);
+    }
+
+    public function deletePermission()
+    {
+        return $this->deleteData('permissions');
     }
 
     public function getExpensesCategories()
@@ -1230,6 +1323,11 @@ class BaseController
         return $this->insertData('expenses_categories', $data);
     }
 
+    public function deleteExpensesCategory()
+    {
+        return $this->deleteData('expenses_categories');
+    }
+
     public function createWorkLeaveQualification()
     {
         $data = [
@@ -1253,6 +1351,11 @@ class BaseController
             $result['data'],
             $result['meta']
         );
+    }
+
+    public function deleteWorkLeaveQualification()
+    {
+        return $this->deleteData('work_leave_qualifications');
     }
 
     public function createDeliveryCharge()
@@ -1284,5 +1387,10 @@ class BaseController
             $result['data'],
             $result['meta']
         );
+    }
+
+    public function deleteDeliveryCharge()
+    {
+        return $this->deleteData('delivery_charges');
     }
 }
