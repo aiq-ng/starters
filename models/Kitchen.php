@@ -331,6 +331,8 @@ class Kitchen
                 throw new \Exception("No Admin user found for notification.");
             }
 
+            $event_data = $this->getOrders(null, ['new order', 'in progress'], 1, 100);
+
             foreach ($usersToNotify as $userToNotify) {
                 if (!isset($userToNotify['id'])) {
                     continue;
@@ -338,14 +340,11 @@ class Kitchen
 
                 $notification = [
                     'user_id' => $userToNotify['id'],
-                    'event' => 'status_update',
+                    'event' => 'update',
                     'entity_type' => 'sales_order',
                     'title' => 'Order Status Update',
                     'body' => 'Order status has been updated to ' . $status,
-                    'event_data' => [
-                        'order_id' => $id,
-                        'status' => $status,
-                    ],
+                    'event_data' => $event_data,
                 ];
 
                 (new NotificationService())->sendNotification($notification, false);
