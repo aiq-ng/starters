@@ -170,8 +170,8 @@ class Kitchen
         }
 
         if ($date) {
-            $conditions[] = "so.delivery_date = :delivery_date";
-            $params[':delivery_date'] = $date;
+            $conditions[] = "so.created_at::DATE = :created_at";
+            $params[':created_at'] = $date;
         }
 
         if ($deliveryTime) {
