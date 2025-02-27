@@ -344,7 +344,7 @@ class Kitchen
                     'entity_type' => 'sales_order',
                     'title' => 'Order Status Update',
                     'body' => 'Order status has been updated to ' . $status,
-                    'event_data' => $event_data,
+                    'event_data' => $event_data['data'],
                 ];
 
                 (new NotificationService())->sendNotification($notification, false);
