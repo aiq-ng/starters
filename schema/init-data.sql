@@ -101,7 +101,7 @@ INSERT INTO users (
     bank_details, leave, nin, passport, department_id
 ) VALUES
 ('25d36e74-fbb4-45ec-8ec2-4f8abc7d79ca', 'Starters', 'Admin', 
-    'starters@admin.com', 'password', 
+    'starters@admin.com', crypt('password', gen_salt('bf')), 
     (SELECT id FROM roles WHERE name = 'Admin'), 
     'https://i.imgur.com/0GY9tnz.jpeg', NULL, NULL, NULL, NULL, 
     NULL, NULL, NULL, 'https://i.imgur.com/AB1234567C.jpeg', 
@@ -109,7 +109,7 @@ INSERT INTO users (
     (SELECT id FROM departments WHERE name = 'Snacks')),
 
 ('276405ab-b5ea-4325-9ad8-976a66f264a9', 'Opororo', 'Nathaniel', 
-    'nat@aiq.com', 'password', 
+    'nat@aiq.com', crypt('password', gen_salt('bf')), 
     (SELECT id FROM roles WHERE name = 'Rider'), 
     'https://i.imgur.com/0GY9tnz.jpeg', '1990-05-15', 
     '123 Main St, Cityville', 'Tom Johnson', '2020-01-01', 3500.00, 
@@ -118,7 +118,7 @@ INSERT INTO users (
     (SELECT id FROM departments WHERE name = 'Dispatch Riders')),
 
 ('2fe8e866-5300-46f9-bc0d-90b53a8645c6', 'Emmanuel', 'Afcon', 
-    'sog@aiq.com', 'password', 
+    'sog@aiq.com', crypt('password', gen_salt('bf')), 
     (SELECT id FROM roles WHERE name = 'Sales'), 
     'https://i.imgur.com/0GY9tnz.jpeg', '1985-10-20', 
     '456 Oak St, Townsville', 'Sarah Smith', '2018-09-15', 4000.00, 
@@ -127,7 +127,7 @@ INSERT INTO users (
     (SELECT id FROM departments WHERE name = 'Sales Representatives')),
 
 ('2df706f3-76ee-4ff8-8bbb-7772595eac69', 'Babanla', 'Odunlami', 
-    'odun@aiq.com', 'password', 
+    'odun@aiq.com', crypt('password', gen_salt('bf')), 
     (SELECT id FROM roles WHERE name = 'Accountant'), 
     'https://i.imgur.com/0GY9tnz.jpeg', '1992-08-10', 
     '789 Pine St, Villageville', 'Emily Brown', '2019-02-18', 2800.00, 
@@ -136,7 +136,7 @@ INSERT INTO users (
     (SELECT id FROM departments WHERE name = 'Kitchen')),
 
 ('2a5abd5e-ca8b-42e0-917a-a5d00eda896f', 'Kingsley', 'Jobojobo', 
-    'kingsley@aiq.com', 'password', 
+    'kingsley@aiq.com', crypt('password', gen_salt('bf')), 
     (SELECT id FROM roles WHERE name = 'Chef'), 
     'https://i.imgur.com/0GY9tnz.jpeg', '1988-12-05', 
     '321 Elm St, Hamletville', 'Anna Doe', '2021-07-21', 4200.00, 
@@ -145,7 +145,7 @@ INSERT INTO users (
     (SELECT id FROM departments WHERE name = 'HR')),
 
 ('20c27317-e747-4f86-9d78-b77e2be931fe', 'Jane', 'Smith', 
-    'jane@example.com', 'password', 
+    'jane@example.com', crypt('password', gen_salt('bf')), 
     (SELECT id FROM roles WHERE name = 'Marketing'), 
     'https://i.imgur.com/0GY9tnz.jpeg', '1994-03-25', 
     '654 Maple St, Citytown', 'Linda Smith', '2022-06-11', 3100.00, 
@@ -154,7 +154,7 @@ INSERT INTO users (
     (SELECT id FROM departments WHERE name = 'Marketing')),
 
 ('2f9980b9-c1d4-4ca3-9731-45fcdf3c23cd', 'Mary', 'Jones', 
-    'mary@example.com', 'password', 
+    'mary@example.com', crypt('password', gen_salt('bf')), 
     (SELECT id FROM roles WHERE name = 'Sales'), 
     'https://i.imgur.com/0GY9tnz.jpeg', '1991-11-30', 
     '987 Cedar St, Smallville', 'John Jones', '2017-04-09', 3600.00, 
@@ -163,7 +163,7 @@ INSERT INTO users (
     (SELECT id FROM departments WHERE name = 'Sales Representatives')),
 
 ('260fe3ef-da1b-46d9-a333-1c2f40b30378', 'Peter', 'Brown', 
-    'peter@example.com', 'password', 
+    'peter@example.com', crypt('password', gen_salt('bf')), 
     (SELECT id FROM roles WHERE name = 'Manager'), 
     'https://i.imgur.com/0GY9tnz.jpeg', '1989-07-15', 
     '123 Birch St, Greenfield', 'Samantha Brown', '2016-03-20', 3900.00, 
@@ -172,7 +172,7 @@ INSERT INTO users (
     (SELECT id FROM departments WHERE name = 'Beverages')),
 
 ('25a7e877-51e4-47fd-8bd2-52c01892d05b', 'Tk', 'Chef', 
-    'chef@admin.com', 'password', 
+    'chef@admin.com', crypt('password', gen_salt('bf')), 
     (SELECT id FROM roles WHERE name = 'Chef'), 
     'https://i.imgur.com/0GY9tnz.jpeg', '1989-07-15', 
     '123 Birch St, Greenfield', 'Samantha Brown', '2016-03-20', 3900.00, 
@@ -181,7 +181,7 @@ INSERT INTO users (
     (SELECT id FROM departments WHERE name = 'Kitchen')),
 
 ('294b2962-3e12-4675-a8d4-0fa2c92506c4', 'Peter', 'Chef', 
-    'chef1@admin.com', 'password', 
+    'chef1@admin.com', crypt('password', gen_salt('bf')), 
     (SELECT id FROM roles WHERE name = 'Chef'), 
     'https://i.imgur.com/0GY9tnz.jpeg', '1989-07-15', 
     '123 Birch St, Greenfield', 'Samantha Brown', '2016-03-20', 3900.00, 

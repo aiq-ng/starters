@@ -1,5 +1,7 @@
 \c starters;
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- Roles
 CREATE TABLE roles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

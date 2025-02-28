@@ -591,6 +591,7 @@ class Purchase extends Inventory
             }
 
             $this->updatePaymentDueDate($paymentTermId, $purchaseOrderId);
+            # $this->updateVendorStatus($vendorId);
 
             $this->db->commit();
 
@@ -629,6 +630,20 @@ class Purchase extends Inventory
         } catch (\Exception $e) {
             error_log('Error updating payment due date: ' . $e->getMessage());
         }
+    }
+
+    public function updateVendorStatus($vendorId)
+    {
+        $query = "
+            UPDATE vendors
+            SET status = 'overdue'
+            WHERE id = :vendorId
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([':vendorId' => $vendorId]);
+
+        return $stmt->rowCount() > 0;
     }
 
     public function updatePurchaseOrderStatus($purchaseOrderId)
