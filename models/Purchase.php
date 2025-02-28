@@ -233,11 +233,8 @@ class Purchase extends Inventory
                 ':processed_by' => $data['user_id'] ?? null,
             ]);
 
-            $this->db->commit();
-
             return $stmt->fetchColumn();
         } catch (\Exception $e) {
-            $this->db->rollBack();
             throw new \Exception("Failed to insert purchase order: " . $e->getMessage());
         }
     }
@@ -287,9 +284,7 @@ class Purchase extends Inventory
                 ]);
             }
 
-            $this->db->commit();
         } catch (\Exception $e) {
-            $this->db->rollBack();
             throw new \Exception("Failed to insert purchase order items: " .
                 $e->getMessage());
         }
@@ -297,16 +292,12 @@ class Purchase extends Inventory
 
     public function updatePurchaseOrder($purchaseOrderId, $data)
     {
-        $this->db->beginTransaction();
-
         try {
             $this->updatePurchaseOrderDetails($purchaseOrderId, $data);
             $this->updatePurchaseOrderItems($purchaseOrderId, $data['items']);
 
-            $this->db->commit();
             return $this->getInvoiceDetails($purchaseOrderId);
         } catch (\Exception $e) {
-            $this->db->rollBack();
             error_log('Error updating purchase order: ' . $e->getMessage());
             throw new \Exception("Failed to update purchase order: " . $e->getMessage());
         }
@@ -362,9 +353,28 @@ class Purchase extends Inventory
             }
 
             foreach ($items as $item) {
-                $item = array_filter($item, fn ($value) => $value !== "" && $value !== null);
+                $filteredItem = array_filter($item, fn ($value) => $value !== "" && $value !== null);
 
-                if (in_array($item['item_id'], $existingItemIds)) {
+                if (empty($filteredItem['item_id']) && !empty($filteredItem['item_name'])) {
+                    $newItemId = $this->createItem([
+                        'name' => $filteredItem['item_name'],
+                        'quantity' => 0,
+                        'price' => $filteredItem['price'] ?? 0,
+                    ]);
+
+                    if (!$newItemId) {
+                        throw new \Exception("Failed to create item: " .
+                            $filteredItem['item_name']);
+                    }
+
+                    $filteredItem['item_id'] = $newItemId;
+                }
+
+                if (empty($filteredItem['item_id'])) {
+                    throw new \Exception("Missing item_id for purchase order item.");
+                }
+
+                if (in_array($filteredItem['item_id'], $existingItemIds)) {
                     $query = "
                     UPDATE purchase_order_items
                     SET 
@@ -376,7 +386,8 @@ class Purchase extends Inventory
                 ";
                 } else {
                     $query = "
-                    INSERT INTO purchase_order_items (purchase_order_id, item_id, quantity, price, tax_id)
+                    INSERT INTO purchase_order_items (purchase_order_id, item_id, 
+                        quantity, price, tax_id)
                     VALUES (:purchase_order_id, :item_id, :quantity, :price, :tax_id)
                 ";
                 }
@@ -384,15 +395,16 @@ class Purchase extends Inventory
                 $stmt = $this->db->prepare($query);
                 $stmt->execute([
                     ':purchase_order_id' => $purchaseOrderId,
-                    ':item_id' => $item['item_id'],
-                    ':quantity' => $item['quantity'] ?? null,
-                    ':price' => $item['price'] ?? null,
-                    ':tax_id' => $item['tax_id'] ?? null
+                    ':item_id' => $filteredItem['item_id'],
+                    ':quantity' => $filteredItem['quantity'] ?? null,
+                    ':price' => $filteredItem['price'] ?? null,
+                    ':tax_id' => $filteredItem['tax_id'] ?? null
                 ]);
             }
         } catch (\Exception $e) {
             error_log($e->getMessage());
-            throw new \Exception("Failed to update purchase order items: " . $e->getMessage());
+            throw new \Exception("Failed to update purchase order items: " .
+                $e->getMessage());
         }
     }
 
