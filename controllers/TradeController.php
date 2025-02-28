@@ -123,10 +123,6 @@ class TradeController extends BaseController
 
         $data = $this->getRequestData();
 
-        if (!is_array($data['items']) || empty($data['items'])) {
-            $this->sendResponse('Items should be an array and not empty', 400);
-        }
-
         $data['processed_by'] = $_SESSION['user_id'];
 
         try {

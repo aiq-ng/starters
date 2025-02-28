@@ -294,7 +294,10 @@ class Purchase extends Inventory
     {
         try {
             $this->updatePurchaseOrderDetails($purchaseOrderId, $data);
-            $this->updatePurchaseOrderItems($purchaseOrderId, $data['items']);
+
+            if (!empty($data['items'])) {
+                $this->updatePurchaseOrderItems($purchaseOrderId, $data['items']);
+            }
 
             return $this->getInvoiceDetails($purchaseOrderId);
         } catch (\Exception $e) {

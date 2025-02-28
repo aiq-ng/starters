@@ -933,7 +933,10 @@ class Sale extends Kitchen
 
         try {
             $this->updateSalesOrder($id, $data);
-            $this->updateSalesOrderItems($id, $data['items']);
+
+            if (!empty($data['items'])) {
+                $this->updateSalesOrderItems($id, $data['items']);
+            }
 
             $this->db->commit();
 
