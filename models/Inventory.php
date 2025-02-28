@@ -280,6 +280,8 @@ class Inventory
     public function createItem($data, $mediaLinks = [])
     {
         try {
+            $this->db->beginTransaction();
+
             $mediaLinks = json_encode($mediaLinks);
 
             $sql = "
@@ -359,8 +361,6 @@ class Inventory
             }
 
             $this->checkItemAvailability($itemId);
-
-            $this->db->commit();
 
             return $stockId;
         } catch (\Exception $e) {

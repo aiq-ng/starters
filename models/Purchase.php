@@ -194,16 +194,12 @@ class Purchase extends Inventory
     public function createPurchase($data)
     {
         try {
-            $this->db->beginTransaction();
-
             $purchaseOrderId = $this->insertPurchaseOrder($data);
 
             $this->insertPurchaseOrderItems($purchaseOrderId, $data['items']);
 
-            $this->db->commit();
             return $this->getInvoiceDetails($purchaseOrderId);
         } catch (\Exception $e) {
-            $this->db->rollBack();
             error_log('Error creating purchase order: ' . $e->getMessage());
             throw new \Exception("Failed to create purchase order: " . $e->getMessage());
         }
@@ -237,8 +233,11 @@ class Purchase extends Inventory
                 ':processed_by' => $data['user_id'] ?? null,
             ]);
 
+            $this->db->commit();
+
             return $stmt->fetchColumn();
         } catch (\Exception $e) {
+            $this->db->rollBack();
             throw new \Exception("Failed to insert purchase order: " . $e->getMessage());
         }
     }
@@ -287,7 +286,10 @@ class Purchase extends Inventory
                     ':tax_id' => $filteredItem['tax_id'] ?? null,
                 ]);
             }
+
+            $this->db->commit();
         } catch (\Exception $e) {
+            $this->db->rollBack();
             throw new \Exception("Failed to insert purchase order items: " .
                 $e->getMessage());
         }
