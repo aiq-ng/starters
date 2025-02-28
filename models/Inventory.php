@@ -282,19 +282,27 @@ class Inventory
         try {
             $this->db->beginTransaction();
 
-            $sql = "
-                INSERT INTO items
-                (name, description, unit_id, category_id,
-                price, threshold_value, media, opening_stock, sku)
-                VALUES (:name, :description, :unitId, :categoryId,
-                :price, :threshold, :media, :openingStock, :sku)
-                RETURNING id
-            ";
-
             $mediaLinks = json_encode($mediaLinks);
 
-            $stmt = $this->db->prepare($sql);
+            $sql = "
+                INSERT INTO items (name, description, unit_id, category_id, price, 
+                    threshold_value, media, opening_stock, sku)
+                VALUES (:name, :description, :unitId, :categoryId, :price, 
+                    :threshold, :media, :openingStock, :sku)
+                ON CONFLICT (name) DO UPDATE SET
+                    description = EXCLUDED.description,
+                    unit_id = EXCLUDED.unit_id,
+                    category_id = EXCLUDED.category_id,
+                    price = EXCLUDED.price,
+                    threshold_value = EXCLUDED.threshold_value,
+                    media = EXCLUDED.media,
+                    opening_stock = EXCLUDED.opening_stock,
+                    sku = EXCLUDED.sku,
+                    updated_at = CURRENT_TIMESTAMP
+                RETURNING id;
+            ";
 
+            $stmt = $this->db->prepare($sql);
             $stmt->bindValue(':name', $data['name'] ?? null);
             $stmt->bindValue(':description', $data['description'] ?? null);
             $stmt->bindValue(':unitId', $data['unit_id'] ?? null);
@@ -306,13 +314,13 @@ class Inventory
             $stmt->bindValue(':sku', $data['sku'] ?? null);
 
             if (!$stmt->execute()) {
-                throw new \Exception('Failed to insert item.');
+                throw new \Exception('Failed to insert/update item.');
             }
 
             $itemId = $stmt->fetchColumn();
 
             if (!$this->createItemStock($itemId, $data)) {
-                throw new \Exception('Failed to insert item stock.');
+                throw new \Exception('Failed to insert/update item stock.');
             }
 
             $this->db->commit();
@@ -322,7 +330,7 @@ class Inventory
         } catch (\Exception $e) {
             $this->db->rollBack();
             error_log($e->getMessage());
-            throw new \Exception('Failed to create item.');
+            throw new \Exception('Failed to create or update item.');
         }
     }
 

@@ -4,12 +4,13 @@ namespace Models;
 
 use Database\Database;
 
-class Purchase
+class Purchase extends Inventory
 {
     private $db;
 
     public function __construct()
     {
+        parent::__construct();
         $this->db = Database::getInstance()->getConnection();
     }
 
@@ -259,16 +260,36 @@ class Purchase
                 // Filter out fields with empty ("") values
                 $filteredItem = array_filter($item, fn ($value) => $value !== "");
 
+                if (empty($filteredItem['item_id']) && !empty($filteredItem['item_name'])) {
+                    $newItemId = $this->createItem([
+                        'name' => $filteredItem['item_name'],
+                        'quantity' => 0,
+                        'price' => $filteredItem['price'] ?? 0,
+                    ]);
+
+                    if (!$newItemId) {
+                        throw new \Exception("Failed to create item: " .
+                            $filteredItem['item_name']);
+                    }
+
+                    $filteredItem['item_id'] = $newItemId;
+                }
+
+                if (empty($filteredItem['item_id'])) {
+                    throw new \Exception("Missing item_id for purchase order item.");
+                }
+
                 $stmt->execute([
                     ':purchase_order_id' => $purchaseOrderId,
-                    ':item_id' => $filteredItem['item_id'] ?? null,
+                    ':item_id' => $filteredItem['item_id'],
                     ':quantity' => $filteredItem['quantity'] ?? null,
                     ':price' => $filteredItem['price'] ?? null,
                     ':tax_id' => $filteredItem['tax_id'] ?? null,
                 ]);
             }
         } catch (\Exception $e) {
-            throw new \Exception("Failed to insert purchase order items: " . $e->getMessage());
+            throw new \Exception("Failed to insert purchase order items: " .
+                $e->getMessage());
         }
     }
 

@@ -191,7 +191,7 @@ class BaseController
     public function authorizeRequest()
     {
         if (!isset($_SERVER['HTTP_AUTHORIZATION'])) {
-        $this->sendResponse('Authorization header not found', 401);
+            $this->sendResponse('Authorization header not found', 401);
             return;
         }
 
@@ -729,6 +729,19 @@ class BaseController
             "items" => $invoice['items'] ?? [],
             "notes" => $invoice[$prefix === 'customer' ? 'customer_note' : 'notes'] ?? "",
         ];
+    }
+
+    public function shareInvoice($id)
+    {
+        $type = $_GET['type'] ?? null;
+
+        $invoiceData = $this->getInvoiceData($id, $type);
+
+        if (!$invoiceData) {
+            throw new \Exception("Invalid record type '$type'.");
+        }
+
+        $this->sendResponse('success', 200, $invoiceData);
     }
 
     protected function fetchData(

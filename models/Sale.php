@@ -945,60 +945,6 @@ class Sale extends Kitchen
         }
     }
 
-    private function updateSalesOrderx($id, $data)
-    {
-        $query = "
-            UPDATE sales_orders
-            SET 
-                order_type = :order_type,
-                order_title = :order_title,
-                payment_term_id = :payment_term_id,
-                customer_id = :customer_id,
-                payment_method_id = :payment_method_id,
-                delivery_option = :delivery_option,
-                delivery_date = :delivery_date,
-                delivery_time = :delivery_time,
-                delivery_address = :delivery_address,
-                additional_note = :additional_note,
-                customer_note = :customer_note,
-                discount = :discount,
-                delivery_charge = :delivery_charge,
-                total = :total,
-                processed_by = :processed_by,
-                total_boxes = :total_boxes,
-                delivery_charge_id = :delivery_charge_id
-            WHERE id = :sales_order_id
-        ";
-
-        try {
-            $stmt = $this->db->prepare($query);
-
-            $stmt->execute([
-                ':sales_order_id' => $id,
-                ':order_type' => $data['order_type'] ?? null,
-                ':order_title' => $data['order_title'] ?? null,
-                ':payment_term_id' => $data['payment_term_id'] ?? null,
-                ':customer_id' => $data['customer_id'] ?? null,
-                ':payment_method_id' => $data['payment_method_id'] ?? null,
-                ':delivery_option' => $data['delivery_option'] ?? null,
-                ':delivery_date' => $data['delivery_date'] ?? null,
-                ':delivery_time' => $data['delivery_time'] ?? null,
-                ':delivery_address' => $data['delivery_address'] ?? null,
-                ':additional_note' => $data['additional_note'] ?? null,
-                ':customer_note' => $data['customer_note'] ?? null,
-                ':discount' => $data['discount'] ?? null,
-                ':delivery_charge' => $data['delivery_charge'] ?? null,
-                ':total' => $data['total'] ?? null,
-                ':processed_by' => $data['user_id'] ?? null,
-                ':total_boxes' => $data['total_boxes'] ?? null,
-                ':delivery_charge_id' => $data['delivery_charge_id'] ?? null
-            ]);
-        } catch (\Exception $e) {
-            error_log($e->getMessage());
-            throw new \Exception("Failed to update sales order: " . $e->getMessage());
-        }
-    }
-
     private function updateSalesOrder($id, $data)
     {
         unset($data['items']);
@@ -1173,33 +1119,14 @@ class Sale extends Kitchen
     public function getInvoiceDetails($salesOrderId)
     {
         $query = "
-            SELECT so.id,
-                so.invoice_number,
-                so.reference_number,
-                so.order_title,
-                so.order_type,
+            SELECT so.*,
                 c.id AS customer_id,
                 CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
                 c.address AS customer_address,
                 c.mobile_phone AS customer_phone,
                 c.email AS customer_email,
                 c.balance AS customer_balance,
-                so.payment_term_id,
-                so.payment_method_id,
-                so.assigned_driver_id,
-                so.delivery_option,
-                so.additional_note,
-                so.customer_note,
-                so.discount,
-                so.total_boxes,
-                so.delivery_charge_id,
-                so.delivery_charge,
-                so.delivery_address,
-                so.total,
-                so.status,
-                so.payment_status,
                 so.created_at::DATE AS invoice_date,
-                so.delivery_date,
                 json_agg(
                     json_build_object(
                         'item_id', p.id,

@@ -152,6 +152,7 @@ $routes = [
         '/sales/orders/([a-fA-F0-9-]{36})/void' => [$tradeController, 'voidSale'],
         '/purchases/orders/invoice/([a-fA-F0-9-]{36})' => [$tradeController, 'sendPurchaseInvoice'],
         '/rate/([a-fA-F0-9-]{36})' => [$tradeController, 'rateOrder'],
+        '/invoice/([a-fA-F0-9-]{36})' => [$tradeController, 'shareInvoice'],
 
     ],
     'PUT' => [
