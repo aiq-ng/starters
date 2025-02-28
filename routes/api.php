@@ -98,6 +98,7 @@ $routes = [
         '/inventory/items/([a-fA-F0-9-]{36})' => [$inventoryController, 'showItem'],
         '/purchases/orders/invoice/([a-fA-F0-9-]{36})' => [$tradeController, 'getPurchaseInvoice'],
         '/sales/orders/invoice/([a-fA-F0-9-]{36})' => [$tradeController, 'getSalesInvoice'],
+        '/invoice/([a-fA-F0-9-]{36})' => [$tradeController, 'shareInvoice'],
     ],
     'POST' => [
         '/auth/register' => [$authController, 'register'],
@@ -152,7 +153,6 @@ $routes = [
         '/sales/orders/([a-fA-F0-9-]{36})/void' => [$tradeController, 'voidSale'],
         '/purchases/orders/invoice/([a-fA-F0-9-]{36})' => [$tradeController, 'sendPurchaseInvoice'],
         '/rate/([a-fA-F0-9-]{36})' => [$tradeController, 'rateOrder'],
-        '/invoice/([a-fA-F0-9-]{36})' => [$tradeController, 'shareInvoice'],
 
     ],
     'PUT' => [

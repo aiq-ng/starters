@@ -280,8 +280,6 @@ class Inventory
     public function createItem($data, $mediaLinks = [])
     {
         try {
-            $this->db->beginTransaction();
-
             $mediaLinks = json_encode($mediaLinks);
 
             $sql = "
@@ -328,9 +326,8 @@ class Inventory
             return $itemId;
 
         } catch (\Exception $e) {
-            $this->db->rollBack();
             error_log($e->getMessage());
-            throw new \Exception('Failed to create or update item.');
+            throw new \Exception('Failed to create or update item. ' . $e->getMessage());
         }
     }
 
@@ -362,6 +359,8 @@ class Inventory
             }
 
             $this->checkItemAvailability($itemId);
+
+            $this->db->commit();
 
             return $stockId;
         } catch (\Exception $e) {
