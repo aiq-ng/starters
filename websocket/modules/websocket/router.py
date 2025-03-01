@@ -1,5 +1,4 @@
 from fastapi import APIRouter, BackgroundTasks, WebSocket, WebSocketDisconnect
-
 from modules.logging import logger
 from modules.utils import keep_alive
 from modules.websocket.manager import ConnectionManager
@@ -39,4 +38,4 @@ async def connect_websocket(
             None,
         )
         if user_id is not None:
-            await manager.disconnect(user_id)
+            await manager.disconnect(user_id, websocket)
