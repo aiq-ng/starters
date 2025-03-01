@@ -74,15 +74,20 @@ class TradeController extends BaseController
         if ($invoice) {
 
             $this->insertAuditLog(
-                userId: $data['user_id'],
+                userId: $invoice['processed_by'],
                 entityId: $invoice['id'],
-                entityType: 'purchase_orders',
+                entityType: 'purchase_invoice',
                 action: 'create',
                 entityData: [
-                    'reference_number' => $invoice['reference_number'] ?? null,
-                    'vendor_id' => $invoice['vendor_id'] ?? null,
-                    'total' => $invoice['total'] ?? null,
-                    'status' => $invoice['status'] ?? null,
+                'reference_number' => $invoice['reference_number'] ?? null,
+                'invoice_number' => $invoice['invoice_number'] ?? null,
+                'order_id' => $invoice['purchase_order_number'] ?? null,
+                'recipient_id' => $invoice['vendor_id'] ?? null,
+                'recipient_name' => $invoice['vendor_name'] ?? null,
+                'total' => $invoice['total'] ?? null,
+                'status' => $invoice['status'] ?? null,
+                'message' => 'invoice created for ' .
+                    '₦' . number_format($invoice['total'] ?? 0, 2)
                 ]
             );
 
@@ -126,24 +131,32 @@ class TradeController extends BaseController
         $data['processed_by'] = $_SESSION['user_id'];
 
         try {
+
+            $previousInvoiceTotal = $this->getInvoiceTotal($purchaseId, 'purchase_orders');
             error_log('Data: ' . json_encode($data));
             $invoice = $this->purchase->updatePurchaseOrder($purchaseId, $data);
 
             if ($invoice) {
+                $newTotal = $invoice['total'] ?? 0;
 
                 $this->insertAuditLog(
-                    userId: $data['processed_by'],
-                    entityId: $purchaseId,
-                    entityType: 'purchase_orders',
+                    userId: $invoice['processed_by'],
+                    entityId: $invoice['id'],
+                    entityType: 'purchase_invoice',
                     action: 'update',
                     entityData: [
                         'reference_number' => $invoice['reference_number'] ?? null,
-                        'vendor_id' => $invoice['vendor_id'] ?? null,
-                        'total' => $invoice['total'] ?? null,
+                        'invoice_number' => $invoice['invoice_number'] ?? null,
+                        'order_id' => $invoice['purchase_order_number'] ?? null,
+                        'recipient_id' => $invoice['vendor_id'] ?? null,
+                        'recipient_name' => $invoice['vendor_name'] ?? null,
+                        'total' => $newTotal,
                         'status' => $invoice['status'] ?? null,
+                        'message' => 'Invoice amount updated from ' .
+                            '₦' . number_format($previousInvoiceTotal, 2) .
+                            ' to ' . '₦' . number_format($newTotal, 2)
                     ]
                 );
-
                 $this->sendResponse('success', 200, $invoice);
             } else {
                 $this->sendResponse('Failed to update purchase', 500);
@@ -161,21 +174,46 @@ class TradeController extends BaseController
         $data = $this->getRequestData();
         $ids = isset($data['ids']) ? (array) $data['ids'] : [];
 
+        if (empty($ids)) {
+            $this->sendResponse('No Purchase Order IDs provided', 400);
+            return;
+        }
+
+        $invoices = [];
+        foreach ($ids as $id) {
+            $invoice = $this->purchase->getInvoiceDetails($id);
+            if ($invoice) {
+                $invoices[$id] = $invoice;
+            }
+        }
+
         $deleted = $this->purchase->deletePurchaseOrder($ids);
 
-        foreach ($ids as $id) {
+        foreach ($invoices as $id => $invoice) {
             $this->insertAuditLog(
-                userId: $_SESSION['user_id'],
-                entityId: $id,
-                entityType: 'purchase_orders',
-                action: 'delete'
+                userId: $invoice['processed_by'],
+                entityId: $invoice['id'],
+                entityType: 'purchase_invoice',
+                action: 'delete',
+                entityData: [
+                    'reference_number' => $invoice['reference_number'] ?? null,
+                    'invoice_number' => $invoice['invoice_number'] ?? null,
+                    'order_id' => $invoice['purchase_order_number'] ?? null,
+                    'recipient_id' => $invoice['vendor_id'] ?? null,
+                    'recipient_name' => $invoice['vendor_name'] ?? null,
+                    'total' => $invoice['total'] ?? null,
+                    'status' => $invoice['status'] ?? null,
+                    'message' => 'Payment of ' .
+                        '₦' . number_format($invoice['total'] ?? 0, 2) .
+                        ' deleted'
+                ]
             );
         }
 
-        $status = $deleted ? 200 : 500;
+        $status = $deleted ? 200 : 404;
         $message = $deleted
             ? 'Purchase Order deleted successfully'
-            : 'Failed to delete Purchase Order';
+            : 'Purchase Order not found';
 
         $this->sendResponse($message, $status);
     }
@@ -191,24 +229,33 @@ class TradeController extends BaseController
         $data['processed_by'] = $_SESSION['user_id'];
 
         try {
+            $previousInvoiceTotal = $this->getInvoiceTotal($saleId, 'sales_orders');
 
             error_log('Data: ' . json_encode($data));
             $invoice = $this->sale->updateSale($saleId, $data);
 
-            $this->insertAuditLog(
-                userId: $data['processed_by'],
-                entityId: $saleId,
-                entityType: 'sales_orders',
-                action: 'update',
-                entityData: [
-                    'reference_number' => $invoice['reference_number'] ?? null,
-                    'customer_id' => $invoice['customer_id'] ?? null,
-                    'total' => $invoice['total'] ?? null,
-                    'status' => $invoice['status'] ?? null,
-                ]
-            );
-
             if ($invoice) {
+                $newTotal = $invoice['total'] ?? 0;
+
+                $this->insertAuditLog(
+                    userId: $invoice['processed_by'],
+                    entityId: $invoice['id'],
+                    entityType: 'sales_invoice',
+                    action: 'update',
+                    entityData: [
+                        'reference_number' => $invoice['reference_number'] ?? null,
+                        'invoice_number' => $invoice['invoice_number'] ?? null,
+                        'order_id' => $invoice['order_id'] ?? null,
+                        'recipient_id' => $invoice['customer_id'] ?? null,
+                        'recipient_name' => $invoice['customer_name'] ?? null,
+                        'total' => $newTotal,
+                        'status' => $invoice['status'] ?? null,
+                        'message' => 'Invoice amount updated from ' .
+                            '₦' . number_format($previousInvoiceTotal, 2) .
+                            ' to ' . '₦' . number_format($newTotal, 2)
+                    ]
+                );
+
                 $this->sendResponse('success', 200, $invoice);
             } else {
                 $this->sendResponse('Failed to update sale', 500);
@@ -226,21 +273,48 @@ class TradeController extends BaseController
         $data = $this->getRequestData();
         $ids = isset($data['ids']) ? (array) $data['ids'] : [];
 
+        if (empty($ids)) {
+            $this->sendResponse('No Sales Order IDs provided', 400);
+            return;
+        }
+
+        $invoices = [];
+        foreach ($ids as $id) {
+            $invoice = $this->sale->getInvoiceDetails($id);
+            if ($invoice) {
+                $invoices[$id] = $invoice;
+            }
+        }
+
         $deleted = $this->sale->deleteSalesOrder($ids);
 
-        if ($deleted) {
-            foreach ($ids as $id) {
-                $this->insertAuditLog(
-                    userId: $_SESSION['user_id'],
-                    entityId: $id,
-                    entityType: 'sales_orders',
-                    action: 'delete'
-                );
-            }
-            $this->sendResponse('Sales Order deleted successfully', 200);
-        } else {
-            $this->sendResponse('Failed to delete Sales Order', 500);
+        foreach ($invoices as $id => $invoice) {
+            $this->insertAuditLog(
+                userId: $invoice['processed_by'],
+                entityId: $invoice['id'],
+                entityType: 'sales_invoice',
+                action: 'delete',
+                entityData: [
+                    'reference_number' => $invoice['reference_number'] ?? null,
+                    'invoice_number' => $invoice['invoice_number'] ?? null,
+                    'order_id' => $invoice['order_id'] ?? null,
+                    'recipient_id' => $invoice['customer_id'] ?? null,
+                    'recipient_name' => $invoice['customer_name'] ?? null,
+                    'total' => $invoice['total'] ?? null,
+                    'status' => $invoice['status'] ?? null,
+                    'message' => 'Payment of ' .
+                        '₦' . number_format($invoice['total'] ?? 0, 2) .
+                        ' deleted'
+                ]
+            );
         }
+
+        $status = $deleted ? 200 : 404;
+        $message = $deleted
+            ? 'Sales Order deleted successfully'
+            : 'Sales Order not found';
+
+        $this->sendResponse($message, $status);
     }
 
     public function markPurchaseAsReceived($purchaseId)
@@ -368,22 +442,27 @@ class TradeController extends BaseController
         $data['user_id'] = $_SESSION['user_id'];
 
         error_log('Data: ' . json_encode($data));
-        $saleId = $this->sale->createSale($data);
+        $sale = $this->sale->createSale($data);
 
-        if (!$saleId) {
+        if (!$sale) {
             $this->sendResponse('Failed to create sale', 500);
         }
 
         $this->insertAuditLog(
-            userId: $data['user_id'],
-            entityId: $saleId,
-            entityType: 'sales_orders',
+            userId: $sale['processed_by'],
+            entityId: $sale['id'],
+            entityType: 'sales_invoice',
             action: 'create',
             entityData: [
-                'reference_number' => $data['reference_number'] ?? null,
-                'customer_id' => $data['customer_id'] ?? null,
-                'total' => $data['total'] ?? null,
-                'status' => $data['status'] ?? null,
+                'reference_number' => $sale['reference_number'] ?? null,
+                'invoice_number' => $sale['invoice_number'] ?? null,
+                'order_id' => $sale['order_id'] ?? null,
+                'recipient_id' => $sale['customer_id'] ?? null,
+                'recipient_name' => $sale['customer_name'] ?? null,
+                'total' => $sale['total'] ?? null,
+                'status' => $sale['status'] ?? null,
+                'message' => 'invoice created for ' .
+                    '₦' . number_format($sale['total'] ?? 0, 2)
             ]
         );
 
@@ -402,7 +481,7 @@ class TradeController extends BaseController
             $notification = [
                 'user_id' => $userToNotify['id'],
                 'event' => 'notification',
-                'entity_id' => $saleId,
+                'entity_id' => $sale['id'],
                 'entity_type' => "sales_order",
                 'title' => 'New Sales Order',
                 'body' => $user['name'] . ' has created a new sales order',
@@ -412,7 +491,7 @@ class TradeController extends BaseController
         }
 
 
-        $this->sendResponse('success', 201, ['sale_id' => $saleId]);
+        $this->sendResponse('success', 201, ['sale_id' => $sale['id']]);
     }
 
     public function sendToKitchen($orderId)
@@ -465,8 +544,34 @@ class TradeController extends BaseController
         $data = $this->getRequestData();
         $invoice = $data['files']['invoice'] ?? [];
 
-        $this->sendInvoiceEmail($purchaseId, 'purchase_orders', $invoice);
+        $response = $this->sendInvoiceEmail($purchaseId, 'purchase_orders', $invoice);
 
+        if ($response->status() !== 200) {
+            return $response;
+        }
+
+        $invoice = $this->purchase->getInvoiceDetails($purchaseId);
+
+        $this->insertAuditLog(
+            userId: $invoice['processed_by'],
+            entityId: $invoice['id'],
+            entityType: 'purchase_invoice',
+            action: 'sent',
+            entityData: [
+                'reference_number' => $invoice['reference_number'] ?? null,
+                'invoice_number' => $invoice['invoice_number'] ?? null,
+                'order_id' => $invoice['purchase_order_number'] ?? null,
+                'recipient_id' => $invoice['vendor_id'] ?? null,
+                'recipient_name' => $invoice['vendor_name'] ?? null,
+                'total' => $invoice['total'] ?? null,
+                'status' => $invoice['status'] ?? null,
+                'message' => 'Invoice for ' .
+                    '₦' . number_format($invoice['total'] ?? 0, 2) .
+                    ' sent to ' . ($invoice['vendor_name'] ?? 'Vendor')
+            ]
+        );
+
+        return $response;
     }
 
     public function getSalesInvoice($salesId)
@@ -489,7 +594,34 @@ class TradeController extends BaseController
         $data = $this->getRequestData();
         $invoice = $data['files']['invoice'] ?? [];
 
-        $this->sendInvoiceEmail($salesId, 'sales_orders', $invoice);
+        $response = $this->sendInvoiceEmail($salesId, 'sales_orders', $invoice);
+
+        if ($response->status() !== 200) {
+            return $response;
+        }
+
+        $invoice = $this->sale->getInvoiceDetails($salesId);
+
+        $this->insertAuditLog(
+            userId: $invoice['processed_by'],
+            entityId: $invoice['id'],
+            entityType: 'sales_invoice',
+            action: 'sent',
+            entityData: [
+                'reference_number' => $invoice['reference_number'] ?? null,
+                'invoice_number' => $invoice['invoice_number'] ?? null,
+                'order_id' => $invoice['order_id'] ?? null,
+                'recipient_id' => $invoice['customer_id'] ?? null,
+                'recipient_name' => $invoice['customer_name'] ?? null,
+                'total' => $invoice['total'] ?? null,
+                'status' => $invoice['status'] ?? null,
+                'message' => 'Invoice for ' .
+                    '₦' . number_format($invoice['total'] ?? 0, 2) .
+                    ' sent to ' . ($invoice['customer_name'] ?? 'Customer')
+            ]
+        );
+
+        return $response;
     }
 
 

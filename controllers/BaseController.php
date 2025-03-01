@@ -711,6 +711,24 @@ class BaseController
         return null;
     }
 
+    public function getInvoiceTotal($id, $type)
+    {
+        $query = match ($type) {
+            'sales_orders' => "SELECT total FROM sales_orders WHERE id = :id",
+            'purchase_orders' => "SELECT total FROM purchase_orders WHERE id = :id",
+            default => null,
+        };
+
+        if (!$query) {
+            return 0;
+        }
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->fetch(\PDO::FETCH_ASSOC)['total'] ?? 0;
+    }
+
     private function mapInvoiceData($invoice, $prefix)
     {
         return [

@@ -358,6 +358,10 @@ class Purchase extends Inventory
             foreach ($items as $item) {
                 $filteredItem = array_filter($item, fn ($value) => $value !== "" && $value !== null);
 
+                if (empty($filteredItem['item_id']) && empty($filteredItem['item_name'])) {
+                    continue;
+                }
+
                 if (empty($filteredItem['item_id']) && !empty($filteredItem['item_name'])) {
                     $newItemId = $this->createItem([
                         'name' => $filteredItem['item_name'],
@@ -501,22 +505,11 @@ class Purchase extends Inventory
     public function getInvoiceDetails($purchaseOrderId)
     {
         $query = "
-            SELECT po.id,
-                po.vendor_id,
-                po.branch_id,
-                po.payment_term_id,
-                po.subject,
-                po.notes,
-                po.terms_and_conditions,
-                po.purchase_order_number,
-                po.reference_number, 
+            SELECT po.*,
                 CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name, 
                 po.created_at::DATE AS order_date, 
-                po.delivery_date, 
+                u.name AS purchase_rep_name, 
                 COALESCE(po.total, 0.00) AS total, 
-                po.discount,
-                po.shipping_charge,
-                po.status,
                 CASE
                     WHEN po.status = 'issued' THEN 'Issued'
                 ELSE pt.name
@@ -539,12 +532,14 @@ class Purchase extends Inventory
             LEFT JOIN payment_terms pt ON po.payment_term_id = pt.id
             LEFT JOIN taxes tr ON poi.tax_id = tr.id
             LEFT JOIN items i ON poi.item_id = i.id
+            LEFT JOIN users u ON po.processed_by = u.id
             WHERE po.id = :purchase_order_id
             GROUP BY po.id, po.purchase_order_number, po.reference_number,
                 v.display_name, v.email, v.address, v.mobile_phone, v.balance, 
                 po.discount, po.shipping_charge, po.notes, po.total, 
                 po.created_at, po.delivery_date, po.status, pt.name, v.salutation,
-                v.first_name, v.last_name, po.subject, po.terms_and_conditions
+                v.first_name, v.last_name, po.subject, po.terms_and_conditions,
+                u.name, po.processed_by
         ";
 
         $stmt = $this->db->prepare($query);

@@ -818,7 +818,7 @@ class Sale extends Kitchen
 
             $this->db->commit();
 
-            return $orderId;
+            return $this->getInvoiceDetails($orderId);
         } catch (\Exception $e) {
             $this->db->rollBack();
             error_log('Failed to create sale: ' . $e->getMessage());
@@ -940,7 +940,7 @@ class Sale extends Kitchen
 
             $this->db->commit();
 
-            return $id;
+            return $this->getInvoiceDetails($id);
         } catch (\Exception $e) {
             $this->db->rollBack();
             error_log('Failed to update sale: ' . $e->getMessage());
@@ -995,6 +995,10 @@ class Sale extends Kitchen
 
             foreach ($items as $item) {
                 $item = array_filter($item, fn ($value) => $value !== "" && $value !== null);
+
+                if (empty($item['item_id'])) {
+                    continue;
+                }
 
                 if (in_array($item['item_id'], $existingItemIds)) {
                     $query = "
@@ -1129,6 +1133,7 @@ class Sale extends Kitchen
                 c.mobile_phone AS customer_phone,
                 c.email AS customer_email,
                 c.balance AS customer_balance,
+                u.name AS sales_rep_name,
                 so.created_at::DATE AS invoice_date,
                 json_agg(
                     json_build_object(
@@ -1147,13 +1152,14 @@ class Sale extends Kitchen
             LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
             LEFT JOIN price_lists p ON soi.item_id = p.id
             LEFT JOIN taxes t ON soi.tax_id = t.id
+            LEFT JOIN users u ON so.processed_by = u.id
             WHERE so.id = :sales_order_id
             GROUP BY so.id, c.display_name, so.invoice_number, so.order_title,
                     so.order_type, c.id, so.payment_term_id, so.payment_method_id,
                     so.assigned_driver_id, so.delivery_option, so.additional_note,
                     so.customer_note, so.discount, so.delivery_charge, so.total,
                     c.email, so.created_at, so.delivery_date, so.delivery_charge_id,
-                    c.first_name, c.last_name, so.total_boxes
+                    c.first_name, c.last_name, so.total_boxes, u.name
         ";
 
 

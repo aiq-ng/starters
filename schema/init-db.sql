@@ -520,7 +520,7 @@ CREATE TABLE audit_logs (
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     entity_id UUID,
     entity_type VARCHAR(50),
-    action VARCHAR(50) CHECK (action IN ('create', 'update', 'delete')),
+    action VARCHAR(50),
     entity_data JSONB,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

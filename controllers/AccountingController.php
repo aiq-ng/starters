@@ -3,19 +3,21 @@
 namespace Controllers;
 
 use Models\Accounting;
-use Models\Kitchen;
-use Services\NotificationService;
+use Models\Sale;
+use Models\Purchase;
 
 class AccountingController extends BaseController
 {
     private $accounting;
-    private $kitchen;
+    private $sale;
+    private $purchase;
 
     public function __construct()
     {
         parent::__construct();
         $this->accounting = new Accounting();
-        $this->kitchen = new Kitchen();
+        $this->sale = new Sale();
+        $this->purchase = new Purchase();
     }
 
     public function createExpense()
@@ -131,6 +133,28 @@ class AccountingController extends BaseController
 
         try {
             $this->accounting->confirmSalesOrderPayment($orderId);
+
+            $invoice = $this->sale->getInvoiceDetails($orderId);
+
+            $this->insertAuditLog(
+                userId: $invoice['processed_by'],
+                entityId: $invoice['id'],
+                entityType: 'sales_invoice',
+                action: 'paid',
+                entityData: [
+                    'reference_number' => $invoice['reference_number'] ?? null,
+                    'invoice_number' => $invoice['invoice_number'] ?? null,
+                    'order_id' => $invoice['order_id'] ?? null,
+                    'recipient_id' => $invoice['customer_id'] ?? null,
+                    'recipient_name' => $invoice['customer_name'] ?? null,
+                    'total' => $invoice['total'] ?? null,
+                    'status' => $invoice['status'] ?? null,
+                    'message' => 'Payment of ' .
+                    '₦' . number_format($invoice['total'] ?? 0, 2) .
+                    ' received from ' . ($invoice['customer_name'] ?? 'Customer')
+                ]
+            );
+
         } catch (\Exception $e) {
             $this->sendResponse($e->getMessage(), 400);
         }
@@ -144,6 +168,29 @@ class AccountingController extends BaseController
 
         try {
             $this->accounting->markBillAsPaid($billId);
+
+            $invoice = $this->purchase->getInvoiceDetails($billId);
+
+            $this->insertAuditLog(
+                userId: $invoice['processed_by'],
+                entityId: $invoice['id'],
+                entityType: 'purchase_invoice',
+                action: 'paid',
+                entityData: [
+                    'reference_number' => $invoice['reference_number'] ?? null,
+                    'invoice_number' => $invoice['invoice_number'] ?? null,
+                    'order_id' => $invoice['purchase_order_number'] ?? null,
+                    'recipient_id' => $invoice['vendor_id'] ?? null,
+                    'recipient_name' => $invoice['vendor_name'] ?? null,
+                    'total' => $invoice['total'] ?? null,
+                    'status' => $invoice['status'] ?? null,
+                    'message' => 'Bill of ' .
+                        '₦' . number_format($invoice['total'] ?? 0, 2) .
+                        ' owed to ' . ($invoice['vendor_name'] ?? 'Vendor') .
+                        ' paid'
+                ]
+            );
+
         } catch (\Exception $e) {
             $this->sendResponse($e->getMessage(), 400);
         }
