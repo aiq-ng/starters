@@ -547,8 +547,8 @@ class TradeController extends BaseController
 
         $response = $this->sendInvoiceEmail($purchaseId, 'purchase_orders', $invoice);
 
-        if ($response->status() !== 200) {
-            return $response;
+        if (!$response) {
+            return $this->sendResponse('Failed to send invoice', 500);
         }
 
         $invoice = $this->purchase->getInvoiceDetails($purchaseId);
@@ -572,7 +572,7 @@ class TradeController extends BaseController
             ]
         );
 
-        return $response;
+        return $this->sendResponse('Invoice sent successfully', 200);
     }
 
     public function getSalesInvoice($salesId)
@@ -598,8 +598,8 @@ class TradeController extends BaseController
 
         $response = $this->sendInvoiceEmail($salesId, 'sales_orders', $invoice);
 
-        if ($response->status() !== 200) {
-            return $response;
+        if (!$response) {
+            return $this->sendResponse('Failed to send invoice', 500);
         }
 
         $invoice = $this->sale->getInvoiceDetails($salesId);
@@ -623,7 +623,7 @@ class TradeController extends BaseController
             ]
         );
 
-        return $response;
+        return $this->sendResponse('Invoice sent successfully', 200);
     }
 
 

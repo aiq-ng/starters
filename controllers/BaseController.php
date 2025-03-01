@@ -667,13 +667,8 @@ class BaseController
     {
         $invoiceData = $this->getInvoiceData($id, $type);
 
-        if (!$invoiceData) {
-            throw new \Exception("Invalid record type '$type'.");
-        }
-
         $templateVariables = array_merge([
             "orgAddress" => trim(getenv('ORG_ADDRESS'), '"'),
-            "orgName" => trim(getenv('ORG_NAME'), '"'),
             "orgName" => trim(getenv('ORG_NAME'), '"'),
             "orgEmail" => trim(getenv('ORG_EMAIL'), '"'),
             "orgPhone" => trim(getenv('ORG_PHONE'), '"'),
@@ -681,30 +676,47 @@ class BaseController
         ], $invoiceData);
 
         try {
-            $this->emailService->sendInvoice(
+            $response = $this->emailService->sendInvoice(
                 $invoiceData['billedToEmail'],
                 $invoiceData['billedTo'],
                 $templateVariables,
                 $attachment
             );
 
+            error_log("Email response: " . json_encode($response));
+
+            if (!empty($response['error']['details'][0]['message'])) {
+                return $this->sendResponse($response['error']['details'][0]['message']
+                        ?? 'Failed to send email', 500);
+            }
+
+            return true;
+
         } catch (\Exception $e) {
             error_log("Error sending email: " . $e->getMessage());
-            return $this->sendResponse('Failed to send Invoice', 500);
+            throw new \Exception($e->getMessage());
         }
-
-        return $this->sendResponse('Invoice sent successfully', 200);
     }
 
     private function getInvoiceData($id, $type)
     {
+        if (!in_array($type, ['sales_orders', 'purchase_orders'])) {
+            throw new \Exception("Invalid record type '$type'.");
+        }
+
         if ($type === 'sales_orders') {
             $invoice = (new Sale())->getInvoiceDetails($id);
+            if (!$invoice) {
+                return [];
+            }
             return $this->mapInvoiceData($invoice, 'customer');
         }
 
         if ($type === 'purchase_orders') {
             $invoice = (new Purchase())->getInvoiceDetails($id);
+            if (!$invoice) {
+                return [];
+            }
             return $this->mapInvoiceData($invoice, 'vendor');
         }
 
@@ -754,10 +766,6 @@ class BaseController
         $type = $_GET['type'] ?? null;
 
         $invoiceData = $this->getInvoiceData($id, $type);
-
-        if (!$invoiceData) {
-            throw new \Exception("Invalid record type '$type'.");
-        }
 
         $this->sendResponse('success', 200, $invoiceData);
     }

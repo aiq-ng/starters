@@ -90,7 +90,7 @@ class Vendor
             return $stmt->fetchColumn();
         } catch (\Exception $e) {
             error_log($e->getMessage());
-            throw new \Exception("Error updating vendor");
+            throw new \Exception("Error updating vendor " . $e->getMessage());
         }
     }
 

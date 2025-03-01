@@ -508,7 +508,8 @@ class Purchase extends Inventory
     {
         $query = "
             SELECT po.*,
-                CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name, 
+                CONCAT_WS(' ', v.salutation, v.first_name, v.last_name) AS vendor_name,
+                v.email AS vendor_email, 
                 po.created_at::DATE AS order_date, 
                 u.name AS purchase_rep_name, 
                 COALESCE(po.total, 0.00) AS total, 
@@ -541,7 +542,7 @@ class Purchase extends Inventory
                 po.discount, po.shipping_charge, po.notes, po.total, 
                 po.created_at, po.delivery_date, po.status, pt.name, v.salutation,
                 v.first_name, v.last_name, po.subject, po.terms_and_conditions,
-                u.name, po.processed_by
+                u.name, po.processed_by, v.email
         ";
 
         $stmt = $this->db->prepare($query);
