@@ -261,7 +261,8 @@ class Purchase extends Inventory
                         'name' => $filteredItem['item_name'],
                         'quantity' => 0,
                         'price' => $filteredItem['price'] ?? 0,
-                    ]);
+                        'threshold_value' => 10,
+                    ], false);
 
                     if (!$newItemId) {
                         throw new \Exception("Failed to create item: " .
@@ -367,7 +368,8 @@ class Purchase extends Inventory
                         'name' => $filteredItem['item_name'],
                         'quantity' => 0,
                         'price' => $filteredItem['price'] ?? 0,
-                    ]);
+                        'threshold_value' => 10,
+                    ], false);
 
                     if (!$newItemId) {
                         throw new \Exception("Failed to create item: " .

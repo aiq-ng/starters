@@ -539,6 +539,7 @@ class TradeController extends BaseController
 
     public function sendPurchaseInvoice($purchaseId)
     {
+        error_log('Sending purchase invoice'. $purchaseId);
         $this->authorizeRequest();
 
         $data = $this->getRequestData();
@@ -589,6 +590,7 @@ class TradeController extends BaseController
 
     public function sendSaleInvoice($salesId)
     {
+        error_log('Sending invoice for sale: ' . $salesId);
         $this->authorizeRequest();
 
         $data = $this->getRequestData();

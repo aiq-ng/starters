@@ -277,7 +277,7 @@ class Inventory
     }
 
 
-    public function createItem($data, $mediaLinks = [])
+    public function createItem($data, $mediaLinks = [], $notify = true)
     {
         try {
             $this->db->beginTransaction();
@@ -319,7 +319,7 @@ class Inventory
 
             $itemId = $stmt->fetchColumn();
 
-            if (!$this->createItemStock($itemId, $data)) {
+            if (!$this->createItemStock($itemId, $data, $notify)) {
                 throw new \Exception('Failed to insert/update item stock.');
             }
 
@@ -333,7 +333,7 @@ class Inventory
         }
     }
 
-    public function createItemStock($itemId, $data)
+    public function createItemStock($itemId, $data, $notify = true)
     {
         $dateReceived = $data['date_received'] ?? date('Y-m-d');
 
@@ -360,7 +360,7 @@ class Inventory
                 throw new \Exception('Failed to insert item relationships.');
             }
 
-            $this->checkItemAvailability($itemId);
+            $this->checkItemAvailability($itemId, $notify);
 
             return $stockId;
         } catch (\Exception $e) {
@@ -629,7 +629,7 @@ class Inventory
         }
     }
 
-    private function checkItemAvailability($itemId)
+    private function checkItemAvailability($itemId, $notify = true)
     {
         try {
             $sql = "
@@ -646,6 +646,10 @@ class Inventory
 
             if (!$item) {
                 throw new \Exception("Item not found.");
+            }
+
+            if ($notify === false) {
+                return;
             }
 
             if (in_array($item['availability'], ['out of stock', 'low stock'], true)) {
