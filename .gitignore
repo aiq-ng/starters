@@ -5,4 +5,4 @@ php_errors.log
 env
 **dc.logs
 **vendor
-**listener.log
+**logs

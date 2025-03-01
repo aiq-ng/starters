@@ -3,9 +3,9 @@
 set -e
 
 PHP_BINARY="/usr/local/bin/php"
-LOG_FILE="/workspace/starters/app/listener.log"
+LOG_FILE="/workspace/starters/app/logs/expired-items.log"
 ENV_FILE="/workspace/starters/app/.env"
-SCRIPT_PATH="/workspace/starters/app/listener.php"
+SCRIPT_PATH="/workspace/starters/app/expired-items.php"
 MAX_LINES=100
 
 init() {
@@ -34,7 +34,7 @@ load_env() {
 }
 
 run_script() {
-	echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running listener.php" >>"$LOG_FILE"
+	echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running expired-items.php" >>"$LOG_FILE"
 	"$PHP_BINARY" "$SCRIPT_PATH" >>"$LOG_FILE" 2>&1
 	local exit_code=$?
 

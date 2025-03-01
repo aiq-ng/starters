@@ -34,11 +34,15 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy the entrypoint script
 COPY docker/scripts/app-entry.sh /usr/local/bin/entrypoint.sh
-COPY docker/scripts/cron.sh /usr/local/bin/cron.sh
+COPY docker/scripts/cronjobs/due-bills-cronjob.sh /usr/local/bin/due-bills-cronjob.sh
+COPY docker/scripts/cronjobs/expired-items-cronjob.sh /usr/local/bin/expired-items-cronjob.sh
+COPY docker/scripts/cronjobs/backup-cronjob.sh /usr/local/bin/backup-cronjob.sh
 
 # Make the script executable
 RUN chmod +x /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/cron.sh
+RUN chmod +x /usr/local/bin/due-bills-cronjob.sh
+RUN chmod +x /usr/local/bin/expired-items-cronjob.sh
+RUN chmod +x /usr/local/bin/backup-cronjob.sh
 
 # Expose the port
 EXPOSE 9090
