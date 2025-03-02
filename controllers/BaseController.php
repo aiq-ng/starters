@@ -362,6 +362,29 @@ class BaseController
         }
     }
 
+    public function getComments()
+    {
+        $this->authorizeRequest();
+
+        $entityType = isset($_GET['type']) ? $_GET['type'] : null;
+
+        $query = "
+            SELECT comments.*, users.name AS user_name
+            FROM comments
+            LEFT JOIN users ON comments.user_id = users.id
+            WHERE entity_type = :entity_type
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':entity_type', $entityType);
+        $stmt->execute();
+
+        $comments = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $message = empty($comments) ? 'No comments found' : 'success';
+        $this->sendResponse($message, 200, empty($comments) ? [] : $comments);
+    }
+
 
     public function getGallery()
     {

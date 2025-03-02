@@ -498,7 +498,7 @@ class TradeController extends BaseController
     {
         $this->authorizeRequest();
 
-        $sale = $this->sale->duplicateSale($saleId);
+        $sale = $this->sale->duplicateSale($saleId, ['user_id' => $_SESSION['user_id']]);
 
         if (!$sale) {
             $this->sendResponse('Failed to duplicate sale', 500);
@@ -781,6 +781,8 @@ class TradeController extends BaseController
     public function comment($id)
     {
 
+        $this->authorizeRequest();
+
         $data = $this->getRequestData();
 
         $data['user_id'] = $_SESSION['user_id'];
@@ -795,17 +797,4 @@ class TradeController extends BaseController
         }
     }
 
-    public function commentOnSalesHistory($id)
-    {
-        $this->authorizeRequest();
-        $this->comment($id);
-
-    }
-
-    public function commentOnPurchaseHistory($id)
-    {
-        $this->authorizeRequest();
-
-        $this->comment($id);
-    }
 }
