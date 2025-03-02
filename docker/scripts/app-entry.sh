@@ -52,4 +52,4 @@ php-fpm -D
 exec php -S 0.0.0.0:$PORT \
 	-d display_errors=1 \
 	-d log_errors=1 \
-	-d error_log=logs/php_errors.log
+	-d error_log=storage/logs/php_errors.log

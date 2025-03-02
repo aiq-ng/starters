@@ -3,7 +3,7 @@
 set -e
 
 PHP_BINARY="/usr/local/bin/php"
-LOG_FILE="/workspace/starters/app/logs/due-bills.log"
+LOG_FILE="/workspace/starters/app/storage/logs/due-bills.log"
 ENV_FILE="/workspace/starters/app/.env"
 SCRIPT_PATH="/workspace/starters/app/due-bills.php"
 MAX_LINES=100

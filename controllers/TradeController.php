@@ -494,6 +494,37 @@ class TradeController extends BaseController
         $this->sendResponse('success', 201, ['sale_id' => $sale['id']]);
     }
 
+    public function duplicateSale($saleId)
+    {
+        $this->authorizeRequest();
+
+        $sale = $this->sale->duplicateSale($saleId);
+
+        if (!$sale) {
+            $this->sendResponse('Failed to duplicate sale', 500);
+        }
+
+        $this->insertAuditLog(
+            userId: $sale['processed_by'],
+            entityId: $sale['id'],
+            entityType: 'sales_invoice',
+            action: 'create',
+            entityData: [
+                'reference_number' => $sale['reference_number'] ?? null,
+                'invoice_number' => $sale['invoice_number'] ?? null,
+                'order_id' => $sale['order_id'] ?? null,
+                'recipient_id' => $sale['customer_id'] ?? null,
+                'recipient_name' => $sale['customer_name'] ?? null,
+                'total' => $sale['total'] ?? null,
+                'status' => $sale['status'] ?? null,
+                'message' => 'invoice create for ' .
+                    '₦' . number_format($sale['total'] ?? 0, 2)
+            ]
+        );
+
+        $this->sendResponse('success', 201, ['sale_id' => $sale['id']]);
+    }
+
     public function sendToKitchen($orderId)
     {
         $this->authorizeRequest();

@@ -3,7 +3,7 @@
 set -e
 
 PHP_BINARY="/usr/local/bin/php"
-LOG_FILE="/workspace/starters/app/logs/expired-items.log"
+LOG_FILE="/workspace/starters/app/storage/logs/expired-items.log"
 ENV_FILE="/workspace/starters/app/.env"
 SCRIPT_PATH="/workspace/starters/app/expired-items.php"
 MAX_LINES=100

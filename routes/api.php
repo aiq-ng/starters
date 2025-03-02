@@ -55,7 +55,7 @@ $routes = [
         '/riders' => [$kitchenController, 'getRiders'],
         '/gallery' => [$kitchenController, 'getGallery'],
         '/notifications/' => [$adminController, 'getNotifications'],
-        '/logs' => [$adminController, 'getAuditLogs'],
+        '/audit-trail' => [$adminController, 'getAuditLogs'],
         '/search' => [$adminController, 'search'],
         '/work_leave_qualifications' => [$humanResourceController, 'getWorkLeaveQualifications'],
         '/dashboard/business' => [$dashboardController, 'businessOverview'],
@@ -151,6 +151,7 @@ $routes = [
         '/inventory/history/comment/([a-fA-F0-9-]{36})' => [$inventoryController, 'comment'],
         '/sales/orders/invoice/([a-fA-F0-9-]{36})' => [$tradeController, 'sendSaleInvoice'],
         '/sales/orders/([a-fA-F0-9-]{36})/void' => [$tradeController, 'voidSale'],
+        '/sales/orders/([a-fA-F0-9-]{36})/duplicate' => [$tradeController, 'duplicateSale'],
         '/purchases/orders/invoice/([a-fA-F0-9-]{36})' => [$tradeController, 'sendPurchaseInvoice'],
         '/rate/([a-fA-F0-9-]{36})' => [$tradeController, 'rateOrder'],
 

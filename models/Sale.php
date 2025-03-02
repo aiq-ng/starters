@@ -911,6 +911,56 @@ class Sale extends Kitchen
         }
     }
 
+    public function duplicateSale($saleId, $modifications = [])
+    {
+        $this->db->beginTransaction();
+
+        try {
+            $originalSale = $this->getSaleById($saleId);
+            $originalItems = $this->getSaleItemsById($saleId);
+
+            if (!$originalSale) {
+                throw new \Exception("Sale not found");
+            }
+
+            $newSaleData = array_merge($originalSale, $modifications);
+            unset($newSaleData['id']);
+
+            $newSaleId = $this->insertSalesOrder($newSaleData);
+
+            foreach ($originalItems as $item) {
+                $item['sales_order_id'] = $newSaleId;
+                unset($item['id']);
+                $this->insertSalesOrderItem($newSaleId, [$item]);
+            }
+
+            $this->db->commit();
+
+            return $this->getInvoiceDetails($newSaleId);
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            error_log("Failed to duplicate sale: " . $e->getMessage());
+            throw new \Exception("Failed to duplicate sale");
+        }
+    }
+
+    private function getSaleById($saleId)
+    {
+        $query = "SELECT * FROM sales_orders WHERE id = :saleId";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([':saleId' => $saleId]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    private function getSaleItemsById($saleId)
+    {
+        $query = "SELECT * FROM sales_order_items WHERE sales_order_id = :saleId";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([':saleId' => $saleId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+
     private function getPrice($itemId)
     {
         $query = "SELECT unit_price FROM price_lists WHERE id = :itemId";
