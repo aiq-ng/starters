@@ -498,7 +498,10 @@ class TradeController extends BaseController
     {
         $this->authorizeRequest();
 
-        $sale = $this->sale->duplicateSale($saleId, ['user_id' => $_SESSION['user_id']]);
+        $additionalData = [
+            'user_id' => $_SESSION['user_id']
+        ];
+        $sale = $this->sale->duplicateSale($saleId, $additionalData);
 
         if (!$sale) {
             $this->sendResponse('Failed to duplicate sale', 500);
@@ -521,6 +524,31 @@ class TradeController extends BaseController
                     '₦' . number_format($sale['total'] ?? 0, 2)
             ]
         );
+
+        $user = $this->findRecord('users', $additionalData['user_id']);
+        $usersToNotify = BaseController::getUserByRole('Admin');
+
+        if (empty($usersToNotify)) {
+            throw new \Exception("No Admin user found for notification.");
+        }
+
+        foreach ($usersToNotify as $userToNotify) {
+            if (!isset($userToNotify['id'])) {
+                continue;
+            }
+
+            $notification = [
+                'user_id' => $userToNotify['id'],
+                'event' => 'notification',
+                'entity_id' => $sale['id'],
+                'entity_type' => "sales_order",
+                'title' => 'New Sales Order',
+                'body' => $user['name'] . ' has created a new sales order',
+            ];
+
+            $this->notify->sendNotification($notification);
+        }
+
 
         $this->sendResponse('success', 201, ['sale_id' => $sale['id']]);
     }
