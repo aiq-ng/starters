@@ -515,27 +515,31 @@ class Purchase extends Inventory
                 COALESCE(po.total, 0.00) AS total, 
                 CASE
                     WHEN po.status = 'issued' THEN 'Issued'
-                ELSE pt.name
+                    ELSE pt.name
                 END AS payment,
-                json_agg(
-                    json_build_object(
-                        'item_id', poi.item_id,
-                        'item_name', i.name,
-                        'item_description', i.description,
-                        'quantity', poi.quantity,
-                        'price', poi.price,
-                        'amount', poi.quantity * poi.price,
-                        'tax_id', poi.tax_id,
-                        'tax_rate', tr.rate,
-                        'created_at', poi.created_at,
-                    ) ORDER BY poi.created_at
+                (
+                    SELECT json_agg(items_data ORDER BY items_data.created_at ASC)
+                    FROM (
+                        SELECT 
+                            poi.item_id,
+                            i.name AS item_name,
+                            i.description AS item_description,
+                            poi.quantity,
+                            poi.price,
+                            poi.quantity * poi.price AS amount,
+                            poi.tax_id,
+                            tr.rate AS tax_rate,
+                            poi.created_at
+                        FROM purchase_order_items poi
+                        LEFT JOIN items i ON poi.item_id = i.id
+                        LEFT JOIN taxes tr ON poi.tax_id = tr.id
+                        WHERE poi.purchase_order_id = po.id
+                        ORDER BY poi.created_at ASC
+                    ) AS items_data
                 ) AS items
             FROM purchase_orders po
             LEFT JOIN vendors v ON po.vendor_id = v.id
-            LEFT JOIN purchase_order_items poi ON poi.purchase_order_id = po.id
             LEFT JOIN payment_terms pt ON po.payment_term_id = pt.id
-            LEFT JOIN taxes tr ON poi.tax_id = tr.id
-            LEFT JOIN items i ON poi.item_id = i.id
             LEFT JOIN users u ON po.processed_by = u.id
             WHERE po.id = :purchase_order_id
             GROUP BY po.id, po.purchase_order_number, po.reference_number,
@@ -550,15 +554,12 @@ class Purchase extends Inventory
 
         try {
             $stmt->execute([':purchase_order_id' => $purchaseOrderId]);
-
             $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             if ($result) {
-                if (!empty($result['items'])) {
-                    $result['items'] = json_decode($result['items'], true);
-                } else {
-                    $result['items'] = [];
-                }
+                $result['items'] = !empty($result['items'])
+                    ? json_decode($result['items'], true)
+                    : [];
                 return $result;
             }
 

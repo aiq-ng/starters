@@ -1188,24 +1188,28 @@ class Sale extends Kitchen
                 c.balance AS customer_balance,
                 u.name AS sales_rep_name,
                 so.created_at::DATE AS invoice_date,
-                json_agg(
-                    json_build_object(
-                        'item_id', p.id,
-                        'item_name', p.item_details,
-                        'quantity', soi.quantity,
-                        'price', soi.price,
-                        'amount', soi.quantity * soi.price,
-                        'total', soi.total,
-                        'tax_id', soi.tax_id,
-                        'tax_rate', t.rate,
-                        'created_at', soi.created_at
-                    ) ORDER BY soi.created_at
-                ) AS items            
+                (
+                    SELECT json_agg(items_data ORDER BY items_data.created_at ASC)
+                    FROM (
+                        SELECT 
+                            soi.item_id,
+                            p.item_details AS item_name,
+                            soi.quantity,
+                            soi.price,
+                            soi.quantity * soi.price AS amount,
+                            soi.total,
+                            soi.tax_id,
+                            t.rate AS tax_rate,
+                            soi.created_at
+                        FROM sales_order_items soi
+                        LEFT JOIN price_lists p ON soi.item_id = p.id
+                        LEFT JOIN taxes t ON soi.tax_id = t.id
+                        WHERE soi.sales_order_id = so.id
+                        ORDER BY soi.created_at ASC
+                    ) AS items_data
+                ) AS items
             FROM sales_orders so
             LEFT JOIN customers c ON so.customer_id = c.id
-            LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
-            LEFT JOIN price_lists p ON soi.item_id = p.id
-            LEFT JOIN taxes t ON soi.tax_id = t.id
             LEFT JOIN users u ON so.processed_by = u.id
             LEFT JOIN discounts dc ON so.discount_id = dc.id
             LEFT JOIN delivery_charges dch ON so.delivery_charge_id = dch.id
@@ -1218,7 +1222,6 @@ class Sale extends Kitchen
                     c.first_name, c.last_name, so.total_boxes, u.name, dch.amount, dc.value
         ";
 
-
         try {
             $stmt = $this->db->prepare($query);
             $stmt->execute([':sales_order_id' => $salesOrderId]);
@@ -1226,7 +1229,9 @@ class Sale extends Kitchen
             $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
             if ($result) {
-                $result['items'] = !empty($result['items']) ? json_decode($result['items'], true) : [];
+                $result['items'] = !empty($result['items'])
+                    ? json_decode($result['items'], true)
+                    : [];
                 return $result;
             }
 
