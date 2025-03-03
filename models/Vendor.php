@@ -325,19 +325,9 @@ class Vendor
                 c.code AS default_currency,
                 pt.name AS payment_term,
                 v.social_media,
-                JSONB_BUILD_OBJECT(
-                    'currency', c.code,
-                    'total_outstanding', COALESCE(
-                        SUM(
-                            CASE WHEN vt.transaction_type = 'debit' THEN vt.amount ELSE 0 END
-                        ), 0
-                    ),
-                    'total_paid', COALESCE(
-                        SUM(
-                            CASE WHEN vt.transaction_type = 'credit' THEN vt.amount ELSE 0 END
-                        ), 0
-                    )
-                ) AS receivables,
+                c.code AS currency,
+                SUM(COALESCE(vt.amount, 0)) FILTER (WHERE po.status = 'received') AS outstanding_receivables,
+                SUM(COALESCE(vt.amount, 0)) FILTER (WHERE po.status = 'paid') AS payables,
                 COALESCE(
                     JSON_AGG(
                         JSONB_BUILD_OBJECT(
@@ -376,10 +366,6 @@ class Vendor
                 $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
                 if ($result) {
-                    $result['receivables'] = !empty($result['receivables'])
-                        ? json_decode($result['receivables'], true)
-                        : [];
-
                     $result['transactions'] = !empty($result['transactions'])
                         ? json_decode($result['transactions'], true)
                         : [];

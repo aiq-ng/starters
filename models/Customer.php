@@ -321,23 +321,13 @@ class Customer
                 c.email,
                 c.work_phone,
                 c.mobile_phone,
-                c.customer_type,
+                c.social_media,
                 cu.code AS default_currency,
                 pt.name AS payment_term,
-                c.social_media,
-                JSONB_BUILD_OBJECT(
-                    'currency', cu.code,
-                    'total_outstanding', COALESCE(
-                        SUM(
-                            CASE WHEN ct.transaction_type = 'debit' THEN ct.amount ELSE 0 END
-                        ), 0
-                    ),
-                    'total_paid', COALESCE(
-                        SUM(
-                            CASE WHEN ct.transaction_type = 'credit' THEN ct.amount ELSE 0 END
-                        ), 0
-                    )
-                ) AS receivables,
+                SUM(COALESCE(ct.amount, 0)) 
+                    FILTER (WHERE so.payment_status = 'paid') AS paid,
+                SUM(COALESCE(ct.amount, 0)) 
+                    FILTER (WHERE so.payment_status = 'unpaid') AS outstanding_receivables,
                 COALESCE(
                     JSON_AGG(
                         JSONB_BUILD_OBJECT(
@@ -363,7 +353,7 @@ class Customer
                 c.id, c.display_name, c.email, c.work_phone, c.customer_type,
                 c.salutation, c.first_name, c.last_name, c.company_name,
                 c.address, c.payment_term_id, c.currency_id, c.social_media,
-                c.mobile_phone, c.customer_type, c.balance, cu.code, pt.name
+                c.mobile_phone, cu.code, pt.name
         ";
 
         try {
@@ -374,7 +364,6 @@ class Customer
                 $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
                 if ($result) {
-                    $result['receivables'] = json_decode($result['receivables'] ?? '[]', true);
                     $result['transactions'] = json_decode($result['transactions'] ?? '[]', true);
                     $result['social_media'] = json_decode($result['social_media'] ?? '[]', true);
                 }

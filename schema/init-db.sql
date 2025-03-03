@@ -278,8 +278,8 @@ CREATE TABLE vendors (
     category_id UUID REFERENCES vendor_categories(id) ON DELETE SET NULL,
     balance DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) GENERATED ALWAYS AS (
-        CASE
-            WHEN balance < 0 THEN 'owing'
+        CASE 
+            WHEN balance > 0 THEN 'owing'
             ELSE 'active'
         END
     ) STORED,
@@ -291,15 +291,14 @@ CREATE TABLE vendors (
 CREATE TABLE vendor_transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_sequence BIGSERIAL UNIQUE,
-    vendor_id UUID REFERENCES vendors(id) ON DELETE SET NULL,
+    vendor_id UUID REFERENCES vendors(id) ON DELETE CASCADE,
     transaction_type VARCHAR(50) 
         CHECK (transaction_type IN ('credit', 'debit')),
     payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL,
+    payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
     cash_account_id UUID REFERENCES cash_accounts(id) ON DELETE SET NULL,
     amount DECIMAL(20, 2),
-    reference_number VARCHAR(50) GENERATED ALWAYS AS (
-        'REF' || LPAD(order_sequence::TEXT, 10, '0')
-    ) STORED,
+    reference_number VARCHAR(50),
     notes TEXT,
     invoice_sent BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT clock_timestamp()
@@ -326,7 +325,7 @@ CREATE TABLE customers (
     balance DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) GENERATED ALWAYS AS (
         CASE
-            WHEN balance < 0 THEN 'owing'
+            WHEN balance > 0 THEN 'owing'
             ELSE 'active'
         END
     ) STORED,
@@ -338,15 +337,14 @@ CREATE TABLE customers (
 CREATE TABLE customer_transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_sequence BIGSERIAL UNIQUE,
-    customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
+    customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
     transaction_type VARCHAR(50) 
         CHECK (transaction_type IN ('credit', 'debit')),
     payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL,
+    payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
     cash_account_id UUID REFERENCES cash_accounts(id) ON DELETE SET NULL,
     amount DECIMAL(20, 2),
-    reference_number VARCHAR(50) GENERATED ALWAYS AS (
-        'REF' || LPAD(order_sequence::TEXT, 10, '0')
-    ) STORED,
+    reference_number VARCHAR(50),
     notes TEXT,
     invoice_sent BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT clock_timestamp()
@@ -449,6 +447,7 @@ CREATE TABLE purchase_orders (
     ) STORED,
     delivery_date DATE,
     payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
+    payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL,
     payment_due_date DATE,
     subject TEXT,
     notes TEXT,

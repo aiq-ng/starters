@@ -1179,7 +1179,11 @@ class Sale extends Kitchen
             SELECT so.*,
                 TO_CHAR(delivery_time, 'HH12:MI AM') AS delivery_time,
                 dch.amount AS delivery_charge,
-                dc.value AS discount,
+                CASE 
+                    WHEN dc.discount_type = 'percentage' THEN (so.total * dc.value) / 100
+                    ELSE dc.value
+                END AS discount,
+                dc.discount_type,
                 c.id AS customer_id,
                 CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
                 c.address AS customer_address,
@@ -1219,7 +1223,8 @@ class Sale extends Kitchen
                     so.assigned_driver_id, so.delivery_option, so.additional_note,
                     so.customer_note, so.discount, so.delivery_charge, so.total,
                     c.email, so.created_at, so.delivery_date, so.delivery_charge_id,
-                    c.first_name, c.last_name, so.total_boxes, u.name, dch.amount, dc.value
+                    c.first_name, c.last_name, so.total_boxes, u.name, dch.amount,
+                    dc.value, dc.discount_type
         ";
 
         try {
