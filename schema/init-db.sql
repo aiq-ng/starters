@@ -43,8 +43,8 @@ CREATE TABLE currencies (
     name VARCHAR(50) UNIQUE NOT NULL,
     symbol VARCHAR(10) UNIQUE,
     code VARCHAR(10) UNIQUE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Base Types
@@ -65,8 +65,8 @@ CREATE TABLE branches (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Item Categories
@@ -74,8 +74,8 @@ CREATE TABLE item_categories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Units of Measurement
@@ -83,8 +83,8 @@ CREATE TABLE units (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) UNIQUE NOT NULL,
     abbreviation VARCHAR(10) UNIQUE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Work Leave Qualifications
@@ -92,8 +92,8 @@ CREATE TABLE no_of_working_days (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) UNIQUE NOT NULL,
     description TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Vendor Categories
@@ -101,8 +101,8 @@ CREATE TABLE vendor_categories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Payment Methods
@@ -110,8 +110,8 @@ CREATE TABLE payment_methods (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) UNIQUE NOT NULL,
     description TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 CREATE TABLE loan_types (
@@ -125,8 +125,8 @@ CREATE TABLE payment_terms (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) UNIQUE NOT NULL,
     description TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Taxes
@@ -135,8 +135,8 @@ CREATE TABLE taxes (
     name VARCHAR(50) UNIQUE NOT NULL,
     rate DECIMAL(5, 2) NOT NULL,
     description TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Item Manufacturers
@@ -144,8 +144,8 @@ CREATE TABLE item_manufacturers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     website VARCHAR(255),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Cash Accounts
@@ -154,8 +154,8 @@ CREATE TABLE cash_accounts (
     name VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
     balance DECIMAL(20, 2) DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Departments
@@ -169,8 +169,8 @@ CREATE TABLE departments (
     work_leave_qualification UUID REFERENCES work_leave_qualifications(id) ON DELETE SET NULL,
     work_leave_period VARCHAR(50),
     description TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 CREATE TABLE users (
@@ -195,15 +195,15 @@ CREATE TABLE users (
     nin VARCHAR(255),
     passport VARCHAR(255),
     status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'afk')),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP    
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()    
 );
 
 CREATE TABLE refresh_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
     token TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT clock_timestamp(),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -227,8 +227,8 @@ CREATE TABLE user_leaves (
     ) STORED,
     status VARCHAR(50) DEFAULT 'booked' CHECK (status IN ('booked', 'on leave', 'leave taken', 'cancelled')),
     notes TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 CREATE TABLE loans (
@@ -242,8 +242,8 @@ CREATE TABLE loans (
     loan_type_id UUID REFERENCES loan_types(id) ON DELETE SET NULL,
     status VARCHAR(50) DEFAULT 'pending' CHECK (status IN 
         ('pending', 'approved', 'disbursed', 'repaid', 'defaulted')),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Price Lists
@@ -255,8 +255,8 @@ CREATE TABLE price_lists (
     item_details VARCHAR(100) NOT NULL UNIQUE,
     unit_price DECIMAL(20, 2),
     minimum_order INT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Vendors
@@ -283,8 +283,8 @@ CREATE TABLE vendors (
             ELSE 'active'
         END
     ) STORED,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Vendor Transactions
@@ -302,7 +302,7 @@ CREATE TABLE vendor_transactions (
     ) STORED,
     notes TEXT,
     invoice_sent BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Customers
@@ -330,8 +330,8 @@ CREATE TABLE customers (
             ELSE 'active'
         END
     ) STORED,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Customer Transactions
@@ -349,7 +349,7 @@ CREATE TABLE customer_transactions (
     ) STORED,
     notes TEXT,
     invoice_sent BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Items
@@ -367,8 +367,8 @@ CREATE TABLE items (
     threshold_value INT DEFAULT 0,
     availability VARCHAR(50), 
     media JSONB,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Item Stocks
@@ -383,8 +383,8 @@ CREATE TABLE item_stocks (
     date_received DATE DEFAULT CURRENT_DATE,
     expiry_date DATE,
     branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp(),
     CONSTRAINT non_negative_quantity CHECK (quantity >= 0)
 );
 
@@ -429,7 +429,7 @@ CREATE TABLE item_stock_adjustments (
     adjustment_type VARCHAR(50) 
         CHECK (adjustment_type IN ('addition', 'subtraction')),
     description TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Purchase Orders
@@ -460,8 +460,8 @@ CREATE TABLE purchase_orders (
         CHECK (status IN ('draft', 'sent', 'received', 'paid', 'overdue', 'cancelled', 'issued')),
     processed_by UUID REFERENCES users(id) ON DELETE SET NULL,
     date_received DATE DEFAULT CURRENT_DATE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Purchase Order Items
@@ -473,8 +473,8 @@ CREATE TABLE purchase_order_items (
     price DECIMAL(20, 2),
     tax_id UUID REFERENCES taxes(id) ON DELETE SET NULL,
     total DECIMAL(20, 2) NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Sales Orders
@@ -520,8 +520,8 @@ CREATE TABLE sales_orders (
         CHECK (payment_status IN ('paid', 'unpaid')),
     sent_to_kitchen BOOLEAN DEFAULT FALSE,
     processed_by UUID REFERENCES users(id) ON DELETE SET NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 CREATE TABLE audit_logs (
@@ -531,7 +531,7 @@ CREATE TABLE audit_logs (
     entity_type VARCHAR(50),
     action VARCHAR(50),
     entity_data JSONB,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 CREATE TABLE order_ratings (
@@ -540,8 +540,8 @@ CREATE TABLE order_ratings (
     name VARCHAR(255),
     rating INT NOT NULL,
     review TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Chef Assignments
@@ -549,8 +549,8 @@ CREATE TABLE chef_assignments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     chef_id UUID REFERENCES users(id) ON DELETE CASCADE,
     order_id UUID REFERENCES sales_orders(id) ON DELETE CASCADE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp(),
     CONSTRAINT unique_chef_order UNIQUE (chef_id, order_id)
 );
 
@@ -559,8 +559,8 @@ CREATE TABLE driver_assignments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     driver_id UUID REFERENCES users(id) ON DELETE CASCADE,
     order_id UUID REFERENCES sales_orders(id) ON DELETE CASCADE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp(),
     CONSTRAINT unique_driver_order UNIQUE (driver_id, order_id)
 );
 
@@ -573,16 +573,16 @@ CREATE TABLE sales_order_items (
     price DECIMAL(20, 2) NOT NULL,
     tax_id UUID REFERENCES taxes(id) ON DELETE SET NULL,
     total DECIMAL(20, 2) NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 CREATE TABLE expenses_categories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 CREATE TABLE expenses (
@@ -603,8 +603,8 @@ CREATE TABLE expenses (
     status VARCHAR(50) DEFAULT 'pending' 
         CHECK (status IN ('paid', 'cancelled')),
     processed_by UUID REFERENCES users(id) ON DELETE SET NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Comments
@@ -615,7 +615,7 @@ CREATE TABLE comments (
     entity_id UUID NOT NULL,
     entity_type VARCHAR(50) NOT NULL,
     comment TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 -- Notifications
@@ -627,5 +627,5 @@ CREATE TABLE notifications (
     title VARCHAR(255) NOT NULL,
     body TEXT NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
