@@ -344,3 +344,14 @@ INSERT INTO delivery_charges (id, name, amount, description) VALUES
 ('150e8400-e29b-41d4-a716-44665544013c', 'Same-Day Delivery', 2500.00, 
     'Delivery within the same day for orders placed before 12 PM');
 
+INSERT INTO discounts (id, name, discount_type, value, description) VALUES
+('360e8400-e29b-41d4-a716-446655440002', 'Loyalty Discount', 'percentage', 5.00, 
+    '5% discount for returning customers'),
+('360e8400-e29b-41d4-a716-446655440003', 'Black Friday Deal', 'percentage', 20.00, 
+    '20% discount for Black Friday sales'),
+('360e8400-e29b-41d4-a716-446655440004', 'Flat ₦500 Off', 'amount', 500.00, 
+    '₦500 off on orders above ₦5000'),
+('360e8400-e29b-41d4-a716-446655440005', 'VIP Discount', 'amount', 1000.00, 
+    '₦1000 discount for VIP customers'),
+('360e8400-e29b-41d4-a716-446655440007', 'Festive Offer', 'percentage', 15.00, 
+    '15% discount for holiday season purchases');

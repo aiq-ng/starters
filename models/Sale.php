@@ -822,7 +822,7 @@ class Sale extends Kitchen
         } catch (\Exception $e) {
             $this->db->rollBack();
             error_log('Failed to create sale: ' . $e->getMessage());
-            throw new \Exception('Failed to create sale');
+            throw new \Exception($e->getMessage());
         }
     }
 
@@ -833,14 +833,14 @@ class Sale extends Kitchen
                 order_type, order_title, payment_term_id, customer_id,
                 payment_method_id, delivery_option, 
                 delivery_date, delivery_time, delivery_address,
-                additional_note, customer_note, discount, delivery_charge, total, processed_by, total_boxes,
+                additional_note, customer_note, discount_id, delivery_charge, total, processed_by, total_boxes,
                 delivery_charge_id
             ) 
             VALUES (
                 :order_type, :order_title, :payment_term_id, :customer_id,
                 :payment_method_id, :delivery_option, 
                 :delivery_date, :delivery_time, :delivery_address, 
-                :additional_note, :customer_note, :discount, :delivery_charge,
+                :additional_note, :customer_note, :discount_id, :delivery_charge,
                 :total, :processed_by, :total_boxes, :delivery_charge_id 
             ) 
             RETURNING id;
@@ -862,7 +862,7 @@ class Sale extends Kitchen
                 ':delivery_address' => $data['delivery_address'] ?? null,
                 ':additional_note' => $data['additional_note'] ?? null,
                 ':customer_note' => $data['customer_note'] ?? null,
-                ':discount' => $data['discount'] ?? null,
+                ':discount_id' => $data['discount_id'] ?? null,
                 ':delivery_charge' => $data['delivery_charge'] ?? null,
                 ':total' => $data['total'] ?? null,
                 ':processed_by' => $data['user_id'] ?? null,
@@ -907,7 +907,7 @@ class Sale extends Kitchen
             }
         } catch (\Exception $e) {
             error_log("Error inserting sales order items: " . $e->getMessage());
-            throw new \Exception("Failed to insert sales order items");
+            throw new \Exception("Failed to insert sales order items " . $e->getMessage());
         }
     }
 
@@ -1177,6 +1177,9 @@ class Sale extends Kitchen
     {
         $query = "
             SELECT so.*,
+                TO_CHAR(delivery_time, 'HH12:MI AM') AS delivery_time,
+                dch.amount AS delivery_charge,
+                dc.value AS discount,
                 c.id AS customer_id,
                 CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
                 c.address AS customer_address,
@@ -1194,22 +1197,25 @@ class Sale extends Kitchen
                         'amount', soi.quantity * soi.price,
                         'total', soi.total,
                         'tax_id', soi.tax_id,
-                        'tax_rate', t.rate
-                    )
-                ) AS items
+                        'tax_rate', t.rate,
+                        'created_at', soi.created_at
+                    ) ORDER BY soi.created_at
+                ) AS items            
             FROM sales_orders so
             LEFT JOIN customers c ON so.customer_id = c.id
             LEFT JOIN sales_order_items soi ON soi.sales_order_id = so.id
             LEFT JOIN price_lists p ON soi.item_id = p.id
             LEFT JOIN taxes t ON soi.tax_id = t.id
             LEFT JOIN users u ON so.processed_by = u.id
+            LEFT JOIN discounts dc ON so.discount_id = dc.id
+            LEFT JOIN delivery_charges dch ON so.delivery_charge_id = dch.id
             WHERE so.id = :sales_order_id
             GROUP BY so.id, c.display_name, so.invoice_number, so.order_title,
                     so.order_type, c.id, so.payment_term_id, so.payment_method_id,
                     so.assigned_driver_id, so.delivery_option, so.additional_note,
                     so.customer_note, so.discount, so.delivery_charge, so.total,
                     c.email, so.created_at, so.delivery_date, so.delivery_charge_id,
-                    c.first_name, c.last_name, so.total_boxes, u.name
+                    c.first_name, c.last_name, so.total_boxes, u.name, dch.amount, dc.value
         ";
 
 

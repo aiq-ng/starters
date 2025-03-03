@@ -77,7 +77,7 @@ class Kitchen
                 so.created_at,
                 so.delivery_address,
                 so.delivery_date,
-                so.delivery_time,
+                TO_CHAR(delivery_time, 'HH12:MI AM') AS delivery_time,
                 so.delivery_option,
                 so.total_boxes,
                 so.status,
@@ -424,7 +424,7 @@ class Kitchen
                 u.name AS driver_name,
                 so.delivery_address,
                 so.delivery_date,
-                so.delivery_time,
+                TO_CHAR(delivery_time, 'HH12:MI AM') AS delivery_time,
                 so.total_boxes,
                 json_agg(
                    json_build_object(

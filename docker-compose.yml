@@ -9,7 +9,6 @@ services:
       - "9000:9000"
     volumes:
       - ./:/workspace/starters/app
-      - ./logs:/workspace/starters/logs
     environment:
       - PORT=9090
     env_file:
@@ -52,7 +51,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./schema/init-db.sql:/docker-entrypoint-initdb.d/01-init-db.sql
-      - ./schema/init-data.sql:/docker-entrypoint-initdb.d/02-init-data.sql
+      - ./schema/triggers.sql:/docker-entrypoint-initdb.d/02-triggers.sql
+      - ./schema/init-data.sql:/docker-entrypoint-initdb.d/03-init-data.sql
     networks:
       - starters-network
 

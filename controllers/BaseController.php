@@ -1455,4 +1455,41 @@ class BaseController
     {
         return $this->deleteData('delivery_charges');
     }
+
+    public function createDiscount()
+    {
+        $data = [
+            'name' => $_POST['name'] ?? null,
+            'value' => $_POST['value'] ?? null,
+            'discount_type' => $_POST['discount_type'] ?? null,
+            'description' => $_POST['description'] ?? null,
+        ];
+
+        if (!$data['value'] || !$data['discount_type']) {
+            return $this->sendResponse('error', 400, 'Value and discount type are required.');
+        }
+
+        return $this->insertData('discounts', $data);
+    }
+
+    public function getDiscounts()
+    {
+        $result = $this->fetchData(
+            'discounts',
+            ['name', 'value', 'discount_type'],
+            ['id', 'name', 'value', 'discount_type'],
+        );
+
+        return $this->sendResponse(
+            'success',
+            200,
+            $result['data'],
+            $result['meta']
+        );
+    }
+
+    public function deleteDiscount()
+    {
+        return $this->deleteData('discounts');
+    }
 }

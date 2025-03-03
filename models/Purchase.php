@@ -526,8 +526,9 @@ class Purchase extends Inventory
                         'price', poi.price,
                         'amount', poi.quantity * poi.price,
                         'tax_id', poi.tax_id,
-                        'tax_rate', tr.rate
-                    )
+                        'tax_rate', tr.rate,
+                        'created_at', poi.created_at,
+                    ) ORDER BY poi.created_at
                 ) AS items
             FROM purchase_orders po
             LEFT JOIN vendors v ON po.vendor_id = v.id
