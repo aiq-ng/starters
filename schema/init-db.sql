@@ -524,6 +524,20 @@ CREATE TABLE sales_orders (
     updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
+-- Sales Order Items
+CREATE TABLE sales_order_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    sales_order_id UUID REFERENCES sales_orders(id) ON DELETE CASCADE,
+    item_id UUID REFERENCES price_lists(id) ON DELETE SET NULL,
+    quantity INT NOT NULL,
+    price DECIMAL(20, 2) NOT NULL,
+    tax_id UUID REFERENCES taxes(id) ON DELETE SET NULL,
+    total DECIMAL(20, 2) NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
+    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
+);
+
+
 CREATE TABLE audit_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
@@ -562,19 +576,6 @@ CREATE TABLE driver_assignments (
     created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
     updated_at TIMESTAMPTZ DEFAULT clock_timestamp(),
     CONSTRAINT unique_driver_order UNIQUE (driver_id, order_id)
-);
-
--- Sales Order Items
-CREATE TABLE sales_order_items (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    sales_order_id UUID REFERENCES sales_orders(id) ON DELETE CASCADE,
-    item_id UUID REFERENCES price_lists(id) ON DELETE SET NULL,
-    quantity INT NOT NULL,
-    price DECIMAL(20, 2) NOT NULL,
-    tax_id UUID REFERENCES taxes(id) ON DELETE SET NULL,
-    total DECIMAL(20, 2) NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
-    updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
 
 CREATE TABLE expenses_categories (

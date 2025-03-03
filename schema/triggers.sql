@@ -85,7 +85,7 @@ BEGIN
     END IF;
 
     NEW.total := NEW.quantity * NEW.price * (1 + tax_rate / 100);
-    NEW.updated_at := CURRENT_TIMESTAMP;
+    NEW.updated_at := clock_timestamp();
     
     RETURN NEW;
 END;
@@ -96,16 +96,26 @@ CREATE OR REPLACE FUNCTION calculate_sales_order_items_price()
 RETURNS TRIGGER AS $$
 DECLARE
     tax_rate DECIMAL(5,2);
+    item_price DECIMAL(20,2);
 BEGIN
+    IF NEW.item_id IS NOT NULL THEN
+        SELECT unit_price INTO item_price 
+        FROM price_lists WHERE id = NEW.item_id;
+        
+        IF item_price IS NOT NULL THEN
+            NEW.price := item_price;
+        END IF;
+    END IF;
+
     IF NEW.tax_id IS NOT NULL THEN
-        SELECT COALESCE(rate, 0) INTO tax_rate FROM taxes 
-        WHERE id = NEW.tax_id;
+        SELECT COALESCE(rate, 0) INTO tax_rate 
+        FROM taxes WHERE id = NEW.tax_id;
     ELSE
         tax_rate := 0;
     END IF;
 
     NEW.total := NEW.quantity * NEW.price * (1 + tax_rate / 100);
-    NEW.updated_at := CURRENT_TIMESTAMP;
+    NEW.updated_at := clock_timestamp();
     
     RETURN NEW;
 END;
