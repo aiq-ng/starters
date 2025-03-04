@@ -447,7 +447,7 @@ class BaseController
                         $result[$key] = is_array($value) ? $processArray($value) : $value;
 
                         if (in_array($key, [
-                            'price', 'total', 'amount','total_amount',
+                            'price', 'total', 'amount', 'total_amount',
                             'delivery_charge', 'total_income', 'total_expenses',
                             'total_sales', 'total_purchase', 'total_purchases',
                             'cash_flow', 'balance', 'prev_month_cash_flow',
@@ -455,10 +455,17 @@ class BaseController
                             'vendor_balance', 'customer_balance', 'total_balance',
                             'shipping_charge', 'total_cost', 'total_profit',
                             'total_transaction', 'expenses', 'highest_revenue', 'highest_expense',
-
+                            'discount'
                         ]) && is_numeric($value)) {
                             $formattedKey = 'formatted_' . $key;
-                            $result[$formattedKey] = "₦{$formatNumber($value)}";
+
+                            // Check if discount_type exists in the same array level
+                            if ($key === 'discount' && isset($item['discount_type'])
+                                && $item['discount_type'] === 'percentage') {
+                                $result[$formattedKey] = "{$formatNumber($value)}%";
+                            } else {
+                                $result[$formattedKey] = "₦{$formatNumber($value)}";
+                            }
                         }
                     }
                     return $result;

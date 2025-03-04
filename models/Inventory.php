@@ -369,73 +369,78 @@ class Inventory
         }
     }
 
-    public function updateItem($itemId, $data, $mediaLinks = [])
+    public function updateItem($itemId, array $data, array $mediaLinks = []): bool
     {
         try {
-            $sql = "
-                UPDATE items
-                SET name = :name, description = :description, unit_id = :unitId,
-                    category_id = :categoryId, price = :price,
-                    threshold_value = :thresholdValue, media = :media,
-                    opening_stock = :openingStock 
-                WHERE id = :itemId
-            ";
 
-            $mediaLinks = json_encode($mediaLinks);
+            $this->db->beginTransaction();
+
+            $fields = [];
+            $bindings = [':itemId' => $itemId];
+
+            foreach ($data as $key => $value) {
+                if ($key === 'quantity' ||
+                    $key === 'manager_id' ||
+                    $key === 'source_id' ||
+                    $key === 'source_department_id') {
+                    continue; // Skip quantity for now, handle stock separately
+                }
+                $param = ":$key";
+                $fields[] = "$key = $param";
+                $bindings[$param] = $value;
+            }
+
+            if (!empty($mediaLinks)) {
+                $bindings[':media'] = json_encode($mediaLinks);
+                $fields[] = "media = :media";
+            }
+
+            $sql = "UPDATE items SET " . implode(", ", $fields) . " WHERE id = :itemId";
             $stmt = $this->db->prepare($sql);
 
-            $stmt->bindParam(':itemId', $itemId);
-            $stmt->bindParam(':name', $data['name']);
-            $stmt->bindParam(':description', $data['description']);
-            $stmt->bindParam(':unitId', $data['unit_id']);
-            $stmt->bindParam(':categoryId', $data['category_id']);
-            $stmt->bindParam(':price', $data['price']);
-            $stmt->bindParam(':thresholdValue', $data['threshold_value']);
-            $stmt->bindParam(':media', $mediaLinks);
-            $stmt->bindParam(':openingStock', $data['quantity']);
+            foreach ($bindings as $param => $value) {
+                $stmt->bindValue($param, $value);
+            }
 
             if (!$stmt->execute()) {
                 throw new \Exception('Failed to update item.');
             }
 
-            $current_quantity = $this->getItemCurrentQuantity($itemId);
-            $difference = $data['quantity'] - $current_quantity;
+            // Handle stock quantity updates
+            if (isset($data['quantity'])) {
+                $current_quantity = $this->getItemCurrentQuantity($itemId);
+                $difference = $data['quantity'] - $current_quantity;
 
-            if ($difference < 0) {
-                error_log("Subtracting stock");
-                $stockIds = $this->adjustStock($itemId, [
-                    'quantity' => abs($difference),
-                    'adjustment_type' => 'subtraction',
-                    'description' => 'Edit item',
-                    'manager_id' => $data['manager_id'],
-                    'source_id' => $data['source_id'],
-                    'source_department_id' => $data['source_department_id'],
-                    'source_type' => 'user',
-                ]);
-            } elseif ($difference > 0) {
-                error_log("Adding stock");
-                $stockIds = $this->adjustStock($itemId, [
-                    'quantity' => $difference,
-                    'adjustment_type' => 'addition',
-                    'description' => 'Edit item',
-                    'manager_id' => $data['manager_id'],
-                    'source_id' => $data['source_id'],
-                    'source_department_id' => $data['source_department_id'],
-                    'source_type' => 'vendor',
-                ]);
-            } else {
-                error_log("No stock change required");
-            }
+                if ($difference !== 0) {
+                    $adjustmentType = $difference < 0 ? 'subtraction' : 'addition';
+                    $sourceType = $difference < 0 ? 'user' : 'vendor';
 
-            if ($difference !== 0) {
-                if (!$this->upsertItemRelationships($stockIds, $data)) {
-                    throw new \Exception('Failed to update or insert item relationships.');
+                    error_log($difference < 0 ? "Subtracting stock" : "Adding stock");
+
+                    $stockIds = $this->adjustStock($itemId, [
+                        'quantity' => abs($difference),
+                        'adjustment_type' => $adjustmentType,
+                        'description' => 'Edit item',
+                        'manager_id' => $data['manager_id'] ?? null,
+                        'source_id' => $data['source_id'] ?? null,
+                        'source_department_id' => $data['source_department_id'] ?? null,
+                        'source_type' => $sourceType,
+                    ]);
+
+                    // Update relationships if stock was adjusted
+                    if (!$this->upsertItemRelationships($stockIds, $data)) {
+                        throw new \Exception('Failed to update item relationships.');
+                    }
+                } else {
+                    error_log("No stock change required");
                 }
             }
 
+            $this->db->commit();
             return true;
 
         } catch (\Exception $e) {
+            $this->db->rollBack();
             error_log($e->getMessage());
             throw new \Exception('Failed to update item.');
         }

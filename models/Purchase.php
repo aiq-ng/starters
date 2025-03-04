@@ -512,7 +512,8 @@ class Purchase extends Inventory
                 v.email AS vendor_email, 
                 po.created_at::DATE AS order_date, 
                 u.name AS purchase_rep_name, 
-                COALESCE(po.total, 0.00) AS total, 
+                COALESCE(po.total, 0.00) AS total,
+                v.balance, 
                 CASE
                     WHEN po.status = 'issued' THEN 'Issued'
                     ELSE pt.name

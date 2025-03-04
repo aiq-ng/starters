@@ -199,23 +199,26 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION sync_vendor_transaction_and_update_balance()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Sync vendor_transactions
-    INSERT INTO vendor_transactions (
-        vendor_id, transaction_type, payment_method_id, 
-        payment_term_id, cash_account_id, amount, 
-        reference_number, notes, invoice_sent, created_at
-    ) VALUES (
-        NEW.vendor_id, 'debit', NEW.payment_method_id, 
-        NEW.payment_term_id, NULL, NEW.total, 
-        NEW.reference_number, NEW.notes, 
-        FALSE, clock_timestamp()
-    )
-    ON CONFLICT (order_sequence) 
-    DO UPDATE SET 
-        amount = EXCLUDED.amount,
-        reference_number = EXCLUDED.reference_number,
-        notes = EXCLUDED.notes,
-        invoice_sent = EXCLUDED.invoice_sent;
+    -- Ensure transaction is recorded only if purchase_order status is 'paid'
+    IF NEW.status = 'paid' THEN
+        -- Sync vendor_transactions
+        INSERT INTO vendor_transactions (
+            vendor_id, transaction_type, payment_method_id, 
+            payment_term_id, cash_account_id, amount, 
+            reference_number, notes, invoice_sent, created_at
+        ) VALUES (
+            NEW.vendor_id, 'debit', NEW.payment_method_id, 
+            NEW.payment_term_id, NULL, NEW.total, 
+            NEW.reference_number, NEW.notes, 
+            FALSE, clock_timestamp()
+        )
+        ON CONFLICT (reference_number) 
+        DO UPDATE SET 
+            amount = EXCLUDED.amount,
+            reference_number = EXCLUDED.reference_number,
+            notes = EXCLUDED.notes,
+            invoice_sent = EXCLUDED.invoice_sent;
+    END IF;
 
     -- Update vendor balance
     UPDATE vendors
@@ -230,40 +233,41 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
 CREATE OR REPLACE FUNCTION sync_customer_transaction_and_update_balance()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Sync customer_transactions
-    INSERT INTO customer_transactions (
-        customer_id, transaction_type, payment_method_id, 
-        payment_term_id, cash_account_id, amount, 
-        reference_number, notes, invoice_sent, created_at
-    ) VALUES (
-        NEW.customer_id, 'credit', NEW.payment_method_id, 
-        NEW.payment_term_id, NULL, NEW.total, 
-        NEW.reference_number, NEW.additional_note, 
-        FALSE, clock_timestamp()
-    )
-    ON CONFLICT (order_sequence) 
-    DO UPDATE SET 
-        amount = EXCLUDED.amount,
-        reference_number = EXCLUDED.reference_number,
-        notes = EXCLUDED.notes,
-        invoice_sent = EXCLUDED.invoice_sent;
+    IF NEW.payment_status = 'paid' THEN
+        INSERT INTO customer_transactions (
+            customer_id, transaction_type, payment_method_id, 
+            payment_term_id, cash_account_id, amount, 
+            reference_number, notes, invoice_sent, created_at
+        ) VALUES (
+            NEW.customer_id, 'credit', NEW.payment_method_id, 
+            NEW.payment_term_id, NULL, NEW.total, 
+            NEW.reference_number, NEW.additional_note, 
+            FALSE, clock_timestamp()
+        )
+        ON CONFLICT (reference_number) 
+        DO UPDATE SET 
+            amount = EXCLUDED.amount,
+            notes = EXCLUDED.notes,
+            invoice_sent = EXCLUDED.invoice_sent;
+    END IF;
 
-    -- Update customer balance
     UPDATE customers
     SET balance = COALESCE((
         SELECT SUM(total) 
         FROM sales_orders 
         WHERE customer_id = NEW.customer_id 
-          AND payment_status = 'unpaid'
+          AND payment_status = 'unpaid' AND status = 'delivered'
     ), 0)
     WHERE id = NEW.customer_id;
     
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 
 -- Triggers
 CREATE TRIGGER before_insert_update_items

@@ -642,37 +642,37 @@ class Sale extends Kitchen
     {
         try {
             $query = "
-            SELECT COUNT(DISTINCT so.order_id) AS count
-            FROM sales_orders so
-            LEFT JOIN sales_order_items soi 
-            ON so.id = soi.sales_order_id
-            LEFT JOIN customers c 
-            ON so.customer_id = c.id
-        ";
+                SELECT COUNT(DISTINCT so.order_id) AS count
+                FROM sales_orders so
+                LEFT JOIN sales_order_items soi 
+                ON so.id = soi.sales_order_id
+                LEFT JOIN customers c 
+                ON so.customer_id = c.id
+            ";
 
             $conditions = [];
             $params = [];
 
-            if (!empty($filters['status'])) {
+            if (!empty($filters['status']) && strtolower($filters['status']) !== 'all') {
                 $conditions[] = "so.status = :status";
-                $params['status'] = $filters['status'];
+                $params[':status'] = $filters['status'];
             }
 
             if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
                 $conditions[] = "so.created_at::DATE BETWEEN :start_date AND :end_date";
-                $params['start_date'] = $filters['start_date'];
-                $params['end_date'] = $filters['end_date'];
+                $params[':start_date'] = $filters['start_date'];
+                $params[':end_date'] = $filters['end_date'];
             } elseif (!empty($filters['start_date'])) {
                 $conditions[] = "so.created_at::DATE >= :start_date";
-                $params['start_date'] = $filters['start_date'];
+                $params[':start_date'] = $filters['start_date'];
             } elseif (!empty($filters['end_date'])) {
                 $conditions[] = "so.created_at::DATE <= :end_date";
-                $params['end_date'] = $filters['end_date'];
+                $params[':end_date'] = $filters['end_date'];
             }
 
             if (!empty($filters['order_type'])) {
                 $conditions[] = "so.order_type = :order_type";
-                $params['order_type'] = $filters['order_type'];
+                $params[':order_type'] = $filters['order_type'];
             }
 
             if (!empty($filters['search'])) {
@@ -683,7 +683,7 @@ class Sale extends Kitchen
                     CONCAT_WS(' ', c.salutation, c.first_name, c.last_name) ILIKE :search
                 )
             ";
-                $params['search'] = '%' . $filters['search'] . '%';
+                $params[':search'] = '%' . $filters['search'] . '%';
             }
 
             if ($conditions) {
@@ -691,8 +691,13 @@ class Sale extends Kitchen
             }
 
             $stmt = $this->db->prepare($query);
-            $stmt->execute($params);
 
+            foreach ($params as $key => $value) {
+                $type = is_int($value) ? \PDO::PARAM_INT : \PDO::PARAM_STR;
+                $stmt->bindValue($key, $value, $type);
+            }
+
+            $stmt->execute();
             return (int) $stmt->fetchColumn();
         } catch (\Exception $e) {
             error_log($e->getMessage());
@@ -1180,8 +1185,9 @@ class Sale extends Kitchen
                 TO_CHAR(delivery_time, 'HH12:MI AM') AS delivery_time,
                 dch.amount AS delivery_charge,
                 CASE 
-                    WHEN dc.discount_type = 'percentage' THEN (so.total * dc.value) / 100
-                    ELSE dc.value
+                    WHEN dc.discount_type = 'percentage' 
+                    THEN ROUND((SUM(soi.total) * dc.value) / 100, 2)
+                    ELSE ROUND(dc.value, 2)
                 END AS discount,
                 dc.discount_type,
                 c.id AS customer_id,
@@ -1189,7 +1195,7 @@ class Sale extends Kitchen
                 c.address AS customer_address,
                 c.mobile_phone AS customer_phone,
                 c.email AS customer_email,
-                c.balance AS customer_balance,
+                c.balance,
                 u.name AS sales_rep_name,
                 so.created_at::DATE AS invoice_date,
                 (
@@ -1213,6 +1219,7 @@ class Sale extends Kitchen
                     ) AS items_data
                 ) AS items
             FROM sales_orders so
+            LEFT JOIN sales_order_items soi ON so.id = soi.sales_order_id
             LEFT JOIN customers c ON so.customer_id = c.id
             LEFT JOIN users u ON so.processed_by = u.id
             LEFT JOIN discounts dc ON so.discount_id = dc.id

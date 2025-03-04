@@ -298,7 +298,7 @@ CREATE TABLE vendor_transactions (
     payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
     cash_account_id UUID REFERENCES cash_accounts(id) ON DELETE SET NULL,
     amount DECIMAL(20, 2),
-    reference_number VARCHAR(50),
+    reference_number VARCHAR(50) UNIQUE,
     notes TEXT,
     invoice_sent BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT clock_timestamp()
@@ -344,7 +344,7 @@ CREATE TABLE customer_transactions (
     payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
     cash_account_id UUID REFERENCES cash_accounts(id) ON DELETE SET NULL,
     amount DECIMAL(20, 2),
-    reference_number VARCHAR(50),
+    reference_number VARCHAR(50) UNIQUE,
     notes TEXT,
     invoice_sent BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT clock_timestamp()
@@ -438,13 +438,13 @@ CREATE TABLE purchase_orders (
     branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
     purchase_order_number VARCHAR(50) GENERATED ALWAYS AS (
         'PO-' || LPAD(order_sequence::TEXT, 5, '0')
-    ) STORED,
+    ) STORED UNIQUE,
     reference_number VARCHAR(50) GENERATED ALWAYS AS (
         'REF' || LPAD(order_sequence::TEXT, 5, '0')
-    ) STORED,
+    ) STORED UNIQUE,
     invoice_number VARCHAR(50) GENERATED ALWAYS AS (
         'INV-' || LPAD(order_sequence::TEXT, 5, '0')
-    ) STORED,
+    ) STORED UNIQUE,
     delivery_date DATE,
     payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
     payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL,
@@ -488,13 +488,13 @@ CREATE TABLE sales_orders (
             WHEN order_type = 'order' THEN 'SLO-' || LPAD(order_sequence::TEXT, 3, '0')
             ELSE 'SLS-' || LPAD(order_sequence::TEXT, 3, '0')
         END
-    ) STORED,
+    ) STORED UNIQUE,
     invoice_number VARCHAR(50) GENERATED ALWAYS AS (
         'INV-' || LPAD(order_sequence::TEXT, 5, '0')
-    ) STORED,
+    ) STORED UNIQUE,
     reference_number VARCHAR(50) GENERATED ALWAYS AS (
         'REF' || LPAD(order_sequence::TEXT, 5, '0')
-    ) STORED,
+    ) STORED UNIQUE,
     customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
     payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
     payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL,
