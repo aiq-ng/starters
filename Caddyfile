@@ -1,0 +1,17 @@
+{
+	debug
+	admin :2019
+}
+
+http://localhost:80 {
+	root * /workspace/starters/app
+	php_fastcgi starters-app:9000
+	file_server
+}
+
+https://localhost:443 {
+	root * /workspace/starters/app
+	php_fastcgi starters-app:9000
+	file_server
+	tls internal
+}

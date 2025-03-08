@@ -334,6 +334,7 @@ class Kitchen
             }
 
             $event_data = $this->getOrders(null, ['new order', 'in progress'], 1, 100);
+            $order = $this->getOrderById($id);
 
             foreach ($usersToNotify as $userToNotify) {
                 if (!isset($userToNotify['id'])) {
@@ -345,7 +346,7 @@ class Kitchen
                     'event' => 'update',
                     'entity_type' => 'sales_order',
                     'title' => 'Order Status Update',
-                    'body' => 'Order status has been updated to ' . $status,
+                    'body' => $order['order_id'] . ' ' . $status,
                     'event_data' => $event_data['data'],
                 ];
 

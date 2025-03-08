@@ -7,6 +7,7 @@ RUN apt-get update && \
         libpng-dev \
         libjpeg-dev \
         libfreetype6-dev \
+        libnss3-tools \
         unzip \
         postgresql-client \
         libpq-dev \

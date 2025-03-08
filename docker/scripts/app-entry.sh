@@ -40,13 +40,9 @@ else
 	echo "Failed to set up cron jobs."
 fi
 
-# Start PHP-FPM in the background
+# Start PHP-FPM
 echo "Starting PHP-FPM..."
-php-fpm -D
-
-# Ensure the container stays running and keeps the cron service active
-# echo "Container is running. Monitoring processes..."
-# tail -f /dev/null
+php-fpm -F
 
 # Start the PHP built-in server
 exec php -S 0.0.0.0:$PORT \

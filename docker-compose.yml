@@ -10,7 +10,7 @@ services:
     volumes:
       - ./:/workspace/starters/app
     environment:
-      - PORT=9090
+      - PORT=9000
     env_file:
       - .env
     networks:
@@ -53,6 +53,23 @@ services:
       - ./schema/init-db.sql:/docker-entrypoint-initdb.d/01-init-db.sql
       - ./schema/triggers.sql:/docker-entrypoint-initdb.d/02-triggers.sql
       - ./schema/init-data.sql:/docker-entrypoint-initdb.d/03-init-data.sql
+    networks:
+      - starters-network
+
+  caddy:
+    image: caddy:latest
+    container_name: starters-caddy
+    profiles:
+      - dev
+    ports:
+      - "80:80"
+      - "443:443"
+      - "2019:2019"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./:/workspace/starters/app
+    depends_on:
+      - app
     networks:
       - starters-network
 
