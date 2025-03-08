@@ -10,7 +10,7 @@ services:
     volumes:
       - ./:/workspace/starters/app
     environment:
-      - PORT=9000
+      - PORT=9090
     env_file:
       - .env
     networks:

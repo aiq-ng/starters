@@ -1,6 +1,5 @@
 {
 	debug
-	admin :2019
 }
 
 http://localhost:80 {
