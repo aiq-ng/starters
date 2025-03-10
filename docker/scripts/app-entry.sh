@@ -42,7 +42,7 @@ fi
 
 # Start PHP-FPM
 echo "Starting PHP-FPM..."
-php-fpm -D
+php-fpm -F
 
 # Start the PHP built-in server
 exec php -S 0.0.0.0:$PORT \
