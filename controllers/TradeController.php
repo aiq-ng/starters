@@ -4,17 +4,21 @@ namespace Controllers;
 
 use Models\Purchase;
 use Models\Sale;
+use Services\RedisService;
+use Ramsey\Uuid\Uuid;
 
 class TradeController extends BaseController
 {
     private $purchase;
     private $sale;
+    private $redis;
 
     public function __construct()
     {
         parent::__construct();
         $this->purchase = new Purchase();
         $this->sale = new Sale();
+        $this->redis = new RedisService();
     }
 
     public function purchaseIndex()
@@ -119,6 +123,28 @@ class TradeController extends BaseController
             $this->sendResponse('success', 201, $invoice);
         } else {
             $this->sendResponse('Failed to create purchase', 500);
+        }
+    }
+
+    public function createDraftOrder()
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+        $data['type'] = isset($data['type']) ? $data['type'] : null;
+
+        if (!in_array($data['type'], ['purchase_orders', 'sales_orders'])) {
+            $this->sendResponse('Invalid type', 400);
+        }
+
+        $data['id'] = Uuid::uuid4()->toString();
+
+        $result = $this->redis->set($data['type'], $data, 3600);
+
+        if ($result) {
+            $this->sendResponse('Order saved to Redis', 200);
+        } else {
+            $this->sendResponse('Failed to save order to Redis', 500);
         }
     }
 
@@ -405,6 +431,9 @@ class TradeController extends BaseController
         ];
 
         $sales = $this->sale->getSalesOrders(array_filter($filters));
+        $catchedSales = $this->redis->get('sales_orders');
+
+        error_log('Catched sales: ' . json_encode($catchedSales));
 
         if (!empty($sales['data'])) {
             $this->sendResponse('success', 200, $sales['data'], $sales['meta']);

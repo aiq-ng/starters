@@ -455,7 +455,7 @@ class BaseController
                             'vendor_balance', 'customer_balance', 'total_balance',
                             'shipping_charge', 'total_cost', 'total_profit',
                             'total_transaction', 'expenses', 'highest_revenue', 'highest_expense',
-                            'discount'
+                            'discount', 'tax_amount'
                         ]) && is_numeric($value)) {
                             $formattedKey = 'formatted_' . $key;
 
@@ -673,6 +673,14 @@ class BaseController
     {
         $stmt = $this->db->prepare("SELECT id FROM roles WHERE name = :name");
         $stmt->bindParam(':name', $roleName, \PDO::PARAM_STR);
+        $stmt->execute();
+        return $stmt->fetch(\PDO::FETCH_ASSOC)['id'] ?? null;
+    }
+
+    public function getDepartmentIdByName($departmentName)
+    {
+        $stmt = $this->db->prepare("SELECT id FROM departments WHERE name = :name");
+        $stmt->bindParam(':name', $departmentName, \PDO::PARAM_STR);
         $stmt->execute();
         return $stmt->fetch(\PDO::FETCH_ASSOC)['id'] ?? null;
     }

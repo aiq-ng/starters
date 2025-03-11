@@ -56,6 +56,35 @@ services:
     networks:
       - starters-network
 
+  redis:
+    image: redis:latest
+    container_name: starters-redis
+    ports:
+      - "6389:6379"
+    env_file:
+      - .env
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_MAXMEMORY: ${REDIS_MAXMEMORY}
+      REDIS_MAXCLIENTS: ${REDIS_MAXCLIENTS}
+    command: >
+      sh -c "redis-server --requirepass ${REDIS_PASSWORD}
+      --maxmemory ${REDIS_MAXMEMORY}
+      --maxclients ${REDIS_MAXCLIENTS}
+      --maxmemory-policy ${REDIS_MAXMEMORY_POLICY}"
+    volumes:
+      - redis_data:/data
+    networks:
+      - starters-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "hordunsecret", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+
   caddy:
     image: caddy:latest
     container_name: starters-caddy
@@ -79,4 +108,4 @@ networks:
 
 volumes:
   postgres_data:
-
+  redis_data:

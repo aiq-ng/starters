@@ -12,6 +12,8 @@ RUN apt-get update && \
         postgresql-client \
         libpq-dev \
         cron \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
         gd \

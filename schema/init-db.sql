@@ -253,8 +253,10 @@ CREATE TABLE price_lists (
     item_category_id UUID REFERENCES item_categories(id) ON DELETE SET NULL,
     unit_id UUID REFERENCES units(id) ON DELETE SET NULL,
     item_details VARCHAR(100) NOT NULL UNIQUE,
+    tax_id UUID REFERENCES taxes(id) ON DELETE SET NULL,
     unit_price DECIMAL(20, 2),
     minimum_order INT,
+    description TEXT,
     created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
     updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );

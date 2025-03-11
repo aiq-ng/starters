@@ -260,7 +260,7 @@ class Sale extends Kitchen
     {
         $query = "
             INSERT INTO price_lists 
-            (item_category_id, item_details, unit_price, minimum_order, unit_id)
+            (item_category_id, item_details, unit_price, minimum_order, unit_id, tax_id, description)
             VALUES 
         ";
 
@@ -269,12 +269,14 @@ class Sale extends Kitchen
 
         try {
             foreach ($data as $item) {
-                $placeholders[] = "(?, ?, ?, ?, ?)";
+                $placeholders[] = "(?, ?, ?, ?, ?, ?, ?)";
                 $values[] = !empty($item['item_category_id']) ? $item['item_category_id'] : null;
                 $values[] = !empty($item['item_details']) ? $item['item_details'] : null;
                 $values[] = !empty($item['unit_price']) ? $item['unit_price'] : null;
                 $values[] = !empty($item['minimum_order']) ? $item['minimum_order'] : null;
                 $values[] = !empty($item['unit_id']) ? $item['unit_id'] : null;
+                $values[] = !empty($item['tax_id']) ? $item['tax_id'] : null;
+                $values[] = !empty($item['description']) ? $item['description'] : null;
             }
 
             $query .= implode(", ", $placeholders);
@@ -290,7 +292,7 @@ class Sale extends Kitchen
             return null;
         } catch (\Exception $e) {
             error_log($e->getMessage());
-            throw new \Exception("Failed to create price list");
+            throw new \Exception("Failed to create price list. " . $e->getMessage());
         }
     }
 
@@ -307,8 +309,10 @@ class Sale extends Kitchen
                     ic.name AS item_category, 
                     pl.item_details, 
                     pl.unit_price, 
-                    pl.minimum_order, 
-                    u.abbreviation AS unit
+                    pl.minimum_order,
+                    pl.description,
+                    u.abbreviation AS unit,
+                    pl.tax_id
                 FROM 
                     price_lists pl
                 LEFT JOIN 
@@ -451,7 +455,9 @@ class Sale extends Kitchen
                     pl.item_details, 
                     pl.unit_price, 
                     pl.minimum_order, 
-                    pl.unit_id
+                    pl.unit_id,
+                    pl.description,
+                    pl.tax_id
                 FROM 
                     price_lists pl
                 WHERE 
@@ -544,6 +550,7 @@ class Sale extends Kitchen
                     so.created_at::DATE AS date, 
                     so.order_type, 
                     so.total AS amount,
+                    ROUND(SUM(soi.total * t.rate) / 100, 2) AS tax_amount,
                     so.total_boxes,
                     so.status,
                     so.payment_status
@@ -555,6 +562,8 @@ class Sale extends Kitchen
                 LEFT JOIN 
                     customers c 
                     ON so.customer_id = c.id
+                LEFT JOIN taxes t
+                    ON soi.tax_id = t.id
             ";
 
             $conditions = [];
@@ -1194,6 +1203,7 @@ class Sale extends Kitchen
                 CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
                 c.address AS customer_address,
                 c.mobile_phone AS customer_phone,
+                ROUND(SUM(soi.total * t.rate) / 100, 2) AS tax_amount,
                 c.email AS customer_email,
                 c.balance,
                 u.name AS sales_rep_name,
@@ -1210,6 +1220,7 @@ class Sale extends Kitchen
                             soi.total,
                             soi.tax_id,
                             t.rate AS tax_rate,
+                            ROUND((soi.total * t.rate) / 100, 2) AS tax_amount,
                             soi.created_at
                         FROM sales_order_items soi
                         LEFT JOIN price_lists p ON soi.item_id = p.id
@@ -1224,6 +1235,7 @@ class Sale extends Kitchen
             LEFT JOIN users u ON so.processed_by = u.id
             LEFT JOIN discounts dc ON so.discount_id = dc.id
             LEFT JOIN delivery_charges dch ON so.delivery_charge_id = dch.id
+            LEFT JOIN taxes t ON soi.tax_id = t.id
             WHERE so.id = :sales_order_id
             GROUP BY so.id, c.display_name, so.invoice_number, so.order_title,
                     so.order_type, c.id, so.payment_term_id, so.payment_method_id,

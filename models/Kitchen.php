@@ -38,18 +38,18 @@ class Kitchen
         }
     }
 
-    public function getRiders($roleId)
+    public function getRiders($departmentId)
     {
         $query = "SELECT u.id, u.name, COUNT(da.order_id) AS total_assignments 
               FROM users u
               LEFT JOIN driver_assignments da ON u.id = da.driver_id
-              WHERE u.role_id = :role_id
+              WHERE u.department_id = :department_id
               GROUP BY u.id, u.name";
 
 
         try {
             $stmt = $this->db->prepare($query);
-            $stmt->bindValue(':role_id', $roleId);
+            $stmt->bindValue(':department_id', $departmentId);
             $stmt->execute();
             $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             return $result;

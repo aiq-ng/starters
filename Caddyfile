@@ -2,13 +2,13 @@
 	debug
 }
 
-http://localhost:80 {
+:80 {
 	root * /workspace/starters/app
 	php_fastcgi starters-app:9000
 	file_server
 }
 
-https://localhost:443 {
+:443 {
 	root * /workspace/starters/app
 	php_fastcgi starters-app:9000
 	file_server

@@ -115,7 +115,7 @@ class KitchenController extends BaseController
     {
         $this->authorizeRequest();
 
-        $riderId = $this->getRoleIdByName('Rider');
+        $riderId = $this->getDepartmentIdByName('Dispatch Riders');
 
         $riders = $this->kitchen->getRiders($riderId);
 
