@@ -128,7 +128,6 @@ $routes = [
         '/base-pay-types' => [$adminController, 'createBasePayType'],
         '/vendor_categories' => [$vendorController, 'createVendorCategory'],
         '/admin/create' => [$adminController, 'createAdmin'],
-        '/orders/draft' => [$tradeController, 'createDraftOrder'],
         '/human-resources/departments' => [$humanResourceController, 'createDepartment'],
         '/human-resources/employees' => [$humanResourceController, 'createEmployee'],
         '/work_leave_qualifications' => [$humanResourceController, 'createWorkLeaveQualification'],

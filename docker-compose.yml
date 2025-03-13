@@ -74,6 +74,7 @@ services:
       --maxmemory-policy ${REDIS_MAXMEMORY_POLICY}"
     volumes:
       - redis_data:/data
+      - ./docker/config/redis/redis.conf:/usr/local/etc/redis/redis.conf
     networks:
       - starters-network
     restart: always

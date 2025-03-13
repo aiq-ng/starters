@@ -553,7 +553,10 @@ class Sale extends Kitchen
                     ROUND(SUM(soi.total * t.rate) / 100, 2) AS tax_amount,
                     so.total_boxes,
                     so.status,
-                    so.payment_status
+                    so.payment_status,
+                    so.created_at AS created_datetime,
+                    so.delivery_date,
+                    so.delivery_time
                 FROM 
                     sales_orders so
                 LEFT JOIN 
@@ -610,7 +613,7 @@ class Sale extends Kitchen
                 GROUP BY 
                     so.order_id, so.order_title, c.salutation, c.first_name, 
                     c.last_name, so.created_at, so.order_type, so.total, so.status,
-                    so.id, so.total
+                    so.id, so.total, so.created_at, so.delivery_date, so.delivery_time
                 ORDER BY 
                     so.created_at DESC 
                 LIMIT :limit OFFSET :offset
