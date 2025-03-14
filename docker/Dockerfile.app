@@ -35,7 +35,7 @@ COPY . .
 # Install Composer globally
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-RUN mkdir -p /workspace/starters/app/storage && chmod -R 755 /workspace/starters/app/storage
+RUN mkdir -p /workspace/starters/app/storage/logs && chmod -R 755 /workspace/starters/app/storage
 
 # Copy the custom php-fpm.conf file into the PHP-FPM configuration directory
 COPY docker/config/php-fpm/php-fpm.conf /etc/php/8.3/fpm/php-fpm.conf
