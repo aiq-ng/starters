@@ -41,8 +41,9 @@ else
 fi
 
 # Start PHP-FPM (-F flag keeps the process in the foreground)
+# -D flag runs process in background allowing the script to continue to PHP built-in server
 echo "Starting PHP-FPM..."
-php-fpm -F
+php-fpm -D
 
 # Start the PHP built-in server
 exec php -S 0.0.0.0:$PORT \
