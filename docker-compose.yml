@@ -6,7 +6,7 @@ services:
     container_name: starters-app
     ports:
       - "9090:9090"
-      - "9080:9080"
+      - "9000:9000"
     volumes:
       - ./:/workspace/starters/app
     environment:
@@ -16,7 +16,7 @@ services:
     networks:
       - starters-network
     depends_on:
-      - postgres
+      - database
     restart: always
 
   websocket:
@@ -36,7 +36,7 @@ services:
       - starters-network
     restart: always
 
-  postgres:
+  database:
     image: postgres:latest
     container_name: starters-db
     restart: always
@@ -85,12 +85,36 @@ services:
       retries: 3
       start_period: 30s
 
+  web:
+    image: nginx:latest
+    container_name: starters-nginx
+    profiles:
+      - dev
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/config/nginx/starters.conf:/etc/nginx/conf.d/default.conf
+      - .:/workspace/starters/app
+      - ./docker/nginx/certs:/etc/nginx/certs
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - starters-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+    depends_on:
+      - app
+      - database
 
   caddy:
     image: caddy:latest
     container_name: starters-caddy
     profiles:
-      - dev
+      - dev1
     ports:
       - "80:80"
       - "443:443"

@@ -40,9 +40,9 @@ else
 	echo "Failed to set up cron jobs."
 fi
 
-# Start PHP-FPM
+# Start PHP-FPM (-F flag keeps the process in the foreground)
 echo "Starting PHP-FPM..."
-php-fpm -D
+php-fpm -F
 
 # Start the PHP built-in server
 exec php -S 0.0.0.0:$PORT \

@@ -54,7 +54,7 @@ RUN chmod +x /usr/local/bin/expired-items-cronjob.sh
 RUN chmod +x /usr/local/bin/backup-cronjob.sh
 
 # Expose PHP-FPM default port (9000)
-EXPOSE 9080
+EXPOSE 9000
 EXPOSE 9090
 
 # Set up entrypoint to handle PHP-FPM and cron jobs
