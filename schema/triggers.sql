@@ -152,9 +152,6 @@ BEGIN
     FROM sales_order_items 
     WHERE sales_order_id = NEW.sales_order_id;
 
-    -- Apply total_boxes multiplier
-    total_amount := total_amount * COALESCE((SELECT total_boxes FROM sales_orders WHERE id = NEW.sales_order_id), 1);
-
     -- Fetch discount details
     SELECT d.value, d.discount_type 
     INTO discount_value, discount_type

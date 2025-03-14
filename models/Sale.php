@@ -551,7 +551,6 @@ class Sale extends Kitchen
                     so.order_type, 
                     so.total AS amount,
                     ROUND(SUM(soi.total * t.rate) / 100, 2) AS tax_amount,
-                    so.total_boxes,
                     so.status,
                     so.payment_status,
                     so.created_at AS created_datetime,
@@ -734,7 +733,6 @@ class Sale extends Kitchen
                     so.order_title AS title,
                     so.additional_note AS description,
                     so.created_at,
-                    so.total_boxes,
                     so.delivery_date
                 FROM 
                     sales_orders so
@@ -855,7 +853,7 @@ class Sale extends Kitchen
                 order_type, order_title, payment_term_id, customer_id,
                 payment_method_id, delivery_option, 
                 delivery_date, delivery_time, delivery_address,
-                additional_note, customer_note, discount_id, delivery_charge, total, processed_by, total_boxes,
+                additional_note, customer_note, discount_id, delivery_charge, total, processed_by,
                 delivery_charge_id, status
             ) 
             VALUES (
@@ -863,7 +861,7 @@ class Sale extends Kitchen
                 :payment_method_id, :delivery_option, 
                 :delivery_date, :delivery_time, :delivery_address, 
                 :additional_note, :customer_note, :discount_id, :delivery_charge,
-                :total, :processed_by, :total_boxes, :delivery_charge_id, :status
+                :total, :processed_by, :delivery_charge_id, :status
             ) 
             RETURNING id;
         ";
@@ -888,7 +886,6 @@ class Sale extends Kitchen
                 ':delivery_charge' => $data['delivery_charge'] ?? null,
                 ':total' => $data['total'] ?? null,
                 ':processed_by' => $data['user_id'] ?? null,
-                ':total_boxes' => $data['total_boxes'] ?? null,
                 ':delivery_charge_id' => $data['delivery_charge_id'] ?? null,
                 ':status' => $data['status'] ?? 'pending'
             ]);
@@ -1251,7 +1248,7 @@ class Sale extends Kitchen
                     so.assigned_driver_id, so.delivery_option, so.additional_note,
                     so.customer_note, so.discount, so.delivery_charge, so.total,
                     c.email, so.created_at, so.delivery_date, so.delivery_charge_id,
-                    c.first_name, c.last_name, so.total_boxes, u.name, dch.amount,
+                    c.first_name, c.last_name, u.name, dch.amount,
                     dc.value, dc.discount_type
         ";
 
@@ -1343,7 +1340,7 @@ class Sale extends Kitchen
             $query = "
                 UPDATE sales_orders
                 SET status = 'new order'
-                WHERE id IN ($placeholders)
+                WHERE id IN ($placeholders) AND status = 'pending'
             ";
 
             $stmt = $this->db->prepare($query);

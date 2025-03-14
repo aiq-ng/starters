@@ -79,7 +79,6 @@ class Kitchen
                 so.delivery_date,
                 TO_CHAR(delivery_time, 'HH12:MI AM') AS delivery_time,
                 so.delivery_option,
-                so.total_boxes,
                 so.status,
                 so.delivery_charge_id,
                 so.delivery_charge,
@@ -189,7 +188,7 @@ class Kitchen
                      so.order_type, so.discount, so.delivery_charge, so.total, 
                      so.created_at, so.delivery_date, so.status, so.processed_by,
                      u.name, d.name, c.work_phone, c.mobile_phone, so.delivery_time,
-                    c.address, so.delivery_option, pm.name, pt.name, so.total_boxes,
+                    c.address, so.delivery_option, pm.name, pt.name,
                     so.delivery_charge_id, c.first_name, c.last_name, so.customer_note,
                     so.additional_note, so.delivery_address
             ORDER BY so.$sortBy $order
@@ -257,7 +256,7 @@ class Kitchen
                      so.processed_by, u.name, d.name, c.work_phone, 
                      c.mobile_phone, so.delivery_time, c.address, 
                      so.delivery_option, pm.name, pt.name, 
-                    c.first_name, c.last_name, so.total_boxes,
+                    c.first_name, c.last_name,
                     so.delivery_charge_id, so.delivery_address
             ";
 
@@ -426,7 +425,6 @@ class Kitchen
                 so.delivery_address,
                 so.delivery_date,
                 TO_CHAR(delivery_time, 'HH12:MI AM') AS delivery_time,
-                so.total_boxes,
                 json_agg(
                    json_build_object(
                        'item_id', p.id,
@@ -441,7 +439,7 @@ class Kitchen
             LEFT JOIN users u ON da.driver_id = u.id
             {$conditionString}
             GROUP BY so.id, so.order_id, so.delivery_date, so.delivery_time, 
-                     u.name, u.id, so.delivery_address, so.total_boxes
+                     u.name, u.id, so.delivery_address
             ORDER BY so.created_at DESC
             LIMIT :page_size OFFSET :offset
         ";
