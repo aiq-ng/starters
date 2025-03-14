@@ -153,8 +153,9 @@ class TradeController extends BaseController
         }
 
         $data['user_id'] = $_SESSION['user_id'];
+        $dataType = isset($data['type']) ? $data['type'] : null;
 
-        if ($data['type'] && $data['type'] === 'draft') {
+        if ($dataType && $dataType === 'draft') {
             $data['data_type'] = 'purchase_orders';
             $this->saveDraftOrder($data);
             return;
@@ -225,7 +226,9 @@ class TradeController extends BaseController
 
         $data['user_id'] = $_SESSION['user_id'];
 
-        if ($data['type'] && $data['type'] === 'draft') {
+        $dataType = isset($data['type']) ? $data['type'] : null;
+
+        if ($dataType && $dataType === 'draft') {
             $data['data_type'] = 'sales_orders';
             $this->saveDraftOrder($data);
             return;
