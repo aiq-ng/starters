@@ -6,7 +6,7 @@ services:
     container_name: starters-app
     ports:
       - "9090:9090"
-      - "9000:9000"
+      - "9080:9080"
     volumes:
       - ./:/workspace/starters/app
     environment:

@@ -96,7 +96,7 @@ class TradeController extends BaseController
         if ($result['data']) {
             $this->sendResponse('success', 200, $result['data'], $result['meta']);
         } else {
-            $this->sendResponse('Purchases not found', 404);
+            $this->sendResponse('Purchases not found', 200);
         }
     }
 
@@ -125,7 +125,7 @@ class TradeController extends BaseController
         if ($result['data']) {
             $this->sendResponse('success', 200, $result['data'], $result['meta']);
         } else {
-            $this->sendResponse('Sales not found', 404);
+            $this->sendResponse('Sales not found', 200);
         }
     }
 
@@ -680,12 +680,15 @@ class TradeController extends BaseController
         $this->sendResponse('success', 201, ['sale_id' => $sale['id']]);
     }
 
-    public function sendToKitchen($orderId)
+    public function sendToKitchen()
     {
         $this->authorizeRequest();
 
+        $data = $this->getRequestData();
+        $ids = isset($data['ids']) ? (array) $data['ids'] : [];
+
         try {
-            $this->sale->sendToKitchen($orderId);
+            $this->sale->sendToKitchen($ids);
         } catch (\Exception $e) {
             $this->sendResponse($e->getMessage(), 400);
         }

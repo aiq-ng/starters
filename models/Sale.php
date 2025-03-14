@@ -724,18 +724,18 @@ class Sale extends Kitchen
             $pageSize = $filters['page_size'] ?? 10;
 
             $query = "
-            SELECT
-                SO.id,
-                so.order_title AS title,
-                so.additional_note AS description,
-                so.created_at,
-                so.total_boxes,
-                so.delivery_date
-            FROM 
-                sales_orders so
-            WHERE 
-                so.order_type = 'service'
-        ";
+                SELECT
+                    SO.id,
+                    so.order_title AS title,
+                    so.additional_note AS description,
+                    so.created_at,
+                    so.total_boxes,
+                    so.delivery_date
+                FROM 
+                    sales_orders so
+                WHERE 
+                    so.order_type = 'service'
+            ";
 
             $conditions = [];
             $params = [
@@ -753,10 +753,10 @@ class Sale extends Kitchen
             }
 
             $query .= "
-            ORDER BY 
-                so.delivery_date ASC
-            LIMIT :limit OFFSET :offset
-        ";
+                ORDER BY 
+                    so.delivery_date ASC
+                LIMIT :limit OFFSET :offset
+            ";
 
             $stmt = $this->db->prepare($query);
 
@@ -1323,19 +1323,27 @@ class Sale extends Kitchen
         }
     }
 
-    public function sendToKitchen($orderId)
+    public function sendToKitchen($orderIds)
     {
         try {
+
+            if (!is_array($orderIds)) {
+                $orderIds = [$orderIds];
+            }
+
             $this->db->beginTransaction();
 
+            $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
             $query = "
                 UPDATE sales_orders
                 SET status = 'new order'
-                WHERE id = :order_id
+                WHERE id IN ($placeholders)
             ";
 
             $stmt = $this->db->prepare($query);
-            $stmt->bindValue('order_id', $orderId);
+            foreach ($orderIds as $index => $orderId) {
+                $stmt->bindValue($index + 1, $orderId);
+            }
             $stmt->execute();
 
             $filters = [
@@ -1358,15 +1366,15 @@ class Sale extends Kitchen
                 $notification = [
                     'user_id' => $userToNotify['id'],
                     'event' => 'update',
-                    'title' => 'New Sales Order',
-                    'body' => 'New sales order has been placed',
+                    'title' => 'New Sales Orders',
+                    'body' => 'New sales orders have been placed',
                     'event_data' => $sales['data'],
                 ];
 
                 (new NotificationService())->sendNotification($notification, false);
             }
 
-            $this->updateSentToKitchen($orderId);
+            $this->updateSentToKitchen($orderIds);
 
             $this->db->commit();
 
@@ -1375,17 +1383,25 @@ class Sale extends Kitchen
                 $this->db->rollBack();
             }
             error_log("Error in sendToKitchen: " . $e->getMessage());
-            throw new \Exception("An error occurred while confirming sales order payment.");
+            throw new \Exception("An error occurred while confirming sales order payments.");
         }
     }
 
-    private function updateSentToKitchen($orderId)
+    private function updateSentToKitchen($orderIds)
     {
         try {
-            $query = "UPDATE sales_orders SET sent_to_kitchen = TRUE WHERE id = :order_id";
+
+            if (!is_array($orderIds)) {
+                $orderIds = [$orderIds];
+            }
+
+            $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+            $query = "UPDATE sales_orders SET sent_to_kitchen = TRUE WHERE id IN ($placeholders)";
 
             $stmt = $this->db->prepare($query);
-            $stmt->bindValue(':order_id', $orderId);
+            foreach ($orderIds as $index => $orderId) {
+                $stmt->bindValue($index + 1, $orderId);
+            }
             $stmt->execute();
 
         } catch (\Exception $e) {
