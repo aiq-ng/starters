@@ -74,8 +74,8 @@ class HumanResource
                 'INSERT INTO users 
             (email, firstname, lastname, date_of_birth, address, next_of_kin,
             date_of_employment, department_id, role_id, no_of_working_days_id, 
-            salary, bank_details, nin, passport, avatar_url, username, password) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            salary, bank_details, nin, passport, avatar_url, username, password, emergency_contact) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             RETURNING id'
             );
 
@@ -103,6 +103,7 @@ class HumanResource
                 $mediaLinks['avatar_url'][0] ?? null,
                 $data['username'] ?? null,
                 $hashedPassword,
+                $data['emergency_contact'] ?? null,
             ]);
 
             $employeeId = $stmt->fetchColumn();
@@ -170,11 +171,11 @@ class HumanResource
 
             if (!empty($filters['search'])) {
                 $conditions[] = "(
-            u.name LIKE :search OR
-            r.name LIKE :search OR
-            d.name LIKE :search OR
-            u.bank_details::TEXT LIKE :search
-        )";
+                    u.name LIKE :search OR
+                    r.name LIKE :search OR
+                    d.name LIKE :search OR
+                    u.bank_details::TEXT LIKE :search
+                )";
                 $params[':search'] = '%' . $filters['search'] . '%';
             }
 

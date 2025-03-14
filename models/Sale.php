@@ -577,6 +577,11 @@ class Sale extends Kitchen
                 $params['status'] = $filters['status'];
             }
 
+            if (!empty($filters['payment_status']) && strtolower($filters['payment_status']) !== 'all') {
+                $conditions[] = "so.payment_status = :payment_status";
+                $params['payment_status'] = $filters['payment_status'];
+            }
+
             if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
                 $conditions[] = "so.created_at::DATE BETWEEN :start_date AND :end_date";
                 $params['start_date'] = $filters['start_date'];
@@ -851,14 +856,14 @@ class Sale extends Kitchen
                 payment_method_id, delivery_option, 
                 delivery_date, delivery_time, delivery_address,
                 additional_note, customer_note, discount_id, delivery_charge, total, processed_by, total_boxes,
-                delivery_charge_id
+                delivery_charge_id, status
             ) 
             VALUES (
                 :order_type, :order_title, :payment_term_id, :customer_id,
                 :payment_method_id, :delivery_option, 
                 :delivery_date, :delivery_time, :delivery_address, 
                 :additional_note, :customer_note, :discount_id, :delivery_charge,
-                :total, :processed_by, :total_boxes, :delivery_charge_id 
+                :total, :processed_by, :total_boxes, :delivery_charge_id, :status
             ) 
             RETURNING id;
         ";
@@ -884,7 +889,8 @@ class Sale extends Kitchen
                 ':total' => $data['total'] ?? null,
                 ':processed_by' => $data['user_id'] ?? null,
                 ':total_boxes' => $data['total_boxes'] ?? null,
-                ':delivery_charge_id' => $data['delivery_charge_id'] ?? null
+                ':delivery_charge_id' => $data['delivery_charge_id'] ?? null,
+                ':status' => $data['status'] ?? 'pending'
             ]);
 
             return $stmt->fetchColumn();
@@ -1348,7 +1354,6 @@ class Sale extends Kitchen
 
             $filters = [
                 'status' => 'new order',
-                'sent_to_kitchen' => 0,
             ];
 
             $sales = $this->getNewOrders($filters);

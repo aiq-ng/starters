@@ -185,6 +185,7 @@ CREATE TABLE users (
     date_of_birth DATE,
     address TEXT,
     next_of_kin VARCHAR(100),
+    emergency_contact TEXT,
     date_of_employment DATE,
     department_id UUID REFERENCES departments(id) ON DELETE SET NULL,
     role_id UUID REFERENCES roles(id) ON DELETE SET NULL,
@@ -516,7 +517,7 @@ CREATE TABLE sales_orders (
     total DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'pending' 
         -- upcoming for services
-        CHECK (status IN ('pending', 'void', 'new order', 'in progress', 'in delivery', 'delivered')),
+        CHECK (status IN ('pending', 'void', 'new order', 'in progress', 'in delivery', 'delivered', 'draft')),
     payment_status VARCHAR(50) DEFAULT 'unpaid' 
         CHECK (payment_status IN ('paid', 'unpaid')),
     sent_to_kitchen BOOLEAN DEFAULT FALSE,

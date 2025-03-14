@@ -21,55 +21,6 @@ class TradeController extends BaseController
         $this->redis = new RedisService();
     }
 
-    private function handleCombinedData(array $drafts, array $ordersData, array $filters): array
-    {
-        $combinedData = [];
-
-        if (!empty($ordersData)) {
-            $combinedData = array_merge($drafts, $ordersData);
-        } elseif (!empty($drafts)) {
-            $combinedData = $drafts;
-        } else {
-            error_log("No orders or drafts");
-        }
-
-        if (!empty($combinedData)) {
-            usort($combinedData, function ($a, $b) {
-                $aTime = isset($a['created_datetime']) ? strtotime($a['created_datetime']) : 0;
-                $bTime = isset($b['created_datetime']) ? strtotime($b['created_datetime']) : 0;
-                return $bTime - $aTime;
-            });
-        }
-
-        if (!empty($combinedData) && !is_null($filters['status']) && $filters['status'] !== 'all') {
-            $combinedData = array_filter($combinedData, function ($item) use ($filters) {
-                return isset($item['status']) && $item['status'] === $filters['status'];
-            });
-        }
-
-        $totalData = count($combinedData);
-        $pageSize = (int) $filters['page_size'];
-        $totalPages = ($pageSize > 0) ? max(1, ceil($totalData / $pageSize)) : 1;
-        $currentPage = max(1, min((int) $filters['page'], $totalPages));
-        $offset = ($currentPage - 1) * $pageSize;
-
-        $paginatedData = array_slice($combinedData, $offset, $pageSize);
-
-        $meta = [
-            'total_data' => $totalData,
-            'total_pages' => $totalPages,
-            'page_size' => $pageSize,
-            'previous_page' => ($currentPage > 1) ? $currentPage - 1 : '',
-            'current_page' => $currentPage,
-            'next_page' => ($currentPage < $totalPages) ? $currentPage + 1 : ''
-        ];
-
-        return [
-            'data' => $paginatedData,
-            'meta' => $meta
-        ];
-    }
-
     public function purchaseIndex()
     {
         $this->authorizeRequest();
@@ -87,16 +38,11 @@ class TradeController extends BaseController
 
 
         $purchases = $this->purchase->getPurchaseOrders($filters);
-        $userId = $_SESSION['user_id'];
-        $draftKey = "drafts:purchase_orders:{$userId}";
-        $drafts = $this->redis->getList($draftKey);
 
-        $result = $this->handleCombinedData($drafts, $purchases['data'] ?? [], $filters);
-
-        if ($result['data']) {
-            $this->sendResponse('success', 200, $result['data'], $result['meta']);
+        if ($purchases) {
+            $this->sendResponse('success', 200, $purchases['data'], $purchases['meta']);
         } else {
-            $this->sendResponse('Purchases not found', 200);
+            $this->sendResponse('Purchases not found', 404);
         }
     }
 
@@ -109,26 +55,20 @@ class TradeController extends BaseController
             'page' => isset($_GET['page']) ? $_GET['page'] : 1,
             'page_size' => isset($_GET['page_size']) ? $_GET['page_size'] : 10,
             'status' => isset($_GET['status']) ? $this->convertStatus($_GET['status']) : null,
+            'payment_status' => isset($_GET['payment_status']) ? $_GET['payment_status'] : null,
             'order_type' => isset($_GET['order_type']) ? $_GET['order_type'] : null,
             'start_date' => !empty($_GET['start_date']) ? $_GET['start_date'] : null,
             'end_date' => !empty($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d'),
         ];
 
         $sales = $this->sale->getSalesOrders(array_filter($filters));
-        $userId = $_SESSION['user_id'];
-        $draftKey = "drafts:sales_orders:{$userId}";
 
-        $drafts = $this->redis->getList($draftKey);
-
-        $result = $this->handleCombinedData($drafts, $sales['data'] ?? [], $filters);
-
-        if ($result['data']) {
-            $this->sendResponse('success', 200, $result['data'], $result['meta']);
+        if (!empty($sales['data'])) {
+            $this->sendResponse('success', 200, $sales['data'], $sales['meta']);
         } else {
-            $this->sendResponse('Sales not found', 200);
+            $this->sendResponse('Sales not found', 404);
         }
     }
-
 
     public function showPurchase($purchaseId)
     {
@@ -153,23 +93,14 @@ class TradeController extends BaseController
         }
 
         $data['user_id'] = $_SESSION['user_id'];
-        $dataType = isset($data['type']) ? $data['type'] : null;
+        $orderStatus = isset($data['status']) && $data['status'] !== 'draft'
+            ? 'issued'
+            : $data['status'] ?? 'issued';
+        $data['status'] = $orderStatus;
 
-        if ($dataType && $dataType === 'draft') {
-            $data['data_type'] = 'purchase_orders';
-            $this->saveDraftOrder($data);
-            return;
-        }
-
-        error_log('Data: ' . json_encode($data));
         $invoice = $this->purchase->createPurchase($data);
 
-        if ($invoice && isset($data['id'])) {
-            $draftKey = "drafts:purchase_orders:{$data['user_id']}";
-            $this->redis->deleteByIds($draftKey, [$data['id']]);
-        }
-
-        if ($invoice) {
+        if ($invoice && $orderStatus !== 'draft') {
             $this->insertAuditLog(
                 userId: $invoice['processed_by'],
                 entityId: $invoice['id'],
@@ -193,23 +124,23 @@ class TradeController extends BaseController
 
             if (empty($usersToNotify)) {
                 throw new \Exception("No Admin user found for notification.");
-            }
 
-            foreach ($usersToNotify as $userToNotify) {
-                if (!isset($userToNotify['id'])) {
-                    continue;
+                foreach ($usersToNotify as $userToNotify) {
+                    if (!isset($userToNotify['id'])) {
+                        continue;
+                    }
+
+                    $notification = [
+                        'user_id' => $userToNotify['id'],
+                        'event' => 'notification',
+                        'entity_id' => $invoice['id'],
+                        'entity_type' => "purchase_order",
+                        'title' => 'New Purchase Order',
+                        'body' => $user['name'] . ' has created a new purchase order',
+                    ];
+
+                    $this->notify->sendNotification($notification);
                 }
-
-                $notification = [
-                    'user_id' => $userToNotify['id'],
-                    'event' => 'notification',
-                    'entity_id' => $invoice['id'],
-                    'entity_type' => "purchase_order",
-                    'title' => 'New Purchase Order',
-                    'body' => $user['name'] . ' has created a new purchase order',
-                ];
-
-                $this->notify->sendNotification($notification);
             }
 
             $this->sendResponse('success', 201, $invoice);
@@ -225,100 +156,60 @@ class TradeController extends BaseController
         $data = $this->getRequestData();
 
         $data['user_id'] = $_SESSION['user_id'];
+        $orderStatus = isset($data['status']) && $data['status'] !== 'draft'
+            ? 'pending'
+            : $data['status'] ?? 'pending';
+        $data['status'] = $orderStatus;
 
-        $dataType = isset($data['type']) ? $data['type'] : null;
-
-        if ($dataType && $dataType === 'draft') {
-            $data['data_type'] = 'sales_orders';
-            $this->saveDraftOrder($data);
-            return;
-        }
-
-
-        error_log('Data: ' . json_encode($data));
         $sale = $this->sale->createSale($data);
 
-        if (!$sale) {
-            $this->sendResponse('Failed to create sale', 500);
-        }
 
-        if ($sale && isset($data['id'])) {
-            $draftKey = "drafts:sales_orders:{$data['user_id']}";
-            $this->redis->deleteByIds($draftKey, [$data['id']]);
-        }
+        if ($sale && $orderStatus !== 'draft') {
+            $this->insertAuditLog(
+                userId: $sale['processed_by'],
+                entityId: $sale['id'],
+                entityType: 'sales_invoice',
+                action: 'create',
+                entityData: [
+                    'reference_number' => $sale['reference_number'] ?? null,
+                    'invoice_number' => $sale['invoice_number'] ?? null,
+                    'order_id' => $sale['order_id'] ?? null,
+                    'recipient_id' => $sale['customer_id'] ?? null,
+                    'recipient_name' => $sale['customer_name'] ?? null,
+                    'total' => $sale['total'] ?? null,
+                    'status' => $sale['status'] ?? null,
+                    'message' => 'invoice created for ' .
+                        '₦' . number_format($sale['total'] ?? 0, 2)
+                ]
+            );
 
+            $user = $this->findRecord('users', $data['user_id']);
+            $usersToNotify = BaseController::getUserByRole('Admin');
 
-        $this->insertAuditLog(
-            userId: $sale['processed_by'],
-            entityId: $sale['id'],
-            entityType: 'sales_invoice',
-            action: 'create',
-            entityData: [
-                'reference_number' => $sale['reference_number'] ?? null,
-                'invoice_number' => $sale['invoice_number'] ?? null,
-                'order_id' => $sale['order_id'] ?? null,
-                'recipient_id' => $sale['customer_id'] ?? null,
-                'recipient_name' => $sale['customer_name'] ?? null,
-                'total' => $sale['total'] ?? null,
-                'status' => $sale['status'] ?? null,
-                'message' => 'invoice created for ' .
-                    '₦' . number_format($sale['total'] ?? 0, 2)
-            ]
-        );
-
-        $user = $this->findRecord('users', $data['user_id']);
-        $usersToNotify = BaseController::getUserByRole('Admin');
-
-        if (empty($usersToNotify)) {
-            throw new \Exception("No Admin user found for notification.");
-        }
-
-        foreach ($usersToNotify as $userToNotify) {
-            if (!isset($userToNotify['id'])) {
-                continue;
+            if (empty($usersToNotify)) {
+                throw new \Exception("No Admin user found for notification.");
             }
 
-            $notification = [
-                'user_id' => $userToNotify['id'],
-                'event' => 'notification',
-                'entity_id' => $sale['id'],
-                'entity_type' => "sales_order",
-                'title' => 'New Sales Order',
-                'body' => $user['name'] . ' has created a new sales order',
-            ];
+            foreach ($usersToNotify as $userToNotify) {
+                if (!isset($userToNotify['id'])) {
+                    continue;
+                }
 
-            $this->notify->sendNotification($notification);
+                $notification = [
+                    'user_id' => $userToNotify['id'],
+                    'event' => 'notification',
+                    'entity_id' => $sale['id'],
+                    'entity_type' => "sales_order",
+                    'title' => 'New Sales Order',
+                    'body' => $user['name'] . ' has created a new sales order',
+                ];
+
+                $this->notify->sendNotification($notification);
+            }
         }
 
 
         $this->sendResponse('success', 201, ['sale_id' => $sale['id']]);
-    }
-
-    public function saveDraftOrder($data)
-    {
-        if (!in_array($data['data_type'], ['purchase_orders', 'sales_orders'])) {
-            $this->sendResponse('Invalid type', 400);
-            return;
-        }
-
-        $draftKey = "drafts:{$data['data_type']}:{$data['user_id']}";
-        $data['id'] = Uuid::uuid4()->toString();
-        $data['is_draft'] = true;
-        $data['status'] = 'draft';
-        $data['created_datetime'] = time();
-
-        $result = $this->redis->set($draftKey, $data);
-
-        if ($result) {
-            $this->redis->expire($draftKey, 2592000); // 30 days
-            $this->sendResponse('Draft order saved successfully', 200, [
-                'draft_id' => $data['id'],
-                'user_id' => $data['user_id'],
-                'total_drafts' => $result
-            ]);
-        } else {
-            $this->sendResponse('Failed to save draft order', 500);
-        }
     }
 
     public function updatePurchase($purchaseId)
@@ -364,67 +255,6 @@ class TradeController extends BaseController
             $this->sendResponse('Error: ' . $e->getMessage(), 500);
         }
     }
-
-
-    public function deletePurchaseOrder()
-    {
-        $this->authorizeRequest();
-
-        $data = $this->getRequestData();
-        $ids = isset($data['ids']) ? (array) $data['ids'] : [];
-
-        if (empty($ids)) {
-            $this->sendResponse('No Purchase Order IDs provided', 400);
-            return;
-        }
-
-        $invoices = [];
-        foreach ($ids as $id) {
-            $invoice = $this->purchase->getInvoiceDetails($id);
-            if ($invoice) {
-                $invoices[$id] = $invoice;
-            }
-        }
-
-        $deleted = $this->purchase->deletePurchaseOrder($ids);
-
-        $userId = $_SESSION['user_id'];
-        $draftKey = "drafts:purchase_orders:{$userId}";
-        $redisDeleted = $this->redis->deleteByIds($draftKey, $ids);
-
-        if (!$redisDeleted) {
-            $this->sendResponse('Failed to delete drafts', 500);
-        }
-
-        foreach ($invoices as $id => $invoice) {
-            $this->insertAuditLog(
-                userId: $invoice['processed_by'],
-                entityId: $invoice['id'],
-                entityType: 'purchase_invoice',
-                action: 'delete',
-                entityData: [
-                    'reference_number' => $invoice['reference_number'] ?? null,
-                    'invoice_number' => $invoice['invoice_number'] ?? null,
-                    'order_id' => $invoice['purchase_order_number'] ?? null,
-                    'recipient_id' => $invoice['vendor_id'] ?? null,
-                    'recipient_name' => $invoice['vendor_name'] ?? null,
-                    'total' => $invoice['total'] ?? null,
-                    'status' => $invoice['status'] ?? null,
-                    'message' => 'Payment of ' .
-                        '₦' . number_format($invoice['total'] ?? 0, 2) .
-                        ' deleted'
-                ]
-            );
-        }
-
-        $status = $deleted ? 200 : 404;
-        $message = $deleted
-            ? 'Purchase Order deleted successfully'
-            : 'Purchase Order not found';
-
-        $this->sendResponse($message, $status);
-    }
-
 
     public function updateSales($saleId)
     {
@@ -472,6 +302,58 @@ class TradeController extends BaseController
         }
     }
 
+    public function deletePurchaseOrder()
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+        $ids = isset($data['ids']) ? (array) $data['ids'] : [];
+
+        if (empty($ids)) {
+            $this->sendResponse('No Purchase Order IDs provided', 400);
+            return;
+        }
+
+        $invoices = [];
+        foreach ($ids as $id) {
+            $invoice = $this->purchase->getInvoiceDetails($id);
+            if ($invoice) {
+                $invoices[$id] = $invoice;
+            }
+        }
+
+        $deleted = $this->purchase->deletePurchaseOrder($ids);
+
+        foreach ($invoices as $id => $invoice) {
+            $this->insertAuditLog(
+                userId: $invoice['processed_by'],
+                entityId: $invoice['id'],
+                entityType: 'purchase_invoice',
+                action: 'delete',
+                entityData: [
+                    'reference_number' => $invoice['reference_number'] ?? null,
+                    'invoice_number' => $invoice['invoice_number'] ?? null,
+                    'order_id' => $invoice['purchase_order_number'] ?? null,
+                    'recipient_id' => $invoice['vendor_id'] ?? null,
+                    'recipient_name' => $invoice['vendor_name'] ?? null,
+                    'total' => $invoice['total'] ?? null,
+                    'status' => $invoice['status'] ?? null,
+                    'message' => 'Payment of ' .
+                        '₦' . number_format($invoice['total'] ?? 0, 2) .
+                        ' deleted'
+                ]
+            );
+        }
+
+        $status = $deleted ? 200 : 404;
+        $message = $deleted
+            ? 'Purchase Order deleted successfully'
+            : 'Purchase Order not found';
+
+        $this->sendResponse($message, $status);
+    }
+
+
 
     public function deleteSalesOrder()
     {
@@ -494,14 +376,6 @@ class TradeController extends BaseController
         }
 
         $deleted = $this->sale->deleteSalesOrder($ids);
-        $userId = $_SESSION['user_id'];
-        $draftKey = "drafts:sales_orders:{$userId}";
-        $redisDeleted = $this->redis->deleteByIds($draftKey, $ids);
-
-        if (!$redisDeleted) {
-            $this->sendResponse('Failed to delete drafts', 500);
-        }
-
 
         foreach ($invoices as $id => $invoice) {
             $this->insertAuditLog(
@@ -524,8 +398,8 @@ class TradeController extends BaseController
             );
         }
 
-        $status = $deleted || $redisDeleted ? 200 : 404;
-        $message = $deleted || $redisDeleted
+        $status = $deleted ? 200 : 404;
+        $message = $deleted
             ? 'Sales Order deleted successfully'
             : 'Sales Order not found';
 
@@ -957,5 +831,33 @@ class TradeController extends BaseController
             $this->sendResponse('Failed to add comment', 500);
         }
     }
+
+    public function saveDraftOrder($data)
+    {
+        if (!in_array($data['data_type'], ['purchase_orders', 'sales_orders'])) {
+            $this->sendResponse('Invalid type', 400);
+            return;
+        }
+
+        $draftKey = "drafts:{$data['data_type']}:{$data['user_id']}";
+        $data['id'] = Uuid::uuid4()->toString();
+        $data['is_draft'] = true;
+        $data['status'] = 'draft';
+        $data['created_datetime'] = time();
+
+        $result = $this->redis->set($draftKey, $data);
+
+        if ($result) {
+            $this->redis->expire($draftKey, 2592000); // 30 days
+            $this->sendResponse('Draft order saved successfully', 200, [
+                'draft_id' => $data['id'],
+                'user_id' => $data['user_id'],
+                'total_drafts' => $result
+            ]);
+        } else {
+            $this->sendResponse('Failed to save draft order', 500);
+        }
+    }
+
 
 }

@@ -210,10 +210,10 @@ class Purchase extends Inventory
         $query = "
             INSERT INTO purchase_orders (delivery_date, vendor_id, 
                 branch_id, payment_term_id, subject, notes,
-                terms_and_conditions, discount, shipping_charge, total, processed_by) 
+                terms_and_conditions, discount, shipping_charge, total, processed_by, status) 
             VALUES (:delivery_date, :vendor_id, :branch_id,
                 :payment_term_id, :subject, :notes, :terms_and_conditions, 
-                :discount, :shipping_charge, :total, :processed_by)
+                :discount, :shipping_charge, :total, :processed_by, 'issued')
             RETURNING id;
         ";
 
@@ -231,6 +231,7 @@ class Purchase extends Inventory
                 ':shipping_charge' => $data['shipping_charge'] ?? null,
                 ':total' => $data['total'] ?? null,
                 ':processed_by' => $data['user_id'] ?? null,
+                ':status' => $data['status'] ?? 'issued'
             ]);
 
             return $stmt->fetchColumn();

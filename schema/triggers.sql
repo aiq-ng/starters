@@ -98,7 +98,7 @@ DECLARE
     tax_rate DECIMAL(5,2);
     item_price DECIMAL(20,2);
 BEGIN
-    IF NEW.item_id IS NOT NULL THEN
+    IF NEW.price IS NULL AND NEW.item_id IS NOT NULL THEN
         SELECT unit_price INTO item_price 
         FROM price_lists WHERE id = NEW.item_id;
         
