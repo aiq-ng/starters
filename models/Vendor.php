@@ -18,11 +18,11 @@ class Vendor
     {
         $query = "
         INSERT INTO vendors 
-        (salutation, first_name, last_name, display_name, company_name, email, 
+        (salutation, first_name, last_name, company_name, email, 
         work_phone, mobile_phone, address, social_media, payment_term_id, 
         currency_id, category_id, website) 
         VALUES 
-        (:salutation, :first_name, :last_name, :display_name, :company_name, 
+        (:salutation, :first_name, :last_name, :company_name, 
         :email, :work_phone, :mobile_phone, :address, :social_media, 
         :payment_term_id, :currency_id, :category_id, :website)
         RETURNING id";
@@ -33,7 +33,6 @@ class Vendor
             $stmt->bindValue(':salutation', $data['salutation'] ?? null);
             $stmt->bindValue(':first_name', $data['first_name'] ?? null);
             $stmt->bindValue(':last_name', $data['last_name'] ?? null);
-            $stmt->bindValue(':display_name', $data['display_name'] ?? null);
             $stmt->bindValue(':company_name', $data['company_name'] ?? null);
             $stmt->bindValue(':email', $data['email'] ?? null);
             $stmt->bindValue(':work_phone', $data['work_phone'] ?? null);
@@ -323,7 +322,7 @@ class Vendor
                 v.mobile_phone,
                 vc.name AS vendor_category,
                 c.code AS default_currency,
-                pt.name AS payment_term,
+                COALESCE(pt.name, v.payment_term) AS payment_term,
                 v.social_media,
                 c.code AS currency,
                 SUM(COALESCE(vt.amount, 0)) FILTER (WHERE po.status = 'received') AS outstanding_receivables,

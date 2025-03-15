@@ -59,6 +59,7 @@ class TradeController extends BaseController
             'order_type' => isset($_GET['order_type']) ? $_GET['order_type'] : null,
             'start_date' => !empty($_GET['start_date']) ? $_GET['start_date'] : null,
             'end_date' => !empty($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d'),
+            'time' => !empty($_GET['time']) ? $_GET['time'] : null,
         ];
 
         $sales = $this->sale->getSalesOrders(array_filter($filters));

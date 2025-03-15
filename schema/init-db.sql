@@ -254,7 +254,10 @@ CREATE TABLE price_lists (
     item_category_id UUID REFERENCES item_categories(id) ON DELETE SET NULL,
     unit_id UUID REFERENCES units(id) ON DELETE SET NULL,
     item_details VARCHAR(100) NOT NULL UNIQUE,
-    tax_id UUID REFERENCES taxes(id) ON DELETE SET NULL,
+
+    tax_id UUID REFERENCES taxes(id),
+    tax DECIMAL(5, 2) DEFAULT 0,
+
     unit_price DECIMAL(20, 2),
     minimum_order INT,
     description TEXT,
@@ -269,14 +272,22 @@ CREATE TABLE vendors (
     first_name VARCHAR(255),
     last_name VARCHAR(255),
     company_name VARCHAR(255),
-    display_name VARCHAR(255),
+    display_name VARCHAR(255) GENERATED ALWAYS AS (
+        CASE
+            WHEN company_name IS NOT NULL THEN company_name
+            ELSE first_name || ' ' || last_name
+        END
+    ) STORED,
     email VARCHAR(255),
     work_phone VARCHAR(20),
     mobile_phone VARCHAR(20),
     address TEXT,
     website VARCHAR(255),
     social_media JSONB,
-    payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
+
+    payment_term_id UUID REFERENCES payment_terms(id),
+    payment_term VARCHAR(50),
+
     currency_id UUID REFERENCES currencies(id) ON DELETE SET NULL,
     category_id UUID REFERENCES vendor_categories(id) ON DELETE SET NULL,
     balance DECIMAL(20, 2) DEFAULT 0,
@@ -297,8 +308,13 @@ CREATE TABLE vendor_transactions (
     vendor_id UUID REFERENCES vendors(id) ON DELETE CASCADE,
     transaction_type VARCHAR(50) 
         CHECK (transaction_type IN ('credit', 'debit')),
-    payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL,
-    payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
+
+    payment_method_id UUID REFERENCES payment_methods(id),
+    payment_method VARCHAR(50),
+
+    payment_term_id UUID REFERENCES payment_terms(id),
+    payment_term VARCHAR(50),
+
     cash_account_id UUID REFERENCES cash_accounts(id) ON DELETE SET NULL,
     amount DECIMAL(20, 2),
     reference_number VARCHAR(50) UNIQUE,
@@ -315,7 +331,12 @@ CREATE TABLE customers (
     salutation VARCHAR(10), 
     first_name VARCHAR(255),
     last_name VARCHAR(255),
-    display_name VARCHAR(255),
+    display_name VARCHAR(255) GENERATED ALWAYS AS (
+        CASE
+            WHEN customer_type = 'individual' THEN first_name || ' ' || last_name
+            ELSE first_name
+        END
+    ) STORED,
     company_name VARCHAR(255),
     email VARCHAR(255),
     work_phone VARCHAR(20),
@@ -323,7 +344,10 @@ CREATE TABLE customers (
     address TEXT,
     website VARCHAR(255),
     social_media JSONB,
-    payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
+
+    payment_term_id UUID REFERENCES payment_terms(id),
+    payment_term VARCHAR(50),
+
     currency_id UUID REFERENCES currencies(id) ON DELETE SET NULL,
     balance DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) GENERATED ALWAYS AS (
@@ -343,8 +367,13 @@ CREATE TABLE customer_transactions (
     customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
     transaction_type VARCHAR(50) 
         CHECK (transaction_type IN ('credit', 'debit')),
-    payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL,
-    payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
+
+    payment_method_id UUID REFERENCES payment_methods(id),
+    payment_method VARCHAR(50),
+
+    payment_term_id UUID REFERENCES payment_terms(id),
+    payment_term VARCHAR(50),
+
     cash_account_id UUID REFERENCES cash_accounts(id) ON DELETE SET NULL,
     amount DECIMAL(20, 2),
     reference_number VARCHAR(50) UNIQUE,
@@ -383,7 +412,10 @@ CREATE TABLE item_stocks (
     quantity INT DEFAULT 0 NOT NULL,
     date_received DATE DEFAULT CURRENT_DATE,
     expiry_date DATE,
-    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+
+    branch_id UUID REFERENCES branches(id),
+    branch VARCHAR(255),
+
     created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
     updated_at TIMESTAMPTZ DEFAULT clock_timestamp(),
     CONSTRAINT non_negative_quantity CHECK (quantity >= 0)
@@ -420,12 +452,19 @@ CREATE TABLE item_stock_branches (
 -- Item Stock Adjustments
 CREATE TABLE item_stock_adjustments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
     stock_id UUID REFERENCES item_stocks(id) ON DELETE CASCADE,
-    manager_id UUID REFERENCES users(id) ON DELETE SET NULL,
+
+    manager_id UUID REFERENCES users(id),
+    manager VARCHAR(255),
+
     source_type VARCHAR(10) NOT NULL 
         CHECK (source_type IN ('user', 'vendor')),
     source_id UUID,
-    source_department_id UUID REFERENCES departments(id) ON DELETE SET NULL,
+
+    source_department_id UUID REFERENCES departments(id),
+    source_department VARCHAR(100),
+
     quantity INT NOT NULL,
     adjustment_type VARCHAR(50) 
         CHECK (adjustment_type IN ('addition', 'subtraction')),
@@ -437,8 +476,13 @@ CREATE TABLE item_stock_adjustments (
 CREATE TABLE purchase_orders (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     order_sequence BIGSERIAL UNIQUE,
-    vendor_id UUID REFERENCES vendors(id) ON DELETE SET NULL,
-    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+
+    vendor_id UUID REFERENCES vendors(id),
+    vendor VARCHAR(255),
+
+    branch_id UUID REFERENCES branches(id),
+    branch VARCHAR(255),
+
     purchase_order_number VARCHAR(50) GENERATED ALWAYS AS (
         'PO-' || LPAD(order_sequence::TEXT, 5, '0')
     ) STORED UNIQUE,
@@ -449,8 +493,13 @@ CREATE TABLE purchase_orders (
         'INV-' || LPAD(order_sequence::TEXT, 5, '0')
     ) STORED UNIQUE,
     delivery_date DATE,
-    payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
-    payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL,
+
+    payment_term_id UUID REFERENCES payment_terms(id),
+    payment_term VARCHAR(50),
+
+    payment_method_id UUID REFERENCES payment_methods(id),
+    payment_method VARCHAR(50),
+
     payment_due_date DATE,
     subject TEXT,
     notes TEXT,
@@ -460,7 +509,10 @@ CREATE TABLE purchase_orders (
     total DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'issued' 
         CHECK (status IN ('draft', 'sent', 'received', 'paid', 'overdue', 'cancelled', 'issued')),
-    processed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+
+    processed_by UUID REFERENCES users(id),
+    manager VARCHAR(255),
+
     date_received DATE DEFAULT CURRENT_DATE,
     created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
     updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
@@ -470,10 +522,16 @@ CREATE TABLE purchase_orders (
 CREATE TABLE purchase_order_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     purchase_order_id UUID REFERENCES purchase_orders(id) ON DELETE CASCADE,
-    item_id UUID REFERENCES items(id) ON DELETE SET NULL,
+
+    item_id UUID REFERENCES items(id),
+    item VARCHAR(255),
+
     quantity INT NOT NULL,
     price DECIMAL(20, 2),
-    tax_id UUID REFERENCES taxes(id) ON DELETE SET NULL,
+
+    tax_id UUID REFERENCES taxes(id),
+    tax DECIMAL(5, 2) DEFAULT 0,
+
     total DECIMAL(20, 2) NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
     updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
@@ -498,21 +556,30 @@ CREATE TABLE sales_orders (
     reference_number VARCHAR(50) GENERATED ALWAYS AS (
         'REF' || LPAD(order_sequence::TEXT, 5, '0')
     ) STORED UNIQUE,
-    customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
-    payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
-    payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL,
+
+    customer_id UUID REFERENCES customers(id),
+    customer VARCHAR(255),
+
+    payment_term_id UUID REFERENCES payment_terms(id),
+    payment_term VARCHAR(50),
+
+    payment_method_id UUID REFERENCES payment_methods(id),
+    payment_method VARCHAR(50),
+
     delivery_option VARCHAR(50) 
         CHECK (delivery_option IN ('pickup', 'delivery')),
-    assigned_driver_id UUID REFERENCES users(id) ON DELETE SET NULL,
     delivery_date DATE,
     delivery_time TIME DEFAULT (CURRENT_TIME + INTERVAL '30 minutes'),
     delivery_address TEXT,
     additional_note TEXT,
     customer_note TEXT,
+
     discount DECIMAL(20, 2) DEFAULT 0,
     discount_id UUID REFERENCES discounts(id) ON DELETE SET NULL,
+
     delivery_charge_id UUID REFERENCES delivery_charges(id) ON DELETE SET NULL,
     delivery_charge DECIMAL(20, 2) DEFAULT 0,
+
     total_boxes INT DEFAULT 1,
     total DECIMAL(20, 2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'pending' 
@@ -521,7 +588,10 @@ CREATE TABLE sales_orders (
     payment_status VARCHAR(50) DEFAULT 'unpaid' 
         CHECK (payment_status IN ('paid', 'unpaid')),
     sent_to_kitchen BOOLEAN DEFAULT FALSE,
+
     processed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    manager VARCHAR(255),
+
     created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
     updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
@@ -530,10 +600,17 @@ CREATE TABLE sales_orders (
 CREATE TABLE sales_order_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     sales_order_id UUID REFERENCES sales_orders(id) ON DELETE CASCADE,
-    item_id UUID REFERENCES price_lists(id) ON DELETE SET NULL,
+
+    item_id UUID REFERENCES price_lists(id),
+    item_name VARCHAR(255),
+
+    platter_items TEXT,
     quantity INT NOT NULL,
     price DECIMAL(20, 2) NOT NULL,
-    tax_id UUID REFERENCES taxes(id) ON DELETE SET NULL,
+
+    tax_id UUID REFERENCES taxes(id),
+    tax DECIMAL(5, 2) NOT NULL DEFAULT 0,
+
     total DECIMAL(20, 2) NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
     updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
@@ -542,7 +619,10 @@ CREATE TABLE sales_order_items (
 
 CREATE TABLE audit_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+
+    user_id UUID REFERENCES users(id),
+    manager VARCHAR(255),
+
     entity_id UUID,
     entity_type VARCHAR(50),
     action VARCHAR(50),
@@ -596,16 +676,25 @@ CREATE TABLE expenses (
     expense_id VARCHAR(255) GENERATED ALWAYS AS (
         'EXP-' || LPAD(order_sequence::TEXT, 5, '0')
     ) STORED,
+
     payment_method_id UUID REFERENCES payment_methods(id) ON DELETE SET NULL,
+    payment_method VARCHAR(50),
+
     payment_term_id UUID REFERENCES payment_terms(id) ON DELETE SET NULL,
+    payment_term VARCHAR(50),
+
     department_id UUID REFERENCES departments(id) ON DELETE SET NULL,
+    department VARCHAR(255),
+
     amount DECIMAL(20, 2),
     bank_charges DECIMAL(20, 2) DEFAULT 0,
     date_of_expense DATE DEFAULT CURRENT_DATE,
     notes TEXT,
     status VARCHAR(50) DEFAULT 'pending' 
         CHECK (status IN ('paid', 'cancelled')),
+
     processed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    manager VARCHAR(255),
     created_at TIMESTAMPTZ DEFAULT clock_timestamp(),
     updated_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
@@ -613,7 +702,10 @@ CREATE TABLE expenses (
 -- Comments
 CREATE TABLE comments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    handler VARCHAR(255),
+
     parent_id UUID REFERENCES comments(id) ON DELETE CASCADE,
     entity_id UUID NOT NULL,
     entity_type VARCHAR(50) NOT NULL,
@@ -624,7 +716,10 @@ CREATE TABLE comments (
 -- Notifications
 CREATE TABLE notifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    handler VARCHAR(255),
+
     entity_id UUID,
     entity_type VARCHAR(50),
     title VARCHAR(255) NOT NULL,

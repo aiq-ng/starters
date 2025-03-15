@@ -19,11 +19,11 @@ class Customer
 
         $query = "
             INSERT INTO customers 
-            (customer_type, salutation, first_name, last_name, display_name, 
+            (customer_type, salutation, first_name, last_name, 
             company_name, email, work_phone, mobile_phone, address, social_media,
             website, currency_id, payment_term_id)
             VALUES 
-            (:customer_type, :salutation, :first_name, :last_name, :display_name, 
+            (:customer_type, :salutation, :first_name, :last_name, 
             :company_name, :email, :work_phone, :mobile_phone, :address,
             :social_media, :website, :currency_id, :payment_term_id)
             RETURNING id
@@ -36,7 +36,6 @@ class Customer
             $stmt->bindValue(':salutation', $data['salutation'] ?? null);
             $stmt->bindValue(':first_name', $data['first_name'] ?? null);
             $stmt->bindValue(':last_name', $data['last_name'] ?? null);
-            $stmt->bindValue(':display_name', $data['display_name'] ?? null);
             $stmt->bindValue(':company_name', $data['company_name'] ?? null);
             $stmt->bindValue(':email', $data['email'] ?? null);
             $stmt->bindValue(':work_phone', $data['work_phone'] ?? null);

@@ -15,15 +15,19 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION update_item_availability()
 RETURNS TRIGGER AS $$
+DECLARE
+    total_quantity DECIMAL(20, 2);
 BEGIN
-    -- Update the availability status based on stock quantity
+    SELECT COALESCE(SUM(quantity), 0)
+    INTO total_quantity
+    FROM item_stocks
+    WHERE item_id = NEW.item_id;
+
     UPDATE items
     SET availability = 
         CASE 
-            WHEN (SELECT COALESCE(SUM(quantity), 0) FROM item_stocks WHERE item_id = NEW.item_id) = 0 
-                THEN 'out of stock'
-            WHEN (SELECT COALESCE(SUM(quantity), 0) FROM item_stocks WHERE item_id = NEW.item_id) < threshold_value 
-                THEN 'low stock'
+            WHEN total_quantity = 0 THEN 'out of stock'
+            WHEN total_quantity < threshold_value THEN 'low stock'
             ELSE 'in stock'
         END
     WHERE id = NEW.item_id;
@@ -46,6 +50,8 @@ BEGIN
     SELECT name INTO term_name 
     FROM payment_terms 
     WHERE id = NEW.payment_term_id;
+
+    term_name := COALESCE(term_name, NEW.payment_term);
 
     IF term_name ILIKE '%delivery%' THEN
         NEW.payment_due_date := NEW.delivery_date;
@@ -76,10 +82,11 @@ RETURNS TRIGGER AS $$
 DECLARE
     tax_rate DECIMAL(5,2);
 BEGIN
-    -- Fetch tax rate if tax_id is not NULL, otherwise set tax_rate to 0
     IF NEW.tax_id IS NOT NULL THEN
         SELECT COALESCE(rate, 0) INTO tax_rate FROM taxes 
         WHERE id = NEW.tax_id;
+    ELSIF NEW.tax IS NOT NULL THEN
+        tax_rate := NEW.tax;
     ELSE
         tax_rate := 0;
     END IF;
@@ -110,6 +117,8 @@ BEGIN
     IF NEW.tax_id IS NOT NULL THEN
         SELECT COALESCE(rate, 0) INTO tax_rate 
         FROM taxes WHERE id = NEW.tax_id;
+    ELSIF NEW.tax IS NOT NULL THEN
+        tax_rate := NEW.tax;
     ELSE
         tax_rate := 0;
     END IF;
@@ -137,26 +146,35 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
 CREATE OR REPLACE FUNCTION update_sales_order_total()
 RETURNS TRIGGER AS $$
 DECLARE
-    discount_value DECIMAL(20, 2);
-    discount_type VARCHAR(20);
-    total_amount DECIMAL(20, 2);
-    discount_applied DECIMAL(20, 2);
+    total_amount DECIMAL(20,2);
+    discount_value DECIMAL(20,2);
+    discount_type TEXT;
+    discount_applied DECIMAL(20,2);
+    v_delivery_charge DECIMAL(20,2);
 BEGIN
-    -- Calculate total sales order items amount
+    -- Calculate total from items
     SELECT COALESCE(SUM(total), 0) 
-    INTO total_amount
-    FROM sales_order_items 
+        INTO total_amount
+        FROM sales_order_items 
     WHERE sales_order_id = NEW.sales_order_id;
+    RAISE NOTICE 'Total Amount: %', total_amount;
+
+    -- Fetch delivery charge
+    SELECT d.amount
+        INTO v_delivery_charge    
+        FROM delivery_charges d
+        JOIN sales_orders so ON so.delivery_charge_id = d.id
+    WHERE so.id = NEW.sales_order_id;
+    RAISE NOTICE 'Delivery Charge: %', COALESCE(v_delivery_charge, 0);
 
     -- Fetch discount details
     SELECT d.value, d.discount_type 
-    INTO discount_value, discount_type
-    FROM discounts d
-    JOIN sales_orders so ON so.discount_id = d.id
+        INTO discount_value, discount_type
+        FROM discounts d
+        JOIN sales_orders so ON so.discount_id = d.id
     WHERE so.id = NEW.sales_order_id;
 
     -- Calculate discount based on type
@@ -167,27 +185,15 @@ BEGIN
     ELSE
         discount_applied := 0;
     END IF;
+    RAISE NOTICE 'Discount Applied: %', discount_applied;
 
-    -- Update sales order total
     UPDATE sales_orders
     SET total = total_amount - COALESCE(discount_applied, 0) 
-                + COALESCE(delivery_charge, 0)
+                + COALESCE(v_delivery_charge, 0),
+        discount = COALESCE(discount_applied, 0),
+        delivery_charge = COALESCE(v_delivery_charge, 0)
     WHERE id = NEW.sales_order_id;
-
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION set_delivery_charge()
-RETURNS TRIGGER AS $$
-BEGIN
-    UPDATE sales_orders
-    SET delivery_charge = COALESCE((
-        SELECT amount FROM delivery_charges 
-        WHERE id = NEW.delivery_charge_id
-    ), 0)
-    WHERE id = NEW.id;
+    RAISE NOTICE 'Total: %', total_amount - COALESCE(discount_applied, 0) + COALESCE(v_delivery_charge, 0);
 
     RETURN NEW;
 END;
@@ -266,8 +272,234 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+CREATE OR REPLACE FUNCTION preserve_tax_on_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE price_lists
+    SET tax = OLD.rate,
+        tax_id = NULL
+    WHERE tax_id = OLD.id;
+
+    UPDATE purchase_order_items
+    SET tax = OLD.rate,
+        tax_id = NULL
+    WHERE tax_id = OLD.id;
+
+    UPDATE sales_order_items
+    SET tax = OLD.rate,
+        tax_id = NULL
+    WHERE tax_id = OLD.id;
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION preserve_payment_term_on_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE vendors
+    SET payment_term = OLD.name,
+        payment_term_id = NULL
+    WHERE payment_term_id = OLD.id;
+
+    UPDATE customers
+    SET payment_term = OLD.name,
+        payment_term_id = NULL
+    WHERE payment_term_id = OLD.id;
+
+    UPDATE vendor_transactions
+    SET payment_term = OLD.name,
+        payment_term_id = NULL
+    WHERE payment_term_id = OLD.id;
+    
+    UPDATE customer_transactions
+    SET payment_term = OLD.name,
+        payment_term_id = NULL
+    WHERE payment_term_id = OLD.id;
+
+    UPDATE purchase_orders
+    SET payment_term = OLD.name,
+        payment_term_id = NULL
+    WHERE payment_term_id = OLD.id;
+
+    UPDATE sales_orders
+    SET payment_term = OLD.name,
+        payment_term_id = NULL
+    WHERE payment_term_id = OLD.id;
+
+    UPDATE expenses
+    SET payment_term = OLD.name,
+        payment_term_id = NULL
+    WHERE payment_term_id = OLD.id;
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION preserve_payment_method_on_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+
+    UPDATE vendor_transactions
+    SET payment_method = OLD.name,
+        payment_method_id = NULL
+    WHERE payment_method_id = OLD.id;
+    
+    UPDATE customer_transactions
+    SET payment_method = OLD.name,
+        payment_method_id = NULL
+    WHERE payment_method_id = OLD.id;
+
+    UPDATE purchase_orders
+    SET payment_method = OLD.name,
+        payment_method_id = NULL
+    WHERE payment_method_id = OLD.id;
+
+    UPDATE sales_orders
+    SET payment_method = OLD.name,
+        payment_method_id = NULL
+    WHERE payment_method_id = OLD.id;
+
+    UPDATE expenses
+    SET payment_method = OLD.name,
+        payment_method_id = NULL
+    WHERE payment_method_id = OLD.id;
+
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION preserve_vendor_on_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+
+    UPDATE purchase_orders
+    SET vendor = OLD.display_name,
+        vendor_id = NULL
+    WHERE vendor_id = OLD.id;
+
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION preserve_customer_name_on_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE sales_orders
+    SET customer = OLD.display_name,
+        customer_id = NULL
+    WHERE customer_id = OLD.id;
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION preserve_item_on_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE purchase_order_items
+    SET item = OLD.name,
+        item_id = NULL
+    WHERE item_id = OLD.id;
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION preserve_item_name_on_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE sales_order_items
+    SET item_name = OLD.item_details,
+        item_id = NULL
+    WHERE item_id = OLD.id;
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION preserve_user_on_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE item_stock_adjustments
+    SET manager = OLD.name,
+        manager_id = NULL
+    WHERE manager_id = OLD.id;
+
+    UPDATE purchase_orders
+    SET manager = OLD.name,
+        manager_id = NULL
+    WHERE processed_by = OLD.id;
+
+    UPDATE sales_orders
+    SET manager = OLD.name,
+        manager_id = NULL
+    WHERE processed_by = OLD.id;
+
+    UPDATE audit_logs
+    SET manager = OLD.name,
+        user_id = NULL
+    WHERE user_id = OLD.id;
+
+    UPDATE expenses
+    SET manager = OLD.name,
+        processed_by = NULL
+    WHERE processed_by = OLD.id;
+    
+    UPDATE comments
+    SET handler = OLD.name,
+        user_id = NULL
+    WHERE user_id = OLD.id;
+
+    UPDATE notifications
+    SET handler = OLD.name,
+        user_id = NULL
+    WHERE user_id = OLD.id;
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION preserve_department_on_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE item_stock_adjustments
+    SET source_department = OLD.name,
+        source_department_id = NULL
+    WHERE source_department_id = OLD.id;
+
+    UPDATE expenses
+    SET department = OLD.name,
+        department_id = NULL
+    WHERE department_id = OLD.id;
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION preserve_branch_on_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE purchase_orders
+    SET branch = OLD.name,
+        branch_id = NULL
+    WHERE branch_id = OLD.id;
+
+    UPDATE item_stocks
+    SET branch = OLD.name,
+        branch_id = NULL
+    WHERE branch_id = OLD.id;
+
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- Triggers
-CREATE TRIGGER before_insert_update_items
+CREATE TRIGGER trigger_before_insert_update_items
 BEFORE INSERT OR UPDATE ON items
 FOR EACH ROW
 EXECUTE FUNCTION generate_sku();
@@ -298,12 +530,6 @@ CREATE TRIGGER trigger_update_sales_order_total
 AFTER INSERT OR UPDATE OR DELETE ON sales_order_items
 FOR EACH ROW EXECUTE FUNCTION update_sales_order_total();
 
-CREATE TRIGGER trigger_set_delivery_charge
-AFTER INSERT OR UPDATE OF delivery_charge_id
-ON sales_orders
-FOR EACH ROW
-EXECUTE FUNCTION set_delivery_charge();
-
 CREATE TRIGGER trigger_sync_vendor_transaction_and_update_balance
 AFTER INSERT OR UPDATE OR DELETE ON purchase_orders
 FOR EACH ROW
@@ -313,4 +539,54 @@ CREATE TRIGGER trigger_sync_customer_transaction_and_update_balance
 AFTER INSERT OR UPDATE OR DELETE ON sales_orders
 FOR EACH ROW
 EXECUTE FUNCTION sync_customer_transaction_and_update_balance();
+
+CREATE TRIGGER trigger_preserve_tax
+BEFORE DELETE ON taxes
+FOR EACH ROW
+EXECUTE FUNCTION preserve_tax_on_delete();
+
+CREATE TRIGGER trigger_preserve_payment_term
+BEFORE DELETE ON payment_terms
+FOR EACH ROW
+EXECUTE FUNCTION preserve_payment_term_on_delete();
+
+CREATE TRIGGER trigger_preserve_payment_method
+BEFORE DELETE ON payment_methods
+FOR EACH ROW
+EXECUTE FUNCTION preserve_payment_method_on_delete();
+
+CREATE TRIGGER trigger_preserve_vendor
+BEFORE DELETE ON vendors
+FOR EACH ROW
+EXECUTE FUNCTION preserve_vendor_on_delete();
+
+CREATE TRIGGER trigger_preserve_customer_name
+BEFORE DELETE ON customers
+FOR EACH ROW
+EXECUTE FUNCTION preserve_customer_name_on_delete();
+
+CREATE TRIGGER trigger_preserve_item
+BEFORE DELETE ON items
+FOR EACH ROW
+EXECUTE FUNCTION preserve_item_on_delete();
+
+CREATE TRIGGER trigger_preserve_item_name
+BEFORE DELETE ON price_lists
+FOR EACH ROW
+EXECUTE FUNCTION preserve_item_name_on_delete();
+
+CREATE TRIGGER trigger_preserve_user
+BEFORE DELETE ON users
+FOR EACH ROW
+EXECUTE FUNCTION preserve_user_on_delete();
+
+CREATE TRIGGER trigger_preserve_department
+BEFORE DELETE ON departments
+FOR EACH ROW
+EXECUTE FUNCTION preserve_department_on_delete();
+
+CREATE TRIGGER trigger_preserve_branch
+BEFORE DELETE ON branches
+FOR EACH ROW
+EXECUTE FUNCTION preserve_branch_on_delete();
 

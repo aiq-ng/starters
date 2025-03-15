@@ -92,6 +92,7 @@ class Kitchen
                     json_build_object(
                         'item_id', p.id,
                         'item_name', p.item_details,
+                        'platter_items', soi.platter_items,
                         'quantity', soi.quantity,
                         'amount', soi.quantity * soi.price
                     )

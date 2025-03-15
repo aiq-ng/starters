@@ -545,8 +545,8 @@ class Sale extends Kitchen
                     so.id, 
                     so.order_id, 
                     so.order_title, 
-                    COALESCE(SUM(soi.quantity), 0) AS quantity, 
-                    CONCAT_WS(' ', c.salutation, c.first_name, c.last_name) AS customer_name, 
+                    COALESCE(SUM(soi.quantity), 0) AS quantity,
+                    COALESCE(c.display_name, so.customer) AS customer_name, 
                     so.created_at::DATE AS date, 
                     so.order_type, 
                     so.total AS amount,
@@ -598,6 +598,11 @@ class Sale extends Kitchen
                 $params['order_type'] = $filters['order_type'];
             }
 
+            if (!empty($filters['time'])) {
+                $conditions[] = "so.delivery_time = :time";
+                $params['time'] = $filters['time'];
+            }
+
             if (!empty($filters['search'])) {
                 $conditions[] = "
                 (
@@ -615,8 +620,8 @@ class Sale extends Kitchen
 
             $query .= "
                 GROUP BY 
-                    so.order_id, so.order_title, c.salutation, c.first_name, 
-                    c.last_name, so.created_at, so.order_type, so.total, so.status,
+                    so.order_id, so.order_title, c.display_name, 
+                    so.created_at, so.order_type, so.total, so.status,
                     so.id, so.total, so.created_at, so.delivery_date, so.delivery_time
                 ORDER BY 
                     so.created_at DESC 
@@ -848,6 +853,7 @@ class Sale extends Kitchen
 
     private function insertSalesOrder($data)
     {
+        error_log('Insert Data: ' . json_encode($data));
         $query = "
             INSERT INTO sales_orders (
                 order_type, order_title, payment_term_id, customer_id,
@@ -900,8 +906,8 @@ class Sale extends Kitchen
     {
         $query = "
         INSERT INTO sales_order_items 
-        (sales_order_id, item_id, quantity, price, tax_id) 
-        VALUES (:sales_order_id, :item_id, :quantity, :price, :tax_id);
+        (sales_order_id, item_id, quantity, price, tax_id, platter_items) 
+        VALUES (:sales_order_id, :item_id, :quantity, :price, :tax_id, :platter_items);
         ";
 
         $stmt = $this->db->prepare($query);
@@ -921,7 +927,8 @@ class Sale extends Kitchen
                             : $this->getPrice($item['item_id']),
                         ':tax_id' => isset($item['tax_id']) && $item['tax_id'] > 0
                             ? $item['tax_id']
-                            : null
+                            : null,
+                        ':platter_items' => $item['platter_items'] ?? null
                     ]);
                 }
             }
@@ -1199,17 +1206,12 @@ class Sale extends Kitchen
             SELECT so.*,
                 TO_CHAR(delivery_time, 'HH12:MI AM') AS delivery_time,
                 dch.amount AS delivery_charge,
-                CASE 
-                    WHEN dc.discount_type = 'percentage' 
-                    THEN ROUND((SUM(soi.total) * dc.value) / 100, 2)
-                    ELSE ROUND(dc.value, 2)
-                END AS discount,
                 dc.discount_type,
                 c.id AS customer_id,
-                CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
+                COALESCE(c.display_name, so.customer) AS customer_name,
                 c.address AS customer_address,
                 c.mobile_phone AS customer_phone,
-                ROUND(SUM(soi.total * t.rate) / 100, 2) AS tax_amount,
+                ROUND(SUM((soi.price * soi.quantity) * t.rate) / 100, 2) AS tax_amount,
                 c.email AS customer_email,
                 c.balance,
                 u.name AS sales_rep_name,
@@ -1226,7 +1228,7 @@ class Sale extends Kitchen
                             soi.total,
                             soi.tax_id,
                             t.rate AS tax_rate,
-                            ROUND((soi.total * t.rate) / 100, 2) AS tax_amount,
+                            ROUND(((soi.price * soi.quantity) * t.rate) / 100, 2) AS tax_amount,
                             soi.created_at
                         FROM sales_order_items soi
                         LEFT JOIN price_lists p ON soi.item_id = p.id
@@ -1245,7 +1247,7 @@ class Sale extends Kitchen
             WHERE so.id = :sales_order_id
             GROUP BY so.id, c.display_name, so.invoice_number, so.order_title,
                     so.order_type, c.id, so.payment_term_id, so.payment_method_id,
-                    so.assigned_driver_id, so.delivery_option, so.additional_note,
+                    so.delivery_option, so.additional_note,
                     so.customer_note, so.discount, so.delivery_charge, so.total,
                     c.email, so.created_at, so.delivery_date, so.delivery_charge_id,
                     c.first_name, c.last_name, u.name, dch.amount,
