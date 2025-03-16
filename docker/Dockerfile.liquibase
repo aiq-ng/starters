@@ -1,7 +1,13 @@
 FROM liquibase/liquibase:latest
 
 USER root
+
 COPY docker/config/liquibase/migrate /usr/local/bin/migrate
 RUN chmod +x /usr/local/bin/migrate
+
+# Ensure all current and future files in /liquibase/changelog are executable
+RUN chmod -R +x /liquibase/changelog && \
+    find /liquibase/changelog -type f -exec chmod +x {} \;
+
 USER liquibase
 
