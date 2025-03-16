@@ -1205,13 +1205,15 @@ class Sale extends Kitchen
         $query = "
             SELECT so.*,
                 TO_CHAR(delivery_time, 'HH12:MI AM') AS delivery_time,
-                dch.amount AS delivery_charge,
                 dc.discount_type,
                 c.id AS customer_id,
                 COALESCE(c.display_name, so.customer) AS customer_name,
                 c.address AS customer_address,
                 c.mobile_phone AS customer_phone,
-                ROUND(SUM((soi.price * soi.quantity) * t.rate) / 100, 2) AS tax_amount,
+                ROUND(
+                    SUM((soi.price * soi.quantity) * COALESCE(t.rate, soi.tax) / 100), 
+                    2
+                ) AS tax_amount,
                 c.email AS customer_email,
                 c.balance,
                 u.name AS sales_rep_name,
@@ -1221,14 +1223,15 @@ class Sale extends Kitchen
                     FROM (
                         SELECT 
                             soi.item_id,
+                            COALESCE(p.item_details, soi.item_name) AS item_name,    
                             p.item_details AS item_name,
                             soi.quantity,
                             soi.price,
                             soi.quantity * soi.price AS amount,
                             soi.total,
                             soi.tax_id,
-                            t.rate AS tax_rate,
-                            ROUND(((soi.price * soi.quantity) * t.rate) / 100, 2) AS tax_amount,
+                            COALESCE(t.rate, soi.tax) AS tax_rate,
+                            ROUND((soi.price * soi.quantity) * COALESCE(t.rate, soi.tax) / 100, 2)  AS tax_amount,
                             soi.created_at
                         FROM sales_order_items soi
                         LEFT JOIN price_lists p ON soi.item_id = p.id

@@ -58,10 +58,17 @@ services:
       - starters-network
 
   liquibase:
-    image: liquibase/liquibase:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.liquibase
     container_name: starters-liquibase
     env_file:
       - .env
+    environment:
+      - LIQUIBASE_DEFAULTS_FILE=/liquibase/liquibase.properties
+      - LIQUIBASE_COMMAND_URL=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - LIQUIBASE_COMMAND_USERNAME=${DB_USER}
+      - LIQUIBASE_COMMAND_PASSWORD=${DB_PASSWORD}
     volumes:
       - ./docker/config/liquibase/changelog:/liquibase/changelog:rw
       - ./docker/config/liquibase/liquibase.properties:/liquibase/liquibase.properties:ro
@@ -72,7 +79,10 @@ services:
     command:
       - sh
       - -c
-      - "liquibase --defaultsFile=/liquibase/liquibase.properties --log-level=DEBUG generate-changelog --changeLogFile=/liquibase/changelog/initial.sql --overwriteOutputFile=true && tail -f /dev/null"
+      - |
+        liquibase --overwriteOutputFile=true generate-changelog && 
+        liquibase changelogSync &&
+        tail -f /dev/null
     restart: unless-stopped
 
   redis:
