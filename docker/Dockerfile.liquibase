@@ -5,9 +5,9 @@ USER root
 COPY docker/config/liquibase/migrate /usr/local/bin/migrate
 RUN chmod +x /usr/local/bin/migrate
 
-# Ensure all current and future files in /liquibase/changelog are executable
-RUN chmod -R +x /liquibase/changelog && \
-    find /liquibase/changelog -type f -exec chmod +x {} \;
+RUN apt-get update && apt-get install -y acl && \
+    setfacl -d -m u:liquibase:rx /liquibase/changelog && \
+    setfacl -R -m u:liquibase:rx /liquibase/changelog
 
 USER liquibase
 
