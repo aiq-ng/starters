@@ -5,9 +5,4 @@ USER root
 COPY docker/config/liquibase/migrate /usr/local/bin/migrate
 RUN chmod +x /usr/local/bin/migrate
 
-RUN apt-get update && apt-get install -y acl && \
-    setfacl -d -m u:liquibase:rx /liquibase/changelog && \
-    setfacl -R -m u:liquibase:rx /liquibase/changelog
-
 USER liquibase
-
