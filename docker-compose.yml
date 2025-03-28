@@ -93,6 +93,7 @@ services:
   redis:
     image: redis:latest
     container_name: starters-redis
+    profiles: ["dev"]
     ports:
       - "6389:6379"
     env_file:
@@ -147,8 +148,7 @@ services:
   caddy:
     image: caddy:latest
     container_name: starters-caddy
-    profiles:
-      - dev1
+    profiles: ["dev"]
     ports:
       - "80:80"
       - "443:443"
