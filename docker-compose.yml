@@ -154,7 +154,7 @@ services:
       - "443:443"
       - "2019:2019"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./docker/config/caddy/Caddyfile:/etc/caddy/Caddyfile
       - ./:/workspace/starters/app
     depends_on:
       - app
