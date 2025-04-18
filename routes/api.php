@@ -218,10 +218,8 @@ if (strpos($requestUri, '?') !== false) {
 
 // Dispatch the request
 $found = false;
-$apiPrefix = '/api';
 foreach ($routes[$requestMethod] as $route => $handler) {
-    $prefixedRoute = $apiPrefix . $route;
-    if (preg_match("#^$prefixedRoute$#", $requestUri, $matches)) {
+    if (preg_match("#^$route$#", $requestUri, $matches)) {
         $found = true;
         if (is_array($handler)) {
             $id = isset($matches[1]) ? $matches[1] : null;
