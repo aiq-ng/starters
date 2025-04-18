@@ -123,8 +123,7 @@ services:
   web:
     image: nginx:latest
     container_name: starters-nginx
-    profiles:
-      - dev
+    profiles: ["prod"]
     restart: always
     ports:
       - "80:80"
