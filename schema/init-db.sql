@@ -1,5 +1,3 @@
-\c starters;
-
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- Roles

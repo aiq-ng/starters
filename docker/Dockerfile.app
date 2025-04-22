@@ -59,6 +59,3 @@ EXPOSE 9090
 
 # Set up entrypoint to handle PHP-FPM and cron jobs
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-
-# Run PHP-FPM in the foreground
-CMD ["php-fpm", "-F"]

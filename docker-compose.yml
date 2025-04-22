@@ -5,14 +5,15 @@ services:
       dockerfile: docker/Dockerfile.app
     container_name: starters-app
     ports:
-      - "9090:9090"
-      - "9000:9000"
+      - "${PHP_PORT:-9090}:9090"
+      - "${PHP_FPM_PORT:-9000}:9000"
     volumes:
       - ./:/workspace/starters/app
     environment:
-      - PORT=9090
+      - ENV=${ENV:-dev}
     env_file:
       - .env
+      - profiles/${ENV:-dev}/.env.app
     networks:
       - starters-network
     depends_on:
@@ -25,13 +26,11 @@ services:
       dockerfile: docker/Dockerfile.websocket
     container_name: starters-ws
     ports:
-      - "9091:9091"
+      - "${WS_PORT:-9091}:9091"
     volumes:
       - ./websocket:/workspace/starters/websocket
     environment:
-      - PORT=9091
-    env_file:
-      - websocket/.env
+      - ENV=${ENV:-dev}
     networks:
       - starters-network
     restart: always
@@ -41,18 +40,20 @@ services:
     container_name: starters-db
     restart: always
     ports:
-      - "9092:5432"
-    env_file:
-      - .env
+      - "${DB_PORT:-5433}:5432"
     environment:
+      - ENV=${ENV:-dev}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
+    env_file:
+      - profiles/${ENV:-dev}/.env.database
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./schema/init-db.sql:/docker-entrypoint-initdb.d/01-init-db.sql
       - ./schema/triggers.sql:/docker-entrypoint-initdb.d/02-triggers.sql
       - ./schema/init-data.sql:/docker-entrypoint-initdb.d/03-init-data.sql
+      - ./schema/${ENV:-dev}-dump.sql:/docker-entrypoint-initdb.d/04-${ENV:-dev}-dump.sql
     command: postgres -c log_min_messages=notice -c logging_collector=off -c log_destination=stderr
     networks:
       - starters-network
@@ -63,36 +64,46 @@ services:
       dockerfile: docker/Dockerfile.liquibase
     container_name: starters-liquibase
     env_file:
-      - .env
+      - profiles/${ENV:-dev}/.env.database
     environment:
       - LIQUIBASE_DEFAULTS_FILE=/liquibase/liquibase.properties
       - LIQUIBASE_COMMAND_URL=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - LIQUIBASE_COMMAND_REFERENCE_URL=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_SNAPSHOT}
       - LIQUIBASE_COMMAND_USERNAME=${DB_USER}
       - LIQUIBASE_COMMAND_PASSWORD=${DB_PASSWORD}
+      - LIQUIBASE_COMMAND_REFERENCE_USERNAME=${DB_USER}
+      - LIQUIBASE_COMMAND_REFERENCE_PASSWORD=${DB_PASSWORD}
     volumes:
-      - ./docker/config/liquibase/changelog:/liquibase/changelog:rw
+      - ./docker/config/liquibase/changelog:/liquibase/changelog
       - ./docker/config/liquibase/liquibase.properties:/liquibase/liquibase.properties:ro
+      - ./schema:/liquibase/schema:ro
     depends_on:
       - database
-    networks:
-      - starters-network
     command:
       - sh
       - -c
       - |
-        liquibase --overwriteOutputFile=true generate-changelog && 
-        liquibase changelogSync &&
+        migrate &&
         tail -f /dev/null
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "liquibase status --verbose"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     logging:
       driver: "json-file"
       options:
-        max-size: "10k"
-        max-file: "1"
+        max-size: "90k"
+        max-file: "5"
+    networks:
+      - starters-network
 
   redis:
     image: redis:latest
     container_name: starters-redis
+    profiles: ["dev"]
     ports:
       - "6389:6379"
     env_file:
@@ -122,8 +133,7 @@ services:
   web:
     image: nginx:latest
     container_name: starters-nginx
-    profiles:
-      - dev
+    profiles: ["dev"]
     restart: always
     ports:
       - "80:80"
@@ -143,23 +153,6 @@ services:
     depends_on:
       - app
       - database
-
-  caddy:
-    image: caddy:latest
-    container_name: starters-caddy
-    profiles:
-      - dev1
-    ports:
-      - "80:80"
-      - "443:443"
-      - "2019:2019"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - ./:/workspace/starters/app
-    depends_on:
-      - app
-    networks:
-      - starters-network
 
 networks:
   starters-network:

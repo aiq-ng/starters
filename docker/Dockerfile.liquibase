@@ -2,6 +2,7 @@ FROM liquibase/liquibase:latest
 
 USER root
 
+RUN apt-get update && apt-get install -y postgresql-client jq
 COPY docker/config/liquibase/migrate /usr/local/bin/migrate
 RUN chmod +x /usr/local/bin/migrate
 

@@ -46,7 +46,7 @@ echo "Starting PHP-FPM..."
 php-fpm -D
 
 # Start the PHP built-in server
-exec php -S 0.0.0.0:$PORT \
+exec php -S 0.0.0.0:$PHP_PORT \
 	-d display_errors=1 \
 	-d log_errors=1 \
 	-d error_log=storage/logs/php_errors.log
