@@ -30,50 +30,64 @@ GIT_SUBDIR = os.path.join(GIT_DIR, "")
 
 
 def push_env_files():
-
-    local_profiles = Path("profiles")
-    if local_profiles.is_dir():
-        print("======= Local 'profiles' directory found =======")
-    else:
-        print("======= Local 'profiles' directory not found =======")
-
-    project_name = Path.cwd().name
+    project_root = Path.cwd()
+    project_name = project_root.name
     remote_base = f"/etc/{project_name}"
 
     conn_kwargs = {
         "host": REMOTE_HOST,
         "user": REMOTE_USER,
     }
-
     if SSH_KEY_PATH:
         conn_kwargs["connect_kwargs"] = {"key_filename": SSH_KEY_PATH}
 
     conn = Connection(**conn_kwargs)
 
-    print(f"======= Syncing env files to {remote_base} =======")
-
+    print(f"============== Syncing env files to {remote_base} ==============")
     conn.run(f"sudo mkdir -p {remote_base}")
     conn.run(f"sudo chown -R $(whoami) {remote_base}")
 
-    if local_profiles.is_dir():
-        for profile_dir in local_profiles.iterdir():
-            if profile_dir.is_dir():
-                remote_path = f"{remote_base}/{profile_dir.name}"
-                conn.run(f"mkdir -p {remote_path}")
-                for env_file in profile_dir.glob("*.env.*"):
-                    print(
-                        f"======= Pushing {env_file} to {remote_path}/ ======="
-                    )
+    def sync_env_file(local_env_path: Path, relative_to: Path):
+        remote_path = Path(remote_base) / local_env_path.parent.relative_to(
+            relative_to
+        )
+        conn.run(f"mkdir -p {remote_path}")
+        print(f"======= Pushing {local_env_path} to {remote_path}/.env")
+        conn.put(str(local_env_path), remote=f"{remote_path}/.env")
+
+    def sync_profiles(profiles_path: Path, relative_to: Path):
+        is_root_profiles = profiles_path.parent == relative_to
+        base_remote = Path(remote_base) / (
+            "profiles"
+            if is_root_profiles
+            else profiles_path.parent.relative_to(relative_to) / "profiles"
+        )
+
+        print(f"======= Processing profiles in {profiles_path}")
+        for profile in profiles_path.iterdir():
+            if profile.is_dir():
+                remote_profile_path = base_remote / profile.name
+                conn.run(f"mkdir -p {remote_profile_path}")
+                for env_file in profile.glob("*.env.*"):
+                    print(f"=== Pushing {env_file} to {remote_profile_path}/")
                     conn.put(
-                        str(env_file), remote=f"{remote_path}/{env_file.name}"
+                        str(env_file),
+                        remote=f"{remote_profile_path}/{env_file.name}",
                     )
 
-    top_level_env = Path(".env")
-    if top_level_env.exists():
-        print(f"======= Pushing {top_level_env} to {remote_base}/.env =======")
-        conn.put(str(top_level_env), remote=f"{remote_base}/.env")
+    for local_dir in [project_root] + list(project_root.rglob("*")):
+        if not local_dir.is_dir():
+            continue
 
-    print("======= Env files pushed successfully =======")
+        local_env = local_dir / ".env"
+        if local_env.exists():
+            sync_env_file(local_env, project_root)
+
+        profiles_dir = local_dir / "profiles"
+        if profiles_dir.is_dir():
+            sync_profiles(profiles_dir, project_root)
+
+    print("================= Env files pushed successfully =================")
 
 
 def install_dependencies(conn):
@@ -188,42 +202,31 @@ def clone_repo(conn):
 
 
 def symlink_env(conn):
-
     project_name = PROJECT_NAME
-
     remote_profiles_base = f"/etc/{project_name}"
     root_env_file = f"{remote_profiles_base}/.env"
 
-    print(f"Creating symlinks from {remote_profiles_base}/* to {GIT_SUBDIR}/")
+    print(f"Creating symlinks from {remote_profiles_base} to {GIT_SUBDIR}/")
 
     if conn.run(f"test -f {root_env_file}", warn=True).ok:
         print(f"Creating symlink for {root_env_file} to {GIT_SUBDIR}/.env")
         conn.run(f"ln -sfn {root_env_file} {GIT_SUBDIR}/.env")
 
-    result = conn.run(f"ls -d {remote_profiles_base}/*/", hide=True)
-    env_dirs = result.stdout.strip().splitlines()
+    result = conn.run(
+        f"find {remote_profiles_base} -type f -name '*.env.*'",
+        hide=True,
+    )
+    env_files = result.stdout.strip().splitlines()
 
-    with conn.cd(GIT_SUBDIR):
-        # Clean up old symlinks if they exist
-        conn.run(
-            "find . -maxdepth 1 -name '*.env.*' -type l -delete", warn=True
-        )
+    for env_file in env_files:
+        relative_path = Path(env_file).relative_to(remote_profiles_base)
+        local_target_path = Path(GIT_SUBDIR) / relative_path
 
-        for env_dir in env_dirs:
-            env_files = (
-                conn.run(f"ls {env_dir}.env.*", hide=True)
-                .stdout.strip()
-                .splitlines()
-            )
+        print(f"Creating symlink for {env_file} → {local_target_path}")
 
-            for env_file in env_files:
-                env_file_name = env_file.split("/")[-1]
-                print(
-                    f"Creating symlink for {env_file_name} from"
-                    f"{env_file} to {GIT_SUBDIR}/"
-                )
+        conn.run(f"mkdir -p {local_target_path.parent}")
 
-                conn.run(f"ln -sfn {env_file} {GIT_SUBDIR}/{env_file_name}")
+        conn.run(f"ln -sfn {env_file} {local_target_path}")
 
     print("======= Symlinks created successfully =======")
 
@@ -241,7 +244,9 @@ def deploy(conn, profile=None):
                 )
             else:
                 conn.run("sudo docker compose up --build -d")
-            conn.run("sudo docker image prune -af")
+            conn.run("sudo docker image prune -f")
+        else:
+            conn.run("sudo docker compose up --build -d")
 
     print("======= Application deployed =======")
 
