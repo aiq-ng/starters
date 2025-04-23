@@ -4,8 +4,8 @@ services:
       context: .
       dockerfile: docker/Dockerfile.app
     ports:
-      - "${PHP_PORT:-9090}:9090"
-      - "${PHP_FPM_PORT:-9000}:9000"
+      - "${PHP_PORT:-9090}:${PHP_PORT:-9090}"
+      - "${PHP_FPM_PORT:-9000}:${PHP_FPM_PORT:-9000}"
     volumes:
       - ./:/workspace/starters/app
     environment:
@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile.websocket
     ports:
-      - "${WS_PORT:-8080}:8080"
+      - "${WS_PORT:-8080}:${WS_PORT:-8080}"
     volumes:
       - ./websocket:/workspace/starters/websocket
     environment:

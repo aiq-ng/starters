@@ -172,7 +172,11 @@ def clone_repo(conn):
     with conn.cd(GIT_SUBDIR):
         if ENVIRONMENT in ["prod", "production"]:
             result = conn.run("git branch -r", hide=True)
-            remote_branches = result.stdout.strip().splitlines()
+            remote_branches = [
+                line.strip() for line in result.stdout.strip().splitlines()
+            ]
+
+            print(f"=== Remote branches: {remote_branches} ===")
 
             if "origin/main" in remote_branches:
                 branch_name = "main"
@@ -201,16 +205,16 @@ def clone_repo(conn):
     )
 
 
-def symlink_env(conn):
+def copy_env_files(conn):
     project_name = PROJECT_NAME
     remote_profiles_base = f"/etc/{project_name}"
     root_env_file = f"{remote_profiles_base}/.env"
 
-    print(f"Creating symlinks from {remote_profiles_base} to {GIT_SUBDIR}/")
+    print(f"Copying env files from {remote_profiles_base} to {GIT_SUBDIR}/")
 
     if conn.run(f"test -f {root_env_file}", warn=True).ok:
-        print(f"Creating symlink for {root_env_file} to {GIT_SUBDIR}/.env")
-        conn.run(f"ln -sfn {root_env_file} {GIT_SUBDIR}/.env")
+        print(f"Copying {root_env_file} to {GIT_SUBDIR}/.env")
+        conn.run(f"cp {root_env_file} {GIT_SUBDIR}/.env")
 
     result = conn.run(
         f"find {remote_profiles_base} -type f -name '*.env.*'",
@@ -222,13 +226,12 @@ def symlink_env(conn):
         relative_path = Path(env_file).relative_to(remote_profiles_base)
         local_target_path = Path(GIT_SUBDIR) / relative_path
 
-        print(f"Creating symlink for {env_file} → {local_target_path}")
+        print(f"Copying {env_file} → {local_target_path}")
 
         conn.run(f"mkdir -p {local_target_path.parent}")
+        conn.run(f"cp {env_file} {local_target_path}")
 
-        conn.run(f"ln -sfn {env_file} {local_target_path}")
-
-    print("======= Symlinks created successfully =======")
+    print("======= Env files copied successfully =======")
 
 
 def deploy(conn, profile=None):
@@ -264,7 +267,7 @@ def handle_connection(host):
     install_dependencies(conn)
     install_docker(conn)
     clone_repo(conn)
-    symlink_env(conn)
+    copy_env_files(conn)
     deploy(conn, profile="prod")
 
 
