@@ -3,10 +3,9 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.app
-    container_name: starters-app
     ports:
-      - "${PHP_PORT:-9090}:9090"
-      - "${PHP_FPM_PORT:-9000}:9000"
+      - "${PHP_PORT:-9090}:${PHP_PORT:-9090}"
+      - "${PHP_FPM_PORT:-9000}:${PHP_FPM_PORT:-9000}"
     volumes:
       - ./:/workspace/starters/app
     environment:
@@ -14,6 +13,12 @@ services:
     env_file:
       - .env
       - profiles/${ENV:-dev}/.env.app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PHP_PORT}/"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - starters-network
     depends_on:
@@ -24,28 +29,31 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.websocket
-    container_name: starters-ws
     ports:
-      - "${WS_PORT:-9091}:9091"
+      - "${WS_PORT:-8080}:${WS_PORT:-8080}"
     volumes:
       - ./websocket:/workspace/starters/websocket
     environment:
       - ENV=${ENV:-dev}
+    env_file:
+      - websocket/profiles/${ENV:-dev}/.env.app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${WS_PORT}/"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - starters-network
     restart: always
 
   database:
     image: postgres:latest
-    container_name: starters-db
     restart: always
     ports:
-      - "${DB_PORT:-5433}:5432"
+      - "${POSTGRES_PORT:-5430}:5432"
     environment:
       - ENV=${ENV:-dev}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
     env_file:
       - profiles/${ENV:-dev}/.env.database
     volumes:
@@ -55,6 +63,12 @@ services:
       - ./schema/init-data.sql:/docker-entrypoint-initdb.d/03-init-data.sql
       - ./schema/${ENV:-dev}-dump.sql:/docker-entrypoint-initdb.d/04-${ENV:-dev}-dump.sql
     command: postgres -c log_min_messages=notice -c logging_collector=off -c log_destination=stderr
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
     networks:
       - starters-network
 
@@ -62,18 +76,12 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.liquibase
-    container_name: starters-liquibase
-    env_file:
-      - profiles/${ENV:-dev}/.env.database
     environment:
-      - LIQUIBASE_DEFAULTS_FILE=/liquibase/liquibase.properties
-      - LIQUIBASE_COMMAND_URL=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-      - LIQUIBASE_COMMAND_REFERENCE_URL=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_SNAPSHOT}
-      - LIQUIBASE_COMMAND_USERNAME=${DB_USER}
-      - LIQUIBASE_COMMAND_PASSWORD=${DB_PASSWORD}
-      - LIQUIBASE_COMMAND_REFERENCE_USERNAME=${DB_USER}
-      - LIQUIBASE_COMMAND_REFERENCE_PASSWORD=${DB_PASSWORD}
+      - ENV=${ENV:-dev}
+    env_file:
+      - profiles/${ENV:-dev}/.env.liquibase
     volumes:
+      # run in local => mkdir -p ./docker/config/liquibase/changelog && sudo chmod -R 777 ./docker/config/liquibase/changelog
       - ./docker/config/liquibase/changelog:/liquibase/changelog
       - ./docker/config/liquibase/liquibase.properties:/liquibase/liquibase.properties:ro
       - ./schema:/liquibase/schema:ro
@@ -102,7 +110,6 @@ services:
 
   redis:
     image: redis:latest
-    container_name: starters-redis
     profiles: ["dev"]
     ports:
       - "6389:6379"
@@ -132,7 +139,6 @@ services:
 
   web:
     image: nginx:latest
-    container_name: starters-nginx
     profiles: ["dev"]
     restart: always
     ports:
