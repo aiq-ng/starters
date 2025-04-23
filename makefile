@@ -1,31 +1,20 @@
 dev:
-	docker compose -p starters-dev up --build -d
-	docker image prune -af
+	docker compose --env-file profiles/dev/.env.app -p starters-dev up --build -d
 
 staging:
-	@export APP_ENV=staging && \
-	export DB_USER=staginguser && \
-	export DB_PASSWORD=stagingpass && \
-	export DB_NAME=starters_staging && \
-	export PORT=5433 && \
-	export WS_PORT=9092 && \
-	docker compose -p starters-staging up --build -d
-	docker image prune -af
+	docker compose --env-file profiles/staging/.env.app -p starters-staging up --build -d
 
 prod:
-	@export APP_ENV=prod && \
-	export DB_USER=produser && \
-	export DB_PASSWORD=prodpass && \
-	export DB_NAME=starters_prod && \
-	export PORT=5434 && \
-	export WS_PORT=9093 && \
-	docker compose -p starters-prod up --build -d
-	docker image prune -af
+	docker compose --env-file profiles/prod/.env.app -p starters-prod up --build -d
 
 stop:
+	@if [ -z "$(env)" ]; then \
+		echo "❌ Please pass env=dev|staging|prod to stop the correct environment"; \
+		exit 1; \
+	fi
 	@if [ "$(v)" = "v" ]; then \
-		docker compose down -v; \
+		docker compose -p starters-$(env) down -v; \
 	else \
-		docker compose down; \
+		docker compose -p starters-$(env) down; \
 	fi
 
