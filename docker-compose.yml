@@ -11,7 +11,6 @@ services:
     environment:
       - ENV=${ENV:-dev}
     env_file:
-      - .env
       - profiles/${ENV:-dev}/.env.app
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${PHP_PORT}/"]
