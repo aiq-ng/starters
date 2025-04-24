@@ -4,8 +4,8 @@ services:
       context: .
       dockerfile: docker/Dockerfile.app
     ports:
-      - "${PHP_PORT:-9090}:${PHP_PORT:-9090}"
-      - "${PHP_FPM_PORT:-9000}:${PHP_FPM_PORT:-9000}"
+      - "${PHP_PORT}:${PHP_PORT}"
+      - "${PHP_FPM_PORT}:${PHP_FPM_PORT}"
     volumes:
       - ./:/workspace/starters/app
     environment:
@@ -29,7 +29,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile.websocket
     ports:
-      - "${WS_PORT:-8080}:${WS_PORT:-8080}"
+      - "${WS_PORT}:${WS_PORT}"
     volumes:
       - ./websocket:/workspace/starters/websocket
     environment:
@@ -50,7 +50,7 @@ services:
     image: postgres:latest
     restart: always
     ports:
-      - "${POSTGRES_PORT:-5430}:5432"
+      - "${POSTGRES_PORT}:5432"
     environment:
       - ENV=${ENV:-dev}
     env_file:
