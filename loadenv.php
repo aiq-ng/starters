@@ -1,7 +1,16 @@
 <?php
 
-function loadEnv($filePath = __DIR__ . '/.env')
+function loadEnv($env = 'dev', $baseDir = __DIR__ . '/profiles')
 {
+    static $loaded = false;
+    if ($loaded) {
+        error_log("loadEnv: Already loaded, skipping");
+        return true;
+    }
+    $loaded = true;
+
+    $filePath = "$baseDir/$env/.env.app";
+
     if (!file_exists($filePath)) {
         error_log("loadEnv: Environment file not found at $filePath");
         return false;
@@ -19,23 +28,23 @@ function loadEnv($filePath = __DIR__ . '/.env')
     }
 
     foreach ($lines as $line) {
-        // Skip comments and invalid lines
         $line = trim($line);
         if (empty($line) || $line[0] === '#') {
             continue;
         }
 
-        // Match key=value, ignoring comments after the value
         if (preg_match('/^([^=]+)=(.*)$/', $line, $matches)) {
             $key = trim($matches[1]);
             $value = trim($matches[2]);
-            // Remove inline comments from value
             $value = preg_replace('/\s*#.*$/', '', $value);
             putenv("$key=$value");
             $_ENV[$key] = $value;
         }
     }
+
     return true;
 }
 
-loadEnv();
+$env = getenv('ENV') ?: 'dev';
+error_log("loadEnv: Loading environment for $env");
+loadEnv($env);

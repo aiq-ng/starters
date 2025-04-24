@@ -1,7 +1,7 @@
 dc.logs
 .php-cs-fixer.cache
 php_errors.log
-.env
+**.env**
 profiles
 env
 **dc.logs

@@ -1,5 +1,3 @@
-\c starters;
-
 -- Functions
 CREATE OR REPLACE FUNCTION generate_sku()
 RETURNS TRIGGER AS $$

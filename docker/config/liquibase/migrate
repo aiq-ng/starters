@@ -21,10 +21,10 @@ wait_for_db() {
 	local RETRIES=20
 	local WAIT=2
 
-	echo "⏳ Waiting for $DB_HOST to be ready..."
+	echo "⏳ Waiting for $LIQ_DB_HOST to be ready..."
 
 	for ((i = 1; i <= RETRIES; i++)); do
-		if PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USER" -d postgres -c '\q' &>/dev/null; then
+		if PGPASSWORD="$LIQ_DB_PASSWORD" psql -h "$LIQ_DB_HOST" -U "$LIQ_DB_USER" -d postgres -c '\q' &>/dev/null; then
 			echo "✅ Database is ready!"
 			return 0
 		fi
@@ -119,14 +119,19 @@ if [ "$INIT" = true ]; then
 fi
 
 if [ "$RUN_GENERATE" = true ]; then
-	printf "🛠️ Creating temporary Postgres database: $DB_SNAPSHOT..."
-	PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USER" -c "CREATE DATABASE $DB_SNAPSHOT;"
+	printf "🛠️ Creating temporary Postgres database: $LIQ_DB_SNAPSHOT..."
+	PGPASSWORD="$LIQ_DB_PASSWORD" psql -h "$LIQ_DB_HOST" -U "$LIQ_DB_USER" -c "CREATE DATABASE $LIQ_DB_SNAPSHOT;"
 
 	printf "\n📝 Applying reference SQL script to temp db...\n"
 	for script in "${SCRIPTS[@]}"; do
-		printf "  - %s\n" "$script"
-		PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_SNAPSHOT" -f "$script"
+		if [ -f "$script" ]; then
+			printf "  - Applying %s\n" "$script"
+			PGPASSWORD="$LIQ_DB_PASSWORD" psql -h "$LIQ_DB_HOST" -U "$LIQ_DB_USER" -d "$LIQ_DB_SNAPSHOT" -f "$script"
+		else
+			printf "  ⚠️  Skipping missing script: %s\n" "$script"
+		fi
 	done
+
 
 	printf "\n🔄 Generating new changelog...\n"
 	CHANGELOG_FILE=$CURRENT_CHANGELOG
@@ -155,5 +160,5 @@ fi
 
 if [ "$DROP_DB" = true ]; then
 	printf "\n🧹 Cleaning up: Dropping temporary database...\n"
-	PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USER" -c "DROP DATABASE IF EXISTS $DB_SNAPSHOT;"
+	PGPASSWORD="$LIQ_DB_PASSWORD" psql -h "$LIQ_DB_HOST" -U "$LIQ_DB_USER" -c "DROP DATABASE IF EXISTS $LIQ_DB_SNAPSHOT;"
 fi

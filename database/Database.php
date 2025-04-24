@@ -2,6 +2,9 @@
 
 namespace Database;
 
+use PDO;
+use PDOException;
+
 class Database
 {
     private static $instance = null;
@@ -14,18 +17,17 @@ class Database
 
     private function __construct()
     {
-        if (getenv('ENV') === 'dev') {
-            $this->host = '127.0.0.1';
-            $this->db_name = 'startersdb';
-            $this->user = 'postgres';
-            $this->password = 'postgres';
-            $this->port = '5432';
-        } else {
-            $this->host = getenv('DB_HOST');
-            $this->db_name = getenv('DB_NAME');
-            $this->user = getenv('DB_USER');
-            $this->password = getenv('DB_PASSWORD');
-            $this->port = getenv('DB_PORT');
+        $this->host = getenv('DB_HOST') ?: 'database';
+        $this->db_name = getenv('DB_NAME') ?: 'starters';
+        $this->user = getenv('DB_USER') ?: 'postgres';
+        $this->password = getenv('DB_PASSWORD') ?: 'starterssecret';
+        $this->port = getenv('DB_PORT') ?: '5432';
+
+        if (!$this->host || !$this->db_name || !$this->user || !$this->port) {
+            $errorMsg = "Missing required environment variables: " .
+                        "host=$this->host, db=$this->db_name, user=$this->user, port=$this->port";
+            error_log($errorMsg);
+            throw new \Exception($errorMsg);
         }
 
         $this->conn = $this->createConnection();
@@ -33,19 +35,37 @@ class Database
 
     private function createConnection()
     {
-        try {
-            $dsn = "pgsql:host={$this->host};port={$this->port};dbname={$this->db_name};";
-            $pdo = new \PDO($dsn, $this->user, $this->password);
-            $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-            return $pdo;
-        } catch (\PDOException $exception) {
-            echo "Connection failed: " . $exception->getMessage();
-            throw new \PDOException("Database connection failed: " .
-                $exception->getMessage(), $exception->getCode());
+        $maxRetries = 3;
+        $retryDelay = 2; // seconds
+        $attempt = 1;
+
+        while ($attempt <= $maxRetries) {
+            try {
+                $dsn = "pgsql:host={$this->host};port={$this->port};dbname={$this->db_name};";
+                $pdo = new PDO($dsn, $this->user, $this->password, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_TIMEOUT => 5,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                ]);
+
+                error_log("Connection successful to {$this->host}");
+                return $pdo;
+            } catch (PDOException $exception) {
+                $errorMsg = "Attempt $attempt failed: " . $exception->getMessage() . " (DSN: $dsn)";
+                error_log($errorMsg);
+
+                if ($attempt === $maxRetries) {
+                    $finalError = "Database connection failed after $maxRetries attempts: " . $exception->getMessage();
+                    error_log($finalError);
+                    throw new PDOException($finalError, (int)$exception->getCode(), $exception);
+                }
+
+                sleep($retryDelay);
+                $attempt++;
+            }
         }
     }
 
-    // Singleton method to get the shared connection
     public static function getInstance()
     {
         if (!self::$instance) {
@@ -59,7 +79,6 @@ class Database
         return $this->conn;
     }
 
-    // Method to get a new connection (for cron jobs, separate tasks, etc.)
     public static function getNewConnection()
     {
         return (new self())->getConnection();

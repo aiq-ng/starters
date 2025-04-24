@@ -4,7 +4,6 @@ namespace Controllers;
 
 use Models\Purchase;
 use Models\Sale;
-use Services\RedisService;
 use Ramsey\Uuid\Uuid;
 
 class TradeController extends BaseController
@@ -18,7 +17,6 @@ class TradeController extends BaseController
         parent::__construct();
         $this->purchase = new Purchase();
         $this->sale = new Sale();
-        $this->redis = new RedisService();
     }
 
     public function purchaseIndex()
