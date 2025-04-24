@@ -42,8 +42,6 @@ class Database
         while ($attempt <= $maxRetries) {
             try {
                 $dsn = "pgsql:host={$this->host};port={$this->port};dbname={$this->db_name};";
-                error_log("Attempt $attempt: Connecting to $dsn, user={$this->user}");
-                
                 $pdo = new PDO($dsn, $this->user, $this->password, [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_TIMEOUT => 5,
@@ -55,13 +53,13 @@ class Database
             } catch (PDOException $exception) {
                 $errorMsg = "Attempt $attempt failed: " . $exception->getMessage() . " (DSN: $dsn)";
                 error_log($errorMsg);
-                
+
                 if ($attempt === $maxRetries) {
                     $finalError = "Database connection failed after $maxRetries attempts: " . $exception->getMessage();
                     error_log($finalError);
                     throw new PDOException($finalError, (int)$exception->getCode(), $exception);
                 }
-                
+
                 sleep($retryDelay);
                 $attempt++;
             }

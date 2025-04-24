@@ -9,12 +9,12 @@
     },
     "require": {
         "firebase/php-jwt": "^6.10",
-        "cloudinary/cloudinary_php": "^2.14",
         "predis/predis": "^2.3",
         "guzzlehttp/guzzle": "^7.9",
         "picqer/php-barcode-generator": "^3.2",
         "barcode-bakery/barcode-1d": "^7.0",
         "barcode-bakery/barcode-common": "^7.0",
-        "ramsey/uuid": "^4.7"
+        "ramsey/uuid": "^4.7",
+        "cloudinary/cloudinary_php": "^3.1"
     }
 }
