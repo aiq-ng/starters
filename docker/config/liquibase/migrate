@@ -124,9 +124,14 @@ if [ "$RUN_GENERATE" = true ]; then
 
 	printf "\n📝 Applying reference SQL script to temp db...\n"
 	for script in "${SCRIPTS[@]}"; do
-		printf "  - %s\n" "$script"
-		PGPASSWORD="$LIQ_DB_PASSWORD" psql -h "$LIQ_DB_HOST" -U "$LIQ_DB_USER" -d "$LIQ_DB_SNAPSHOT" -f "$script"
+		if [ -f "$script" ]; then
+			printf "  - Applying %s\n" "$script"
+			PGPASSWORD="$LIQ_DB_PASSWORD" psql -h "$LIQ_DB_HOST" -U "$LIQ_DB_USER" -d "$LIQ_DB_SNAPSHOT" -f "$script"
+		else
+			printf "  ⚠️  Skipping missing script: %s\n" "$script"
+		fi
 	done
+
 
 	printf "\n🔄 Generating new changelog...\n"
 	CHANGELOG_FILE=$CURRENT_CHANGELOG
