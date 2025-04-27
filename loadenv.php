@@ -4,7 +4,6 @@ function loadEnv($env = 'dev', $baseDir = __DIR__ . '/profiles')
 {
     static $loaded = false;
     if ($loaded) {
-        error_log("loadEnv: Already loaded, skipping");
         return true;
     }
     $loaded = true;
@@ -46,5 +45,4 @@ function loadEnv($env = 'dev', $baseDir = __DIR__ . '/profiles')
 }
 
 $env = getenv('ENV') ?: 'dev';
-error_log("loadEnv: Loading environment for $env");
 loadEnv($env);
