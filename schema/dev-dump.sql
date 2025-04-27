@@ -1,11 +1,3 @@
--- Seed data for roles
-INSERT INTO roles (id, name) VALUES
-('550e8400-e29b-41d4-a716-446655440000', 'Admin'),
-('550e8400-e29b-41d4-a716-446655440001', 'Head of department'),
-('550e8400-e29b-41d4-a716-446655440002', 'Assistant to head of department'),
-('550e8400-e29b-41d4-a716-446655440003', 'Supervisor'),
-('550e8400-e29b-41d4-a716-446655440004', 'Team Lead');
-
 -- Seed data for salutations
 INSERT INTO salutations (id, name) VALUES
 ('660e9500-e25b-41d4-b716-556655440000', 'Mr.'),
@@ -15,21 +7,6 @@ INSERT INTO salutations (id, name) VALUES
 ('660e9500-e25b-41d4-b716-556655440004', 'Prof.'),
 ('660e9500-e25b-41d4-b716-556655440005', 'Engr.');
 
--- Seed data for permissions
-INSERT INTO permissions (id, name, description) VALUES
-('770a1600-f31c-42d5-c827-667755440000', 'sales', 
- 'View and manage sales orders'),
-('770a1600-f31c-42d5-c827-667755440001', 'procurement', 
- 'View and manage purchase orders'),
-('770a1600-f31c-42d5-c827-667755440002', 'hr', 
- 'View and manage HR data'),
-('770a1600-f31c-42d5-c827-667755440003', 'accounting', 
- 'View and manage accounting data'),
-('770a1600-f31c-42d5-c827-667755440004', 'admin', 
- 'Full access to all features'),
-('770a1600-f31c-42d5-c827-667755440005', 'inventory', 
- 'View and manage inventory data');
-
 -- Seed data for base pay types
 INSERT INTO base_pay_types (id, name, description) VALUES
 ('880b2700-f42d-53e6-d938-778866550000', 'hourly', 
@@ -37,7 +14,6 @@ INSERT INTO base_pay_types (id, name, description) VALUES
 ('880b2700-f42d-53e6-d938-778866550001', 'delivery', 
  'Base salary calculated based on delivery rates');
 
--- Insert default qualification periods
 -- Insert default qualification periods
 INSERT INTO work_leave_qualifications (id, name) VALUES
 ('990c3800-b53e-44f7-e049-889977660000', '3 months'),

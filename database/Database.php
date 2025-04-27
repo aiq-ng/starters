@@ -48,7 +48,6 @@ class Database
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
                 ]);
 
-                error_log("Connection successful to {$this->host}");
                 return $pdo;
             } catch (PDOException $exception) {
                 $errorMsg = "Attempt $attempt failed: " . $exception->getMessage() . " (DSN: $dsn)";
