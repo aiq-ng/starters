@@ -203,6 +203,7 @@ class AuthController extends BaseController
             $this->deleteRefreshToken($userId);
         }
 
+        $this->invalidateSessions();
         session_destroy();
 
         $this->sendResponse('Logout successful', 200);

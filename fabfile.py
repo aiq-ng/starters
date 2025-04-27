@@ -90,6 +90,56 @@ def push_env_files():
     print("================= Env files pushed successfully =================")
 
 
+def pull_env_files():
+    project_root = Path.cwd()
+    project_name = project_root.name
+    remote_base = f"/etc/{project_name}"
+
+    conn_kwargs = {
+        "host": REMOTE_HOST,
+        "user": REMOTE_USER,
+    }
+    if SSH_KEY_PATH:
+        conn_kwargs["connect_kwargs"] = {"key_filename": SSH_KEY_PATH}
+
+    conn = Connection(**conn_kwargs)
+
+    print(
+        f"============== Pulling env files from {remote_base} =============="
+    )
+
+    def pull_env_file(remote_env_path: str, local_path: Path):
+        print(f"======= Pulling {remote_env_path} to {local_path}")
+        local_path.parent.mkdir(parents=True, exist_ok=True)
+        conn.get(remote=remote_env_path, local=str(local_path))
+
+    def pull_profiles(remote_profiles_path: Path, local_base_path: Path):
+        result = conn.run(
+            f"find {remote_profiles_path} -type f -name '*.env.*'",
+            hide=True,
+            warn=True,
+        )
+        for line in result.stdout.strip().splitlines():
+            remote_path = Path(line.strip())
+            relative_path = remote_path.relative_to(remote_base)
+            local_path = project_root / relative_path
+            print(f"=== Pulling profile file {remote_path} to {local_path}")
+            pull_env_file(str(remote_path), local_path)
+
+    result = conn.run(
+        f"find {remote_base} -type f -name '.env'", hide=True, warn=True
+    )
+    for line in result.stdout.strip().splitlines():
+        remote_path = Path(line.strip())
+        relative_path = remote_path.relative_to(remote_base)
+        local_path = project_root / relative_path
+        pull_env_file(str(remote_path), local_path)
+
+    pull_profiles(Path(remote_base), project_root)
+
+    print("================= Env files pulled successfully =================")
+
+
 def install_dependencies(conn):
     result = conn.run("which git", warn=True, hide=True)
     if result.stdout.strip():
