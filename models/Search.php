@@ -399,7 +399,7 @@ class Search
             OR so.reference_number ILIKE :search" : "") . "
         GROUP BY so.id, c.display_name, so.invoice_number, so.order_title,
                 so.order_type, c.id, so.payment_term_id, so.payment_method_id,
-                so.assigned_driver_id, so.delivery_option, so.additional_note,
+                so.delivery_option, so.additional_note,
                 so.customer_note, so.discount, so.delivery_charge, so.total,
                 c.email, so.created_at, so.delivery_date";
     }
