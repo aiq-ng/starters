@@ -15,6 +15,10 @@ endef
 
 $(ALLOWED_ENV_NAMES):
 	@echo "🔧 Starting environment: $@"
+	@if ! docker network inspect shared-network > /dev/null 2>&1; then \
+		echo " Creating shared-network..."; \
+		docker network create shared-network; \
+	fi
 	$(call COMPOSE_UP,$@)
 
 %:

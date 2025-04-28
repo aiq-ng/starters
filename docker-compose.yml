@@ -5,7 +5,7 @@ services:
       dockerfile: docker/Dockerfile.app
     ports:
       - "${PHP_PORT}:${PHP_PORT}"
-      - "${PHP_FPM_PORT}:${PHP_FPM_PORT}"
+      - "${PHP_FPM_PORT}:9000"
     volumes:
       - ./:/workspace/starters/app
     environment:
