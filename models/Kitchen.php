@@ -233,6 +233,8 @@ class Kitchen
                 'next_page' => (int) $page + 1,
             ];
 
+            $meta = array_merge($meta, $this->getOrderCount());
+
             return [
                 'data' => $result,
                 'meta' => $meta,
@@ -242,6 +244,32 @@ class Kitchen
             error_log("Failed to fetch orders: " . $e->getMessage());
             return ['data' => [], 'meta' => []];
         }
+    }
+
+    public function getOrderCount()
+    {
+        $query = "
+			SELECT
+				COUNT(*) AS total_orders,
+				COUNT(*) FILTER (WHERE status = 'pending') AS pending_orders,
+				COUNT(*) FILTER (WHERE payment_status = 'paid') AS paid_orders,
+				COUNT(*) FILTER (WHERE status = 'in progress') AS orders_in_progress,
+				COUNT(*) FILTER (WHERE status = 'in delivery') AS orders_in_delivery,
+				COUNT(*) FILTER (WHERE status = 'delivered') AS delivered_orders,
+				COUNT(*) FILTER (WHERE sent_to_kitchen = TRUE) AS sent_to_kitchen,
+				COUNT(*) FILTER (WHERE payment_status = 'paid' AND sent_to_kitchen = TRUE) AS total_paid_orders_sent_to_kitchen
+			FROM sales_orders
+		";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute();
+        $response = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        $counts = array_map('intval', $response);
+
+        error_log("Order counts: " . json_encode($counts));
+
+        return $counts;
     }
 
     public function getOrderById($orderId)
