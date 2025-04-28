@@ -4,8 +4,8 @@ services:
       context: .
       dockerfile: docker/Dockerfile.app
     ports:
-      - "${PHP_PORT}:${PHP_PORT}"
-      - "${PHP_FPM_PORT}:9000"
+      - "${PHP_PORT:-9091}:${PHP_PORT:-9091}"
+      - "${PHP_FPM_PORT:-9001}:${PHP_FPM_PORT:-9001}"
     volumes:
       - ./:/workspace/starters/app
     environment:
@@ -13,7 +13,7 @@ services:
     env_file:
       - profiles/${ENV:-dev}/.env.app
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${PHP_PORT}/"]
+      test: ["CMD", "curl", "-f", "http://localhost:${PHP_PORT:-9001}/"]
       interval: 60s
       timeout: 10s
       retries: 3
@@ -29,7 +29,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile.websocket
     ports:
-      - "${WS_PORT}:${WS_PORT}"
+      - "${WS_PORT:-8081}:${WS_PORT:-8081}"
     volumes:
       - ./websocket:/workspace/starters/websocket
     environment:
@@ -37,7 +37,7 @@ services:
     env_file:
       - websocket/profiles/${ENV:-dev}/.env.app
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${WS_PORT}/"]
+      test: ["CMD", "curl", "-f", "http://localhost:${WS_PORT:-8081}/"]
       interval: 60s
       timeout: 10s
       retries: 3
@@ -50,7 +50,7 @@ services:
     image: postgres:latest
     restart: always
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${POSTGRES_PORT:-5431}:5432"
     environment:
       - ENV=${ENV:-dev}
     env_file:
@@ -63,7 +63,7 @@ services:
       - ./schema/${ENV:-dev}-dump.sql:/docker-entrypoint-initdb.d/04-${ENV:-dev}-dump.sql
     command: postgres -c log_min_messages=notice -c logging_collector=off -c log_destination=stderr
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}"]
       interval: 20s
       timeout: 10s
       retries: 5

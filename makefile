@@ -1,12 +1,16 @@
-PROJECT_NAME = starters
 ALLOWED_ENV_NAMES = dev staging prod
+PROJECT_NAME := $(notdir $(CURDIR))
 
 define COMPOSE_UP
 	@set -a; \
+	ENV_NAME=$(1); \
+	DUMP_ENV=$$( [ "$$ENV_NAME" = "staging" ] && echo "dev" || echo "$$ENV_NAME" ); \
+	export DUMP_ENV; \
 	for f in profiles/$(1)/.env.*; do \
 		. $$f; \
 	done; \
 	set +a; \
+	mkdir -p ./docker/config/liquibase/changelog && chmod -R 777 ./docker/config/liquibase/changelog; \
 	docker compose -p $(PROJECT_NAME)-$(1) up --build -d; \
 	docker image prune -f
 endef
@@ -45,4 +49,3 @@ help:
 	@echo "  make staging   – start staging environment"
 	@echo "  make prod      – start prod environment"
 	@echo "  make stop env=dev|staging|prod [v=v] – stop environment with optional volumes"
-
