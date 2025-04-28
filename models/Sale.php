@@ -652,6 +652,8 @@ class Sale extends Kitchen
                 'next_page' => (int) $page + 1,
             ];
 
+            $meta = array_merge($meta, $this->getOrderCount());
+
             return ['data' => $data, 'meta' => $meta];
         } catch (\Exception $e) {
             error_log($e->getMessage());

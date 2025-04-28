@@ -267,8 +267,6 @@ class Kitchen
 
         $counts = array_map('intval', $response);
 
-        error_log("Order counts: " . json_encode($counts));
-
         return $counts;
     }
 
