@@ -701,16 +701,52 @@ class BaseController
         return $result && $result['role_id'] === $adminRoleId;
     }
 
+    private function getCompanyDetails()
+    {
+        $query = "SELECT content FROM settings WHERE name = 'site_setting' LIMIT 1";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->execute();
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$result) {
+            return [];
+        }
+
+        return json_decode($result['content'], true);
+    }
+
+
     public function sendInvoiceEmail($id, $type, $attachment = null)
     {
         $invoiceData = $this->getInvoiceData($id, $type);
+        $companyDetails = $this->getCompanyDetails();
+        $address = implode(', ', array_filter([
+            $companyDetails['address']['line1'] ?? '',
+            $companyDetails['address']['line2'] ?? '',
+            $companyDetails['address']['city'] ?? '',
+            $companyDetails['address']['state'] ?? '',
+            $companyDetails['address']['zip'] ?? '',
+            $companyDetails['address']['country'] ?? '',
+        ]));
+        $termsList = $settings['terms_and_conditions'] ?? [];
+
+        $termsOfService = '';
+        foreach ($termsList as $term) {
+            if (isset($term['title']) && strtolower($term['title']) === 'terms of service') {
+                $termsOfService = $term['content'];
+                break;
+            }
+        }
 
         $templateVariables = array_merge([
-            "orgAddress" => trim(getenv('ORG_ADDRESS'), '"'),
-            "orgName" => trim(getenv('ORG_NAME'), '"'),
-            "orgEmail" => trim(getenv('ORG_EMAIL'), '"'),
-            "orgPhone" => trim(getenv('ORG_PHONE'), '"'),
-            "orgWebsite" => trim(getenv('ORG_WEBSITE'), '"'),
+            "orgAddress" => $address,
+            "orgName" => $companyDetails['company_name'] ?? '',
+            "orgEmail" => $companyDetails['company_email'] ?? '',
+            "orgPhone" => $companyDetails['company_number'] ?? '',
+            "orgUrl" => $companyDetails['company_website'] ?? '',
+            "orgLogo" => $companyDetails['logo_url'] ?? '',
+            "tos" => $companyDetails['terms_of_service'] ?? '',
         ], $invoiceData);
 
         try {
@@ -784,7 +820,7 @@ class BaseController
         return [
             "invoiceNumber" => $invoice['invoice_number'] ?? "",
             "reference" => $invoice['reference_number'] ?? "",
-            "issueDate" => $invoice[$prefix === 'customer' ? 'invoice_date' : 'order_date'] ?? "",
+            "issuedDate" => $invoice[$prefix === 'customer' ? 'invoice_date' : 'order_date'] ?? "",
             "dueDate" => $invoice['delivery_date'] ?? "",
             "billedTo" => $invoice["{$prefix}_name"] ?? "",
             "billedToAddress" => $invoice["{$prefix}_address"] ?? "",
