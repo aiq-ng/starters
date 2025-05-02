@@ -43,9 +43,15 @@ stop:
 		docker compose -p $(PROJECT_NAME)-$$ENV_NAME down; \
 	fi
 
+logs:
+	@ENV_NAME=$${env:-dev}; \
+	docker compose -p $(PROJECT_NAME)-$$ENV_NAME logs -f;
+
+
 help:
 	@echo "Available commands:"
 	@echo "  make dev       – start dev environment"
 	@echo "  make staging   – start staging environment"
 	@echo "  make prod      – start prod environment"
 	@echo "  make stop env=dev|staging|prod [v=v] – stop environment with optional volumes"
+	@echo "  make logs env=dev|staging|prod – view logs of the environment"
