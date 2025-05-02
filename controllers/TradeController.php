@@ -502,7 +502,8 @@ class TradeController extends BaseController
         $this->authorizeRequest();
 
         $additionalData = [
-            'user_id' => $_SESSION['user_id']
+            'user_id' => $_SESSION['user_id'],
+            'status' => 'pending'
         ];
         $sale = $this->sale->duplicateSale($saleId, $additionalData);
 

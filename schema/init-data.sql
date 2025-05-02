@@ -1,3 +1,46 @@
+-- Settings seeder
+INSERT INTO settings (id, name, content, scope, target_id)
+VALUES (
+    'c0a8c2f2-64e1-4a88-98ef-5f8c1de4381d',
+    'site_setting',
+    '{
+        "company_name": "Starters",
+        "contact_email": "starterssmallchops@gmail.com",
+        "phone_number": "08073011100",
+        "address": {
+            "line1": "2 B Close, Off Okagbue BN Street",
+            "line2": "Kado Estate",
+            "city": "Abuja",
+            "state": "Federal Capital Territory",
+            "zip": "900108",
+            "country": "Nigeria"
+        },
+        "logo_url": "https://res.cloudinary.com/dsueaitln/image/upload/v1746014963/osbeqiqzjubpxabt8c6a.png",
+        "favicon_url": "https://startererp.com/assets/favicon.png",
+        "rating_url": "https://startererp.com/assets/rating.png",
+        "default_currency": {
+            "code": "NGN",
+            "symbol": "₦"
+        },
+        "terms_and_conditions": [
+            {
+                "title": "Terms of Service",
+                "content": "These are the terms of service for using our application."
+            },
+            {
+                "title": "Privacy Policy",
+                "content": "This is our privacy policy regarding user data."
+            },
+            {
+                "title": "Terms and Conditions",
+                "content": "This is our refund policy for purchases made through our application."
+            }
+        ]
+    }'::jsonb,
+    'global',
+    NULL
+);
+
 -- Seed data for roles
 INSERT INTO roles (id, name) VALUES
 ('550e8400-e29b-41d4-a716-446655440000', 'Admin'),

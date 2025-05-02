@@ -725,3 +725,18 @@ CREATE TABLE notifications (
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT clock_timestamp()
 );
+
+CREATE TABLE IF NOT EXISTS settings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    content JSONB DEFAULT '{}'::JSONB,
+    scope VARCHAR(20) DEFAULT 'global' CHECK (
+        scope IN ('global', 'account', 'sales', 'purchase', 'inventory', 'hr')
+    ),
+    target_id UUID,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE (name, scope, target_id)
+);
+

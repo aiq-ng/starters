@@ -13,13 +13,13 @@ services:
     env_file:
       - profiles/${ENV:-dev}/.env.app
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${PHP_PORT:-9001}/"]
+      test: ["CMD", "curl", "-f", "http://localhost:${PHP_PORT:-9091}/"]
       interval: 60s
       timeout: 10s
       retries: 3
       start_period: 30s
     networks:
-      - starters-network
+      - shared-network
     depends_on:
       - database
     restart: always
@@ -43,7 +43,7 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - starters-network
+      - shared-network
     restart: always
 
   database:
@@ -69,7 +69,7 @@ services:
       retries: 5
       start_period: 20s
     networks:
-      - starters-network
+      - shared-network
 
   liquibase:
     build:
@@ -105,7 +105,7 @@ services:
         max-size: "90k"
         max-file: "5"
     networks:
-      - starters-network
+      - shared-network
 
   redis:
     image: redis:latest
@@ -127,7 +127,7 @@ services:
       - redis_data:/data
       - ./docker/config/redis/redis.conf:/usr/local/etc/redis/redis.conf
     networks:
-      - starters-network
+      - shared-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "hordunsecret", "ping"]
@@ -149,7 +149,7 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      - starters-network
+      - shared-network
     logging:
       driver: "json-file"
       options:
@@ -160,8 +160,8 @@ services:
       - database
 
 networks:
-  starters-network:
-    driver: bridge
+  shared-network:
+    external: true
 
 volumes:
   postgres_data:
