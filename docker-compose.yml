@@ -19,7 +19,10 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - shared-network
+      shared-network:
+        aliases:
+          - ${ENV:-dev}-app
+      internal-network:
     depends_on:
       - database
     restart: always
@@ -43,7 +46,10 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - shared-network
+      shared-network:
+        aliases:
+          - ${ENV:-dev}-websocket
+      internal-network:
     restart: always
 
   database:
@@ -69,7 +75,7 @@ services:
       retries: 5
       start_period: 20s
     networks:
-      - shared-network
+      - internal-network
 
   liquibase:
     build:
@@ -105,7 +111,7 @@ services:
         max-size: "90k"
         max-file: "5"
     networks:
-      - shared-network
+      - internal-network
 
   redis:
     image: redis:latest
@@ -127,7 +133,7 @@ services:
       - redis_data:/data
       - ./docker/config/redis/redis.conf:/usr/local/etc/redis/redis.conf
     networks:
-      - shared-network
+      - internal-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "hordunsecret", "ping"]
@@ -149,7 +155,7 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      - shared-network
+      - internal-network
     logging:
       driver: "json-file"
       options:
@@ -162,6 +168,8 @@ services:
 networks:
   shared-network:
     external: true
+  internal-network:
+    driver: bridge
 
 volumes:
   postgres_data:
