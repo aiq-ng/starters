@@ -8,7 +8,7 @@ ws = APIRouter(prefix="/ws", tags=["WebSocket"])
 manager = ConnectionManager()
 
 
-@ws.websocket("")
+@ws.websocket("/")
 async def connect_websocket(
     websocket: WebSocket, background_tasks: BackgroundTasks
 ):

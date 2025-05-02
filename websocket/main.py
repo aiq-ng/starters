@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from modules.schemas import NotificationAllRequest, NotificationRequest
 from modules.websocket.router import manager, ws
@@ -7,6 +7,15 @@ app = FastAPI()
 
 # Bind the WebSocket router to the app
 app.include_router(ws)
+
+app.middleware("http")
+
+
+async def add_trailing_slash_middleware(request: Request, call_next):
+    if request.url.path != "/" and not request.url.path.endswith("/"):
+        request.scope["path"] = request.url.path + "/"
+    response = await call_next(request)
+    return response
 
 
 @app.get("/")
