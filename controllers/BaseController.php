@@ -706,7 +706,7 @@ class BaseController
         return $result && $result['role_id'] === $adminRoleId;
     }
 
-    private function getCompanyDetails()
+    protected function getCompanyDetails()
     {
         $query = "SELECT content FROM settings WHERE name = 'site_setting' LIMIT 1";
 

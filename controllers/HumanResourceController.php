@@ -82,11 +82,15 @@ class HumanResourceController extends BaseController
         }
 
         if ($formData['username'] && $formData['password']) {
+            $companyDetails = $this->getCompanyDetails();
             $templateVariables = [
+                'company_name' => $companyDetails['name'],
+                'logo_url' => $companyDetails['logo_url'],
+                'year' => date('Y'),
                 'name' => $formData['firstname'] . ' ' . $formData['lastname'],
                 'email' => $formData['email'],
                 'password' => $formData['password'],
-                'login_link' => getenv('APP_URL') . '/login',
+                'login_url' => getenv('APP_URL') . '/auth/signin',
             ];
 
             try {

@@ -80,8 +80,15 @@ class HumanResource
             );
 
             if (isset($data['login_details'])) {
-                $data['username'] = $data['login_details']['username'] ?? null;
-                $data['password'] = $data['login_details']['password'] ?? null;
+                $data['username'] = $data['login_details']['username'] ?? $data['username'] ?? null;
+                $data['password'] = $data['login_details']['password'] ?? $data['password'] ?? null;
+            }
+
+            if (!isset($data['bank_details'])) {
+                $data['bank_details'] = [
+                    'account_number' => $data['account_number'] ?? null,
+                    'bank_name' => $data['bank_name'] ?? null,
+                ];
             }
 
             $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
