@@ -45,7 +45,6 @@ class CustomerController extends BaseController
 
         $data['social_media'] = isset($data['social_media']) ? json_encode($data['social_media']) : null;
 
-        error_log('Customer Data: ' . json_encode($data));
         $result = $this->customer->create($data);
 
         if ($result) {
@@ -76,7 +75,6 @@ class CustomerController extends BaseController
 
         $data['social_media'] = isset($data['social_media']) ? json_encode($data['social_media']) : null;
 
-        error_log('Customer Data: ' . json_encode($data));
         $result = $this->customer->updateCustomer($id, $data);
 
         if ($result) {

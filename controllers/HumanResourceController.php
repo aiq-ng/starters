@@ -82,11 +82,15 @@ class HumanResourceController extends BaseController
         }
 
         if ($formData['username'] && $formData['password']) {
+            $companyDetails = $this->getCompanyDetails();
             $templateVariables = [
+                'company_name' => $companyDetails['name'],
+                'logo_url' => $companyDetails['logo_url'],
+                'year' => date('Y'),
                 'name' => $formData['firstname'] . ' ' . $formData['lastname'],
                 'email' => $formData['email'],
                 'password' => $formData['password'],
-                'login_link' => getenv('APP_URL') . '/login',
+                'login_url' => getenv('APP_URL') . '/auth/signin',
             ];
 
             try {
@@ -182,6 +186,38 @@ class HumanResourceController extends BaseController
 
         if ($result) {
             $this->sendResponse('Employee deleted successfully', 200);
+        } else {
+            $this->sendResponse('Employee not found', 404);
+        }
+    }
+
+    public function updateEmployee($id)
+    {
+        $this->authorizeRequest();
+
+        $data = $this->getRequestData();
+        $formData = $data['form_data'] ?? [];
+        $mediaFiles = $data['files'] ?? [];
+
+        $mediaLinks = [];
+        $mediaTypes = ['nin', 'passport', 'avatar_url'];
+
+        foreach ($mediaTypes as $mediaType) {
+            if (!empty($mediaFiles[$mediaType])) {
+                $mediaLink = $this->mediaHandler->handleMediaFiles([$mediaFiles[$mediaType]]);
+
+                if ($mediaLink === false) {
+                    error_log("Error uploading {$mediaType} file");
+                }
+
+                $mediaLinks[$mediaType] = $mediaLink;
+            }
+        }
+
+        $result = $this->humanResource->updateEmployee($id, $formData, $mediaLinks);
+
+        if ($result) {
+            $this->sendResponse('Employee updated successfully', 200);
         } else {
             $this->sendResponse('Employee not found', 404);
         }

@@ -60,6 +60,7 @@ class AuthController extends BaseController
 
         $user_id = $user['id'] ?? null;
         $role_id = $user['role_id'] ?? null;
+        $role = $user['role'] ?? null;
 
         if (!$user) {
             $this->sendResponse('Invalid credentials', 400);
@@ -81,7 +82,7 @@ class AuthController extends BaseController
             $_SESSION['user_id'] = $user_id;
             $_SESSION['role_id'] = $role_id;
 
-            $this->sendTokens($user_id, $role_id);
+            $this->sendTokens($user_id, $role_id, $role);
         } else {
             $this->sendResponse('Invalid credentials', 400);
         }
@@ -147,7 +148,7 @@ class AuthController extends BaseController
         }
     }
 
-    private function sendTokens($userId, $roleId)
+    private function sendTokens($userId, $roleId, $role)
     {
         $accessExpiry = 1 * 24 * 60 * 60; // 1 day
         $refreshExpiry = 30 * 24 * 60 * 60; // 30 days
@@ -162,6 +163,7 @@ class AuthController extends BaseController
         $this->sendResponse('Login Successful', 200, [
             'user_id' => $userId,
             'role_id' => $roleId,
+            'role' => $role,
             'first_timer' => $firstTimer,
             'token' => $accessToken,
             'refresh_token' => $refreshToken,

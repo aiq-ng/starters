@@ -44,10 +44,12 @@ VALUES (
 -- Seed data for roles
 INSERT INTO roles (id, name) VALUES
 ('550e8400-e29b-41d4-a716-446655440000', 'Admin'),
-('550e8400-e29b-41d4-a716-446655440001', 'Head of department'),
-('550e8400-e29b-41d4-a716-446655440002', 'Assistant to head of department'),
-('550e8400-e29b-41d4-a716-446655440003', 'Supervisor'),
-('550e8400-e29b-41d4-a716-446655440004', 'Team Lead');
+('550e8400-e29b-41d4-a716-446655440001', 'Sales'),
+('550e8400-e29b-41d4-a716-446655440002', 'Procurement'),
+('550e8400-e29b-41d4-a716-446655440003', 'Human-Resources'),
+('550e8400-e29b-41d4-a716-446655440004', 'Accountant'),
+('550e8400-e29b-41d4-a716-446655440005', 'Kitchen'),
+('550e8400-e29b-41d4-a716-446655440006', 'Rider');
 
 -- Seed data for permissions
 INSERT INTO permissions (id, name, description) VALUES

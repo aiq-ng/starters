@@ -79,10 +79,18 @@ class HumanResource
             RETURNING id'
             );
 
-            $bankDetails = [
-                'account_number' => $data['account_number'] ?? null,
-                'bank_name' => $data['bank_name'] ?? null,
-            ];
+            if (isset($data['login_details'])) {
+                $data['username'] = $data['login_details']['username'] ?? $data['username'] ?? null;
+                $data['password'] = $data['login_details']['password'] ?? $data['password'] ?? null;
+            }
+
+            if (!isset($data['bank_details'])) {
+                $data['bank_details'] = [
+                    'account_number' => $data['account_number'] ?? null,
+                    'bank_name' => $data['bank_name'] ?? null,
+                ];
+            }
+
             $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
 
             $stmt->execute([
@@ -97,7 +105,7 @@ class HumanResource
                 $data['role_id'] ?? null,
                 $data['no_of_working_days_id'] ?? null,
                 $data['salary'] ?? null,
-                json_encode($bankDetails),
+                json_encode($data['bank_details'] ?? []),
                 $mediaLinks['nin'][0] ?? null,
                 $mediaLinks['passport'][0] ?? null,
                 $mediaLinks['avatar_url'][0] ?? null,
@@ -338,6 +346,45 @@ class HumanResource
         } catch (\Exception $e) {
             error_log($e->getMessage());
             throw new \Exception("Error deleting employee");
+        }
+    }
+
+    public function updateEmployee($employeeid, $data)
+    {
+        if (isset($data['bank_details']) && is_array($data['bank_details'])) {
+            $data['bank_details'] = json_encode($data['bank_details']);
+        }
+        $filtereddata = array_filter($data, function ($value) {
+            return $value !== "" && $value !== null;
+        });
+
+        $setclauses = [];
+        $params = [':employee_id' => $employeeid];
+
+        foreach ($filtereddata as $field => $value) {
+            $setclauses[] = "$field = :$field";
+            $params[":$field"] = $value;
+        }
+
+        if (empty($setclauses)) {
+            return null;
+        }
+
+        $setclausestring = implode(', ', $setclauses);
+
+        $query = "
+            update users
+            set $setclausestring
+            where id = :employee_id
+            returning id;
+        ";
+
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute($params);
+            return $stmt->fetchcolumn();
+        } catch (\exception $e) {
+            throw new \exception("failed to update user: " . $e->getmessage());
         }
     }
 

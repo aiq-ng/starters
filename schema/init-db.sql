@@ -173,6 +173,7 @@ CREATE TABLE departments (
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    employee_id VARCHAR(8) GENERATED ALWAYS AS (LEFT(id::TEXT, 8)) STORED UNIQUE,
     email VARCHAR(255) UNIQUE,
     username VARCHAR(100) UNIQUE,
     password VARCHAR(255),
@@ -183,6 +184,9 @@ CREATE TABLE users (
     date_of_birth DATE,
     address TEXT,
     next_of_kin VARCHAR(100),
+    gender VARCHAR(10) CHECK (gender IN ('male', 'female', 'other')),
+    marital_status VARCHAR(20) CHECK (marital_status IN ('single', 'married', 'divorced', 'widowed')),
+    employment_type VARCHAR(50) CHECK (employment_type IN ('full-time', 'part-time', 'contract', 'internship')),
     emergency_contact TEXT,
     date_of_employment DATE,
     department_id UUID REFERENCES departments(id) ON DELETE SET NULL,

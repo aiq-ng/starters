@@ -657,7 +657,12 @@ class BaseController
 
     protected function getUserByUsernameOrEmail(string $identifier)
     {
-        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = :identifier OR username = :identifier");
+        $stmt = $this->db->prepare("
+            SELECT users.*, roles.name AS role
+            FROM users
+            LEFT JOIN roles ON users.role_id = roles.id
+            WHERE email = :identifier OR username = :identifier
+        ");
         $stmt->bindParam(':identifier', $identifier, \PDO::PARAM_STR);
         $stmt->execute();
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -701,7 +706,7 @@ class BaseController
         return $result && $result['role_id'] === $adminRoleId;
     }
 
-    private function getCompanyDetails()
+    protected function getCompanyDetails()
     {
         $query = "SELECT content FROM settings WHERE name = 'site_setting' LIMIT 1";
 
