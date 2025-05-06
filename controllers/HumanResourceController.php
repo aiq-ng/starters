@@ -84,8 +84,8 @@ class HumanResourceController extends BaseController
         if ($formData['username'] && $formData['password']) {
             $companyDetails = $this->getCompanyDetails();
             $templateVariables = [
-                'company_name' => $companyDetails['name'],
-                'logo_url' => $companyDetails['logo_url'],
+                'company_name' => $companyDetails['company_name'] ?? '',
+                'logo_url' => $companyDetails['logo_url'] ?? '',
                 'year' => date('Y'),
                 'name' => $formData['firstname'] . ' ' . $formData['lastname'],
                 'email' => $formData['email'],
